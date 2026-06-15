@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pika Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="overlay.css" />
+</head>
+<body>
+  <!-- Title bar -->
+  <div id="titlebar" class="titlebar">
+    <div class="titlebar-left">
+      <span class="logo">⚔ Pika<span class="logo-accent">Overlay</span></span>
+      <span class="logo-version">v3.1.0</span>
+      <span id="status-badge" class="badge badge-idle">Idle</span>
+    </div>
+    <div class="titlebar-right">
+      <!-- Low-opacity contrast switcher — shown by JS when opacity < 15% -->
+      <div id="lo-switcher" title="Text contrast mode for low-opacity background">
+        <button id="lo-btn-dark"  class="lo-btn active" title="Dark text contrast (for dark/default textures)">🌙 Dark</button>
+        <button id="lo-btn-light" class="lo-btn"        title="Light text contrast (for bright/white textures)">☀ Light</button>
+      </div>
+      <button id="btn-toggle-view" class="icon-btn btn-layout-toggle" title="Toggle Compact / Detailed Layout">◧</button>
+      <button id="btn-clear"    class="icon-btn" title="Clear players">🗑</button>
+      <button id="btn-settings" class="icon-btn" title="Settings">⚙</button>
+      <button id="btn-minimize" class="icon-btn" title="Minimize">─</button>
+      <button id="btn-close"    class="icon-btn btn-close-x" title="Hide">✕</button>
+    </div>
+  </div>
+
+  <!-- Search bar (hidden in compact mode) -->
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="search-input" type="text"
+        placeholder="Search player or paste multiple names…"
+        autocomplete="off" spellcheck="false" />
+      <button id="btn-lookup" class="btn-primary">Search</button>
+      <div class="period-divider"></div>
+
+      <!-- Period dropdown -->
+      <div class="filter-dropdown-wrap" id="period-wrap">
+        <button class="filter-btn" id="btn-period" title="Stats time period">
+          <span id="period-label">All Time</span>
+          <span class="filter-chevron">▾</span>
+        </button>
+        <div class="filter-dropdown" id="period-dropdown">
+          <div class="filter-option selected" data-value="total">All Time</div>
+          <div class="filter-option" data-value="weekly">Weekly</div>
+          <div class="filter-option" data-value="monthly">Monthly</div>
+          <div class="filter-option" data-value="yearly">Yearly</div>
+        </div>
+      </div>
+
+      <!-- Mode dropdown -->
+      <div class="filter-dropdown-wrap" id="mode-wrap">
+        <button class="filter-btn" id="btn-mode" title="Game mode">
+          <span id="mode-label">Overall</span>
+          <span class="filter-chevron">▾</span>
+        </button>
+        <div class="filter-dropdown" id="mode-dropdown">
+          <div class="filter-option selected" data-value="ALL_MODES">Overall</div>
+          <div class="filter-option" data-value="SOLO">Solo</div>
+          <div class="filter-option" data-value="DOUBLES">Duo</div>
+          <div class="filter-option" data-value="QUAD">Quad</div>
+        </div>
+      </div>
+    </div>
+    <div class="search-hint">Press <kbd>Enter</kbd> to search · Paste multiple names for bulk lookup · Period &amp; mode apply to all stats</div>
+  </div>
+
+  <!-- Stats table -->
+  <div class="table-wrapper">
+    <table id="stats-table">
+      <thead><tr id="stats-thead-row"></tr></thead>
+      <tbody id="stats-body"></tbody>
+    </table>
+
+    <div id="empty-state" class="empty-state">
+      <div class="empty-icon">🏠</div>
+      <div class="empty-title">No players detected</div>
+      <div class="empty-sub">
+        Players are detected automatically from the kill feed.<br />
+        Or search for a username manually above.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer (hidden in compact mode) -->
+  <div class="footer-bar">
+    <span id="footer-count">0 players</span>
+    <span id="footer-by" class="footer-by">by AcquaPanna</span>
+    <span class="footer-api">stats.pika-network.net</span>
+  </div>
+
+  <!-- Inline Settings Panel Modal -->
+  <div id="settings-panel" class="settings-panel">
+    <!-- Custom Title Bar for Settings -->
+    <div class="settings-titlebar">
+      <span class="settings-logo">⚙ Settings <span class="settings-logo-ver">v3.1.0</span></span>
+      <button id="btn-settings-close-x" class="icon-btn btn-close-x" title="Close">✕</button>
+    </div>
+
+    <!-- Tab Navigation -->
+    <nav class="settings-tab-nav">
+      <button class="settings-tab-btn active" data-tab="general">📁 General</button>
+      <button class="settings-tab-btn" data-tab="columns">📊 Columns</button>
+      <button class="settings-tab-btn" data-tab="stats">🎨 Stats</button>
+      <button class="settings-tab-btn" data-tab="debug">🐛 Debug</button>
+    </nav>
+
+    <!-- Content area -->
+    <div class="settings-body">
+      <!-- ═══ TAB: General ═══ -->
+      <div id="tab-general" class="settings-tab-panel active">
+        <!-- Log File -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">📁 Minecraft Log File</h2>
+          <p class="settings-section-desc">Path to the <code>latest.log</code> file.</p>
+          <div class="settings-input-row">
+            <input id="logPath" type="text" class="settings-text-input" placeholder="C:\Users\...\AppData\Roaming\.minecraft\logs\latest.log" />
+            <button id="btnBrowse" class="settings-btn-secondary">📂 Browse</button>
+            <button id="btnTestLog" class="settings-btn-secondary">✓ Test</button>
+          </div>
+          <div id="logStatus" class="settings-status-line"></div>
+        </section>
+
+        <!-- Identity -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">👤 Identity</h2>
+          <p class="settings-section-desc">Your in-game name (or nicked name) — used for self-filtering and party detection.</p>
+          <div class="settings-form-row">
+            <label for="myUsername">My Username</label>
+            <input type="text" id="myUsername" class="settings-text-input compact" placeholder="Your MC Name" />
+          </div>
+        </section>
+
+        <!-- Overlay Behaviour -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">🖥 Overlay</h2>
+          <div class="settings-form-row">
+            <label for="alwaysOnTop">Always on top</label>
+            <label class="settings-toggle">
+              <input type="checkbox" id="alwaysOnTop" />
+              <span class="settings-toggle-knob"></span>
+            </label>
+          </div>
+          <div class="settings-form-row">
+            <label for="opacity">Opacity <span class="settings-label-badge" id="opacityVal">92%</span></label>
+            <input type="range" id="opacity" min="0.05" max="1" step="0.05" value="0.92" class="settings-slider" />
+          </div>
+          <div class="settings-form-row">
+            <label for="toggleHotkey">Show/Hide Hotkey</label>
+            <input type="text" id="toggleHotkey" class="settings-text-input compact center" placeholder="F4" />
+          </div>
+          <div class="settings-form-row">
+            <label for="clearHotkey">Clear List Hotkey</label>
+            <input type="text" id="clearHotkey" class="settings-text-input compact center" placeholder="F5" />
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ TAB: Columns ═══ -->
+      <div id="tab-columns" class="settings-tab-panel">
+        <section class="settings-section">
+          <h2 class="settings-section-title">📊 Detailed Mode — Columns</h2>
+          <p class="settings-section-desc">Toggle visibility and drag ↕ or use arrow buttons to reorder.</p>
+          <div id="columnList" class="settings-column-list">
+            <!-- Rows inserted by JS -->
+          </div>
+        </section>
+        <section class="settings-section">
+          <h2 class="settings-section-title">📐 Compact Mode — Columns</h2>
+          <p class="settings-section-desc">Choose which columns are visible when the overlay is in compact mode.</p>
+          <div id="compactColumnList" class="settings-compact-grid">
+            <!-- Chips inserted by JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ TAB: Stats & Colors ═══ -->
+      <div id="tab-stats" class="settings-tab-panel">
+        <!-- Tier Colors (shared) -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">🎨 Tier Colors</h2>
+          <p class="settings-section-desc">Colors applied to stats based on thresholds.</p>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <span></span>
+            <button id="btnResetColors" class="settings-btn-secondary" style="font-size:11px;padding:5px 12px;">↺ Reset defaults</button>
+          </div>
+          <div class="settings-color-grid">
+            <div class="settings-color-item">
+              <input type="color" id="colorHacker" value="#f43f5e" class="settings-color-pick" />
+              <span class="settings-tier-dot tier-hacker"></span>
+              <span class="settings-color-label">Hacker</span>
+            </div>
+            <div class="settings-color-item">
+              <input type="color" id="colorGodlike" value="#d946ef" class="settings-color-pick" />
+              <span class="settings-tier-dot tier-godlike"></span>
+              <span class="settings-color-label">Sweat</span>
+            </div>
+            <div class="settings-color-item">
+              <input type="color" id="colorGood" value="#22c55e" class="settings-color-pick" />
+              <span class="settings-tier-dot tier-good"></span>
+              <span class="settings-color-label">Excellent</span>
+            </div>
+            <div class="settings-color-item">
+              <input type="color" id="colorMedium" value="#f59e0b" class="settings-color-pick" />
+              <span class="settings-tier-dot tier-medium"></span>
+              <span class="settings-color-label">Average</span>
+            </div>
+            <div class="settings-color-item">
+              <input type="color" id="colorBad" value="#ef4444" class="settings-color-pick" />
+              <span class="settings-tier-dot tier-bad"></span>
+              <span class="settings-color-label">Poor</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Per-Ratio Thresholds -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">⚡ Thresholds</h2>
+          <p class="settings-section-desc">Set minimum stats values for each tier.</p>
+
+          <!-- Ratio selector tabs -->
+          <div class="settings-ratio-tabs">
+            <button class="settings-ratio-tab active" data-ratio="fkdr">FKDR</button>
+            <button class="settings-ratio-tab" data-ratio="kdr">KDR</button>
+            <button class="settings-ratio-tab" data-ratio="wlr">WLR</button>
+          </div>
+
+          <!-- FKDR Panel -->
+          <div id="panel-fkdr" class="settings-ratio-panel active">
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-hacker"></span>
+              <span class="settings-thresh-label">Hacker</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-fkdr-hacker" class="settings-number-input" min="0" max="999" step="1" value="20" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-godlike"></span>
+              <span class="settings-thresh-label">Sweat</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-fkdr-godlike" class="settings-number-input" min="0" max="999" step="1" value="10" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-good"></span>
+              <span class="settings-thresh-label">Excellent</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-fkdr-good" class="settings-number-input" min="0" max="999" step="0.5" value="3" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-medium"></span>
+              <span class="settings-thresh-label">Average</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-fkdr-medium" class="settings-number-input" min="0" max="999" step="0.1" value="1" />
+            </div>
+            <div class="settings-thresh-row settings-thresh-bad">
+              <span class="settings-tier-dot tier-bad"></span>
+              <span class="settings-thresh-label">Poor</span>
+              <span class="settings-thresh-desc">everything below Average</span>
+            </div>
+          </div>
+
+          <!-- KDR Panel -->
+          <div id="panel-kdr" class="settings-ratio-panel">
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-hacker"></span>
+              <span class="settings-thresh-label">Hacker</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-kdr-hacker" class="settings-number-input" min="0" max="999" step="0.5" value="5" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-godlike"></span>
+              <span class="settings-thresh-label">Sweat</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-kdr-godlike" class="settings-number-input" min="0" max="999" step="0.5" value="2.5" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-good"></span>
+              <span class="settings-thresh-label">Excellent</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-kdr-good" class="settings-number-input" min="0" max="999" step="0.1" value="1.5" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-medium"></span>
+              <span class="settings-thresh-label">Average</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-kdr-medium" class="settings-number-input" min="0" max="999" step="0.1" value="0.75" />
+            </div>
+            <div class="settings-thresh-row settings-thresh-bad">
+              <span class="settings-tier-dot tier-bad"></span>
+              <span class="settings-thresh-label">Poor</span>
+              <span class="settings-thresh-desc">everything below Average</span>
+            </div>
+          </div>
+
+          <!-- WLR Panel -->
+          <div id="panel-wlr" class="settings-ratio-panel">
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-hacker"></span>
+              <span class="settings-thresh-label">Hacker</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-wlr-hacker" class="settings-number-input" min="0" max="999" step="0.5" value="5" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-godlike"></span>
+              <span class="settings-thresh-label">Sweat</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-wlr-godlike" class="settings-number-input" min="0" max="999" step="0.5" value="2.5" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-good"></span>
+              <span class="settings-thresh-label">Excellent</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-wlr-good" class="settings-number-input" min="0" max="999" step="0.1" value="1.5" />
+            </div>
+            <div class="settings-thresh-row">
+              <span class="settings-tier-dot tier-medium"></span>
+              <span class="settings-thresh-label">Average</span>
+              <span class="settings-thresh-geq">≥</span>
+              <input type="number" id="thresh-wlr-medium" class="settings-number-input" min="0" max="999" step="0.1" value="0.75" />
+            </div>
+            <div class="settings-thresh-row settings-thresh-bad">
+              <span class="settings-tier-dot tier-bad"></span>
+              <span class="settings-thresh-label">Poor</span>
+              <span class="settings-thresh-desc">everything below Average</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ TAB: Debug ═══ -->
+      <div id="tab-debug" class="settings-tab-panel">
+        <section class="settings-section">
+          <h2 class="settings-section-title">🐛 Debug Log</h2>
+          <p class="settings-section-desc">Last lines read from the log file.</p>
+          <pre id="debugLog" class="settings-debug-box">Loading...</pre>
+          <button id="btnRefreshLog" class="settings-btn-secondary" style="margin-top:8px">🔄 Refresh</button>
+        </section>
+      </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="settings-actions-bar">
+      <button id="btn-settings-cancel" class="settings-btn-secondary">Cancel</button>
+      <button id="btn-settings-save" class="settings-btn-primary">💾 Save Settings</button>
+    </div>
+  </div>
+
+  <script src="shared/columns.js"></script>
+  <script src="overlay.js"></script>
+  <script src="settings-inline.js"></script>
+</body>
+</html>

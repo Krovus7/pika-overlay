@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Pika Overlay — Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="settings.css" />
+</head>
+
+<body>
+    <!-- Custom Title Bar -->
+    <div id="titlebar" class="titlebar">
+        <div class="titlebar-left">
+            <span class="logo">⚙ Pika Overlay <span class="logo-ver">v3.1.0</span></span>
+        </div>
+        <div class="titlebar-right">
+            <button id="btn-close-settings" class="icon-btn btn-close-x" title="Close">✕</button>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="general">📁 General</button>
+        <button class="tab-btn" data-tab="columns">📊 Columns</button>
+        <button class="tab-btn" data-tab="stats">🎨 Stats</button>
+        <button class="tab-btn" data-tab="debug">🐛 Debug</button>
+    </nav>
+
+    <!-- ═══ TAB: General ═══ -->
+    <div id="tab-general" class="tab-panel active">
+        <!-- Log File -->
+        <section class="section">
+            <h2 class="section-title">📁 Minecraft Log File</h2>
+            <p class="section-desc">Path to the <code>latest.log</code> file. Badlion / Lunar: use standard <code>.minecraft/logs</code> path.</p>
+            <div class="input-row">
+                <input id="logPath" type="text" class="text-input"
+                    placeholder="C:\Users\...\AppData\Roaming\.minecraft\logs\latest.log" />
+                <button id="btnBrowse" class="btn-secondary">📂 Browse</button>
+                <button id="btnTestLog" class="btn-secondary">✓ Test</button>
+            </div>
+            <div id="logStatus" class="status-line"></div>
+        </section>
+
+        <!-- Identity -->
+        <section class="section">
+            <h2 class="section-title">👤 Identity</h2>
+            <p class="section-desc">Your in-game name (or nicked name) — used for self-filtering in the queue and party detection.</p>
+            <div class="form-row">
+                <label for="myUsername">My Username</label>
+                <input type="text" id="myUsername" class="text-input compact" placeholder="Your MC Name" />
+            </div>
+        </section>
+
+        <!-- Overlay Behaviour -->
+        <section class="section">
+            <h2 class="section-title">🪟 Overlay</h2>
+            <div class="form-row">
+                <label for="alwaysOnTop">Always on top</label>
+                <label class="toggle">
+                    <input type="checkbox" id="alwaysOnTop" />
+                    <span class="toggle-knob"></span>
+                </label>
+            </div>
+            <div class="form-row">
+                <label for="opacity">Opacity <span class="label-badge" id="opacityVal">92%</span></label>
+                <input type="range" id="opacity" min="0" max="1" step="0.05" value="0.92" class="slider" />
+            </div>
+            <div class="form-row">
+                <label for="toggleHotkey">Show/Hide Hotkey</label>
+                <input type="text" id="toggleHotkey" class="text-input compact center" placeholder="F4" />
+            </div>
+            <div class="form-row">
+                <label for="clearHotkey">Clear List Hotkey</label>
+                <input type="text" id="clearHotkey" class="text-input compact center" placeholder="F5" />
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══ TAB: Columns ═══ -->
+    <div id="tab-columns" class="tab-panel">
+        <section class="section">
+            <h2 class="section-title">📊 Column Manager</h2>
+            <p class="section-desc">Toggle visibility and drag ↕ to reorder. Changes apply on save.</p>
+            <div id="columnList" class="column-list">
+                <!-- Rows inserted by JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══ TAB: Stats & Colors ═══ -->
+    <div id="tab-stats" class="tab-panel">
+        <!-- Tier Colors (shared) -->
+        <section class="section">
+            <h2 class="section-title">🎨 Tier Colors <span class="section-badge">shared across all ratios</span></h2>
+            <p class="section-desc">Colors applied to FKDR, KDR, and WLR cells. Thresholds are set per-ratio below.</p>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                <span></span>
+                <button id="btnResetColors" class="btn-secondary" style="font-size:11px;padding:5px 12px;">↺ Reset defaults</button>
+            </div>
+            <div class="color-grid">
+                <div class="color-item">
+                    <input type="color" id="colorHacker" value="#f43f5e" class="color-pick" />
+                    <span class="tier-dot tier-hacker"></span>
+                    <span class="color-label">Hacker</span>
+                </div>
+                <div class="color-item">
+                    <input type="color" id="colorGodlike" value="#d946ef" class="color-pick" />
+                    <span class="tier-dot tier-godlike"></span>
+                    <span class="color-label">Sweat</span>
+                </div>
+                <div class="color-item">
+                    <input type="color" id="colorGood" value="#22c55e" class="color-pick" />
+                    <span class="tier-dot tier-good"></span>
+                    <span class="color-label">Excellent</span>
+                </div>
+                <div class="color-item">
+                    <input type="color" id="colorMedium" value="#f59e0b" class="color-pick" />
+                    <span class="tier-dot tier-medium"></span>
+                    <span class="color-label">Average</span>
+                </div>
+                <div class="color-item">
+                    <input type="color" id="colorBad" value="#ef4444" class="color-pick" />
+                    <span class="tier-dot tier-bad"></span>
+                    <span class="color-label">Poor</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Per-Ratio Thresholds -->
+        <section class="section">
+            <h2 class="section-title">⚡ Thresholds <span class="section-badge">per ratio</span></h2>
+            <p class="section-desc">Set minimum values for each tier independently per ratio. FKDR 2.5 is already very good — KDR has different scales.</p>
+
+            <!-- Ratio selector tabs -->
+            <div class="ratio-tabs">
+                <button class="ratio-tab active" data-ratio="fkdr">FKDR</button>
+                <button class="ratio-tab" data-ratio="kdr">KDR</button>
+                <button class="ratio-tab" data-ratio="wlr">WLR</button>
+            </div>
+
+            <!-- FKDR Panel -->
+            <div id="panel-fkdr" class="ratio-panel active">
+                <div class="thresh-row">
+                    <span class="tier-dot tier-hacker"></span>
+                    <span class="thresh-label">Hacker</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-fkdr-hacker" class="number-input" min="0" max="999" step="1" value="20" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-godlike"></span>
+                    <span class="thresh-label">Sweat</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-fkdr-godlike" class="number-input" min="0" max="999" step="1" value="10" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-good"></span>
+                    <span class="thresh-label">Excellent</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-fkdr-good" class="number-input" min="0" max="999" step="0.5" value="3" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-medium"></span>
+                    <span class="thresh-label">Average</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-fkdr-medium" class="number-input" min="0" max="999" step="0.1" value="1" />
+                </div>
+                <div class="thresh-row thresh-bad">
+                    <span class="tier-dot tier-bad"></span>
+                    <span class="thresh-label">Poor</span>
+                    <span class="thresh-desc">everything below Average</span>
+                </div>
+            </div>
+
+            <!-- KDR Panel -->
+            <div id="panel-kdr" class="ratio-panel">
+                <div class="thresh-row">
+                    <span class="tier-dot tier-hacker"></span>
+                    <span class="thresh-label">Hacker</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-kdr-hacker" class="number-input" min="0" max="999" step="0.5" value="5" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-godlike"></span>
+                    <span class="thresh-label">Sweat</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-kdr-godlike" class="number-input" min="0" max="999" step="0.5" value="2.5" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-good"></span>
+                    <span class="thresh-label">Excellent</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-kdr-good" class="number-input" min="0" max="999" step="0.1" value="1.5" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-medium"></span>
+                    <span class="thresh-label">Average</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-kdr-medium" class="number-input" min="0" max="999" step="0.1" value="0.75" />
+                </div>
+                <div class="thresh-row thresh-bad">
+                    <span class="tier-dot tier-bad"></span>
+                    <span class="thresh-label">Poor</span>
+                    <span class="thresh-desc">everything below Average</span>
+                </div>
+            </div>
+
+            <!-- WLR Panel -->
+            <div id="panel-wlr" class="ratio-panel">
+                <div class="thresh-row">
+                    <span class="tier-dot tier-hacker"></span>
+                    <span class="thresh-label">Hacker</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-wlr-hacker" class="number-input" min="0" max="999" step="0.5" value="5" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-godlike"></span>
+                    <span class="thresh-label">Sweat</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-wlr-godlike" class="number-input" min="0" max="999" step="0.5" value="2.5" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-good"></span>
+                    <span class="thresh-label">Excellent</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-wlr-good" class="number-input" min="0" max="999" step="0.1" value="1.5" />
+                </div>
+                <div class="thresh-row">
+                    <span class="tier-dot tier-medium"></span>
+                    <span class="thresh-label">Average</span>
+                    <span class="thresh-geq">≥</span>
+                    <input type="number" id="thresh-wlr-medium" class="number-input" min="0" max="999" step="0.1" value="0.75" />
+                </div>
+                <div class="thresh-row thresh-bad">
+                    <span class="tier-dot tier-bad"></span>
+                    <span class="thresh-label">Poor</span>
+                    <span class="thresh-desc">everything below Average</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══ TAB: Debug ═══ -->
+    <div id="tab-debug" class="tab-panel">
+        <section class="section">
+            <h2 class="section-title">🐛 Debug Log</h2>
+            <p class="section-desc">Last lines read from the log file. Use this to verify the log path is correct.</p>
+            <pre id="debugLog" class="debug-box">Loading...</pre>
+            <button id="btnRefreshLog" class="btn-secondary" style="margin-top:8px">🔄 Refresh</button>
+        </section>
+    </div>
+
+    <!-- Sticky Actions Bar -->
+    <div class="actions-bar">
+        <button id="btnCancel" class="btn-secondary">Cancel</button>
+        <button id="btnSave" class="btn-primary">💾 Save Settings</button>
+    </div>
+
+    <script src="shared/columns.js"></script>
+    <script src="settings.js"></script>
+</body>
+
+</html>
