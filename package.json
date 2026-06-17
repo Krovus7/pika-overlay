@@ -1,6 +1,6 @@
 {
   "name": "pika-overlay",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Pika-Network BedWars Stats Overlay v3",
   "main": "main.js",
   "scripts": {

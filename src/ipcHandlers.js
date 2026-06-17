@@ -164,7 +164,11 @@ function registerIpcHandlers({
 
         // Restart watcher if log path changed
         logWatcher.stop();
-        logWatcher.start(store.get('logPath'), store.get('myUsername'));
+        // When nicked, use the nick name for log detection (that's what appears in chat)
+        const watcherName = store.get('isNicked') && store.get('myNickName')
+            ? store.get('myNickName')
+            : store.get('myUsername');
+        logWatcher.start(store.get('logPath'), watcherName);
 
         // Update overlay window properties
         updateAlwaysOnTop(store);

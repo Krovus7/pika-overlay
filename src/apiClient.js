@@ -156,24 +156,14 @@ async function getPlayerStats(username, interval = 'total', mode = 'ALL_MODES') 
 
         const rawStats = await safeJson(statsRes);
 
-        // ── Nicked vs API-off detection ──────────────────────────────────────
-        // Check whether the profile shows any general Pika activity (exp, level,
-        // game-mode ranks, friends).  A real player who turned off their API will
-        // still have general activity;  a nicked player's borrowed name usually
-        // has zero activity because it belongs to someone who never played Pika.
-        const _exp        = profile?.rank?.experience ?? 0;
-        const _lvl        = profile?.rank?.level ?? 0;
-        const _gameRanks  = (profile?.ranks || []).length;
-        const _friends    = (profile?.friends || []).length;
-        const _hasClan    = !!profile?.clan;
-        const hasGeneralActivity = _exp > 0 || _lvl > 1 || _gameRanks > 0 || _friends > 0 || _hasClan;
+        // ── API-off detection ─────────────────────────────────────────────────
+        // Profile returned 200, so this name HAS played on Pika.  Pika's nick
+        // system requires a name that has NEVER been used on the server, meaning
+        // a 200 profile can never be a nick.  Only a 404 (handled above) is nicked.
 
-        // null stats but valid profile = no BedWars data at all
+        // null stats but valid profile = no BedWars data at all → API off
         if (!rawStats) {
-            if (hasGeneralActivity) {
-                return { username: exactUsername, notFound: true, nicked: false, apiOff: true };
-            }
-            return { username: exactUsername, notFound: true, nicked: true, apiOff: false };
+            return { username: exactUsername, notFound: true, nicked: false, apiOff: true };
         }
 
         // Helper — extract integer from leaderboard entry
@@ -201,10 +191,7 @@ async function getPlayerStats(username, interval = 'total', mode = 'ALL_MODES') 
         // All BedWars entries are null → treat same as no stats
         const allEntriesNull = Object.values(rawStats).every(v => !v?.entries?.length);
         if (allEntriesNull) {
-            if (hasGeneralActivity) {
-                return { username: exactUsername, notFound: true, nicked: false, apiOff: true };
-            }
-            return { username: exactUsername, notFound: true, nicked: true, apiOff: false };
+            return { username: exactUsername, notFound: true, nicked: false, apiOff: true };
         }
 
         const fkdr = finalDeaths === 0 ? finalKills : finalKills / finalDeaths;

@@ -26,6 +26,9 @@ function defaultLogPath() {
 const CONFIG_DEFAULTS = {
     logPath:       defaultLogPath(),
     myUsername:    '',
+    pinSelf:       false,
+    isNicked:      false,
+    myNickName:    '',
     overlayBounds: { x: 20, y: 60, width: 960, height: 600 },
     alwaysOnTop:   true,
     toggleHotkey:  'F4',
@@ -51,7 +54,7 @@ function createTray() {
     const iconPath = path.join(rootDir, 'icon.png');
     tray = new Tray(iconPath);
     tray.setContextMenu(Menu.buildFromTemplate([
-        { label: 'Pika Overlay v3.1.0', enabled: false },
+        { label: 'Pika Overlay v3.2.0', enabled: false },
         { type: 'separator' },
         { label: 'Show Overlay', click: () => windowManager.getOverlayWin()?.show() },
         { label: 'Settings',    click: () => {
@@ -64,7 +67,7 @@ function createTray() {
         { type: 'separator' },
         { label: 'Quit',        click: () => app.quit() },
     ]));
-    tray.setToolTip('Pika-Network BedWars Overlay v3.1.0');
+    tray.setToolTip('Pika-Network BedWars Overlay v3.2.0');
     tray.on('click', () => windowManager.getOverlayWin()?.show());
 }
 
@@ -229,8 +232,11 @@ app.whenReady().then(() => {
 
     bindWatcherEvents();
     
-    // Start watcher
-    logWatcher.start(store.get('logPath'), store.get('myUsername'));
+    // Start watcher — when nicked, use nick name for log detection
+    const watcherName = store.get('isNicked') && store.get('myNickName')
+        ? store.get('myNickName')
+        : store.get('myUsername');
+    logWatcher.start(store.get('logPath'), watcherName);
     
     // Register hotkeys
     registerHotkeys();

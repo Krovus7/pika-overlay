@@ -19,6 +19,11 @@
     const panel           = document.getElementById('settings-panel');
     const logPathInput    = document.getElementById('logPath');
     const myUsernameInput = document.getElementById('myUsername');
+    const pinSelfCb       = document.getElementById('pinSelf');
+    const isNickedCb      = document.getElementById('isNicked');
+    const myNickNameInput = document.getElementById('myNickName');
+    const nickNameRow     = document.getElementById('nickNameRow');
+    const nickDesc        = document.getElementById('nickDesc');
     const alwaysOnTopCb   = document.getElementById('alwaysOnTop');
     const toggleHotkeyIn  = document.getElementById('toggleHotkey');
     const clearHotkeyIn   = document.getElementById('clearHotkey');
@@ -85,6 +90,13 @@
 
     btnCloseX.addEventListener('click',  () => window._closeSettings());
     btnCancel.addEventListener('click',  () => window._closeSettings());
+
+    // ─── Nicked toggle ───────────────────────────────────────────────────────
+    isNickedCb.addEventListener('change', () => {
+        const show = isNickedCb.checked;
+        nickNameRow.style.display = show ? '' : 'none';
+        nickDesc.style.display   = show ? '' : 'none';
+    });
 
     // ─── Tab switching ───────────────────────────────────────────────────────
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
@@ -169,6 +181,12 @@
 
         logPathInput.value      = cfg.logPath || '';
         myUsernameInput.value   = cfg.myUsername || '';
+        pinSelfCb.checked       = !!cfg.pinSelf;
+        isNickedCb.checked      = !!cfg.isNicked;
+        myNickNameInput.value   = cfg.myNickName || '';
+        // Show/hide nick fields based on saved state
+        nickNameRow.style.display = cfg.isNicked ? '' : 'none';
+        nickDesc.style.display   = cfg.isNicked ? '' : 'none';
         alwaysOnTopCb.checked   = cfg.alwaysOnTop !== false;
         toggleHotkeyIn.value    = cfg.toggleHotkey || 'F4';
         clearHotkeyIn.value     = cfg.clearHotkey  || '';
@@ -385,6 +403,9 @@
         const cfg = {
             logPath:      logPathInput.value.trim(),
             myUsername:    myUsernameInput.value.trim(),
+            pinSelf:       pinSelfCb.checked,
+            isNicked:      isNickedCb.checked,
+            myNickName:    myNickNameInput.value.trim(),
             alwaysOnTop:  alwaysOnTopCb.checked,
             toggleHotkey: toggleHotkeyIn.value.trim() || 'F4',
             clearHotkey:  clearHotkeyIn.value.trim()  || '',
