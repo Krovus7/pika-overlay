@@ -130,31 +130,34 @@
         <!-- Identity -->
         <section class="settings-section">
           <h2 class="settings-section-title">👤 Identity</h2>
-          <p class="settings-section-desc">Your in-game name — used for self-filtering and party detection.</p>
           <div class="settings-form-row">
             <label for="myUsername">My Username</label>
             <input type="text" id="myUsername" class="settings-text-input compact" placeholder="Your MC Name" />
           </div>
           <div class="settings-form-row">
-            <label for="pinSelf">Pin my name to top</label>
+            <label for="pinSelf">Pin top</label>
             <label class="settings-toggle">
               <input type="checkbox" id="pinSelf" />
-              <span class="settings-toggle-slider"></span>
+              <span class="settings-toggle-knob"></span>
             </label>
           </div>
-          <p class="settings-section-desc" style="margin-top:2px; font-size:11px; opacity:0.7">Always keeps your stats row pinned above all other players.</p>
           <div class="settings-form-row">
             <label for="isNicked">Nicked</label>
             <label class="settings-toggle">
               <input type="checkbox" id="isNicked" />
-              <span class="settings-toggle-slider"></span>
+              <span class="settings-toggle-knob"></span>
             </label>
           </div>
           <div class="settings-form-row" id="nickNameRow" style="display:none">
             <label for="myNickName">My Nick</label>
             <input type="text" id="myNickName" class="settings-text-input compact" placeholder="Your nicked name" />
           </div>
-          <p class="settings-section-desc" id="nickDesc" style="display:none; margin-top:4px; font-size:11px; opacity:0.7">Log detection uses your nick, overlay shows your real name.</p>
+          
+          <div class="settings-section-desc" style="margin-top: 12px; font-size: 11px; opacity: 0.8; line-height: 1.5;">
+            <strong>Username:</strong> Used for self-filtering and party detection.<br>
+            <strong>Pin top:</strong> Keeps your stats row pinned above all other players.
+            <div id="nickDesc" style="display:none;"><strong>Nicked:</strong> Log detection uses your nick, overlay shows your real name.</div>
+          </div>
         </section>
 
         <!-- Overlay Behaviour -->
