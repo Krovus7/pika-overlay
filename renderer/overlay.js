@@ -24,10 +24,6 @@ let currentMode     = 'ALL_MODES'; // game mode: ALL_MODES | SOLO | DOUBLES | QU
 let partyMembers    = new Set();  // lowercased usernames in the party
 let currentLayout   = 'detailed'; // detailed | compact
 let compactColumns  = new Set(['rank', 'player', 'fkdr', 'winstreak', 'source']); // configurable compact cols
-let pinSelf         = false;      // pin own row to the very top
-let isNicked        = false;      // user is playing nicked
-let myUsername      = '';         // real username (lowercase)
-let myNickName      = '';         // nicked name (lowercase)
 
 // Config-driven state (loaded from settings)
 let columnOrder   = ALL_COLUMNS.map(c => c.id);
@@ -163,12 +159,6 @@ function applyConfig(cfg) {
             btnToggleView.title = currentLayout === 'compact' ? 'Switch to Detailed layout' : 'Switch to Compact layout';
         }
     }
-
-    // Identity / nick mode
-    myUsername  = (cfg.myUsername  || '').toLowerCase();
-    pinSelf    = !!cfg.pinSelf;
-    isNicked   = !!cfg.isNicked;
-    myNickName = (cfg.myNickName || '').toLowerCase();
 
     // Background opacity — only the background changes, text/stats stay fully opaque
     if (cfg.opacity != null) {
@@ -491,26 +481,11 @@ function renderNow() {
 }
 
 function comparePlayers(a, b) {
-    // Self pinned to the very top (above party, above everything)
-    if (pinSelf && myUsername) {
-        const selfKey = isNicked && myNickName ? myNickName : myUsername;
-        const aSelf = a.username?.toLowerCase() === selfKey;
-        const bSelf = b.username?.toLowerCase() === selfKey;
-        if (aSelf && !bSelf) return -1;
-        if (!aSelf && bSelf) return 1;
-    }
-
     // Party members always on top
     const aParty = partyMembers.size > 0 && partyMembers.has(a.username?.toLowerCase());
     const bParty = partyMembers.size > 0 && partyMembers.has(b.username?.toLowerCase());
     if (aParty && !bParty) return -1;
     if (!aParty && bParty) return 1;
-
-    // Nicked players next (below party, above everyone else)
-    const aNicked = !!a.nicked;
-    const bNicked = !!b.nicked;
-    if (aNicked && !bNicked) return -1;
-    if (!aNicked && bNicked) return 1;
 
     if (a.loading && !b.loading) return 1;
     if (!a.loading && b.loading) return -1;
@@ -533,28 +508,17 @@ function isSuspect(p) {
     );
 }
 
-// ─── Display name resolver ────────────────────────────────────────────────────
-// When the user is nicked, replace their nick with their real name in the overlay
-function displayName(p) {
-    if (isNicked && myNickName && myUsername && p.username.toLowerCase() === myNickName) {
-        // Capitalise the real username properly (use stored cfg value)
-        return myUsername.charAt(0).toUpperCase() + myUsername.slice(1);
-    }
-    return p.username;
-}
-
 // ─── Row builder ─────────────────────────────────────────────────────────────
 function buildRow(p, visCols) {
     const tr  = document.createElement('tr');
     const vis = visCols || getVisibleCols();
     const colSpan = vis.length;
-    const dName = displayName(p);
 
     if (p.loading) {
         tr.className = 'row-loading';
         const cells = vis.map((col, i) => {
             if (i === 0) return `<td>—</td>`;
-            if (col.id === 'player') return `<td><span class="spinner"></span>${esc(dName)}</td>`;
+            if (col.id === 'player') return `<td><span class="spinner"></span>${esc(p.username)}</td>`;
             if (i === 2 || (colSpan <= 2 && i === colSpan - 1)) {
                 return `<td colspan="${Math.max(1, colSpan - 2)}" class="muted-italic">Loading…</td>`;
             }
@@ -567,35 +531,15 @@ function buildRow(p, visCols) {
     if (p.notFound) {
         const key = p.username.toLowerCase();
         const isPartyRow = partyMembers.size > 0 && partyMembers.has(key);
-        const playerIsNicked   = !!p.nicked;
-        const isApiOff   = !!p.apiOff;
-
-        tr.className = playerIsNicked ? 'row-nicked' : 'row-notfound';
+        tr.className = 'row-notfound';
         if (isPartyRow) tr.classList.add('row-party');
         
         const hasSource  = vis.some(c => c.id === 'source');
         const innerSpan  = vis.length - 2 - (hasSource ? 1 : 0);
-
-        let statusMsg, statusIcon;
-        if (playerIsNicked) {
-            statusIcon = '🎭';
-            statusMsg  = `<span class="nicked-alert">NICKED</span>`;
-        } else if (isApiOff) {
-            statusIcon = '🔒';
-            statusMsg  = 'API Off';
-        } else {
-            statusIcon = '🔒';
-            statusMsg  = 'Private / no data';
-        }
-
-        const nameBadge = isPartyRow ? '<span class="party-badge" title="Party member">♦</span>'
-                        : playerIsNicked  ? `<span class="nicked-badge" title="Likely nicked">${statusIcon}</span>`
-                        : '';
-
         const cells = [
             `<td>—</td>`,
-            `<td class="player-name">${nameBadge}${esc(dName)}</td>`,
-            ...(innerSpan > 0 ? [`<td colspan="${innerSpan}" class="${playerIsNicked ? 'nicked-msg' : 'notfound-msg'}">${playerIsNicked ? '' : statusIcon + ' '}${statusMsg}</td>`] : []),
+            `<td class="player-name">${isPartyRow ? '<span class="party-badge" title="Party member">♦</span>' : ''}${esc(p.username)}</td>`,
+            ...(innerSpan > 0 ? [`<td colspan="${innerSpan}" class="notfound-msg">🔒 Private / no data</td>`] : []),
             ...(hasSource    ? [`<td>${srcBadge(p.source)}</td>`] : []),
         ];
         tr.innerHTML = cells.join('');
@@ -612,7 +556,7 @@ function buildRow(p, visCols) {
         const innerSpan  = vis.length - 2 - (hasSource ? 1 : 0);
         const cells = [
             `<td>—</td>`,
-            `<td>${isPartyRow ? '<span class="party-badge" title="Party member">♦</span>' : ''}${esc(dName)}</td>`,
+            `<td>${isPartyRow ? '<span class="party-badge" title="Party member">♦</span>' : ''}${esc(p.username)}</td>`,
             ...(innerSpan > 0 ? [`<td colspan="${innerSpan}" class="error-msg">⚠ API blocked/err</td>`] : []),
             ...(hasSource    ? [`<td>${srcBadge(p.source)}</td>`] : []),
         ];
@@ -630,7 +574,7 @@ function buildRow(p, visCols) {
             case 'rank':
                 return `<td class="col-rank">${buildRankCell(p)}</td>`;
             case 'player':
-                return `<td class="player-name">${isInParty ? '<span class="party-badge" title="Party member">♦</span>' : ''}${esc(dName)}</td>`;
+                return `<td class="player-name">${isInParty ? '<span class="party-badge" title="Party member">♦</span>' : ''}${esc(p.username)}</td>`;
             case 'guild':
                 return `<td class="val-dim guild-cell" title="${esc(p.guild || '')}">${esc(p.guild || '—')}</td>`;
             case 'fkdr':

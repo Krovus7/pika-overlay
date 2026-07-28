@@ -123,8 +123,8 @@ async function getPlayerStats(username, interval = 'total', mode = 'ALL_MODES') 
         // 1) Profile — rank, level, clan/guild
         const profileRes = await fetchWithRetry(`${BASE_URL}/profile/${encodeURIComponent(uname)}`);
 
-        // 404 = player name does not exist on Pika at all → nicked
-        if (profileRes.status === 404) return { username: uname, notFound: true, nicked: true };
+        // 404 = player truly not found
+        if (profileRes.status === 404) return { username: uname, notFound: true };
 
         // 429/503 still failing after retries = API is overloaded, treat as transient error
         if (profileRes.status === 429 || profileRes.status === 503) {
@@ -156,15 +156,8 @@ async function getPlayerStats(username, interval = 'total', mode = 'ALL_MODES') 
 
         const rawStats = await safeJson(statsRes);
 
-        // ── API-off detection ─────────────────────────────────────────────────
-        // Profile returned 200, so this name HAS played on Pika.  Pika's nick
-        // system requires a name that has NEVER been used on the server, meaning
-        // a 200 profile can never be a nick.  Only a 404 (handled above) is nicked.
-
-        // null stats but valid profile = no BedWars data at all → API off
-        if (!rawStats) {
-            return { username: exactUsername, notFound: true, nicked: false, apiOff: true };
-        }
+        // null stats but valid profile = the player truly has no BedWars data (private or never played)
+        if (!rawStats) return { username: exactUsername, notFound: true };
 
         // Helper — extract integer from leaderboard entry
         const stat = key => {
@@ -188,12 +181,6 @@ async function getPlayerStats(username, interval = 'total', mode = 'ALL_MODES') 
         const arrowsShot    = stat('Arrows shot');
         const arrowsHit     = stat('Arrows hit');
 
-        // All BedWars entries are null → treat same as no stats
-        const allEntriesNull = Object.values(rawStats).every(v => !v?.entries?.length);
-        if (allEntriesNull) {
-            return { username: exactUsername, notFound: true, nicked: false, apiOff: true };
-        }
-
         const fkdr = finalDeaths === 0 ? finalKills : finalKills / finalDeaths;
         const wlr  = losses      === 0 ? wins       : wins / losses;
         const kdr  = deaths      === 0 ? kills      : kills / deaths;
@@ -201,8 +188,6 @@ async function getPlayerStats(username, interval = 'total', mode = 'ALL_MODES') 
         const result = {
             username: exactUsername,
             notFound: false,
-            nicked: false,
-            apiOff: false,
             rank: rankInfo,
             level,
             guild,
