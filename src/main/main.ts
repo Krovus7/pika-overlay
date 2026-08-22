@@ -19,7 +19,8 @@ import { LookupQueue } from './state/lookupQueue';
 import { createTray } from './tray';
 import { createOverlay, getOverlayWin, updateAlwaysOnTop } from './windowManager';
 
-const rootDir = path.join(__dirname, '..', '..');
+// dist/src/main → project root (main.js is compiled, unlike v3's root main.js)
+const rootDir = path.join(__dirname, '..', '..', '..');
 
 // Same config location as v3 (%APPDATA%\pika-overlay\config.json) in both dev
 // and packaged builds (ADR-0007). Must run before anything touches userData.

@@ -4,10 +4,11 @@
  */
 
 import type { PlayerErrorInfo, PlayerLoading, PlayerStats } from './types';
+import type { StatsPayload } from './ipc-contract';
 
 export interface PikaOverlayApi {
     // === Overlay events ===
-    onPlayerStats: (cb: (data: PlayerStats) => void) => void;
+    onPlayerStats: (cb: (data: StatsPayload) => void) => void;
     onPlayerLoading: (cb: (data: PlayerLoading) => void) => void;
     onPlayerError: (cb: (data: PlayerErrorInfo) => void) => void;
     onPlayerRemove: (cb: (username: string) => void) => void;

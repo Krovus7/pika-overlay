@@ -4,6 +4,25 @@
 
 import type { RankDisplay } from '../main/api/rankDisplay';
 
+export type StatsInterval = 'total' | 'weekly' | 'monthly' | 'yearly';
+export type StatsMode = 'ALL_MODES' | 'SOLO' | 'DOUBLES' | 'QUAD';
+export type RatioKey = 'fkdr' | 'kdr' | 'wlr';
+export type TierKey = 'hacker' | 'godlike' | 'good' | 'medium';
+
+export interface RatioThresholds {
+    fkdr: Record<TierKey, number>;
+    kdr: Record<TierKey, number>;
+    wlr: Record<TierKey, number>;
+}
+
+export interface RatioColors {
+    hacker: string;
+    godlike: string;
+    good: string;
+    medium: string;
+    bad: string;
+}
+
 export interface PlayerStats {
     username: string;
     notFound: boolean;

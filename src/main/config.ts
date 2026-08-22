@@ -8,26 +8,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import type {
+    RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey,
+} from '../shared/types';
+
+export type { RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey };
+
 // ─── Types ────────────────────────────────────────────────────────────────────
-export type StatsInterval = 'total' | 'weekly' | 'monthly' | 'yearly';
-export type StatsMode = 'ALL_MODES' | 'SOLO' | 'DOUBLES' | 'QUAD';
-export type RatioKey = 'fkdr' | 'kdr' | 'wlr';
-export type TierKey = 'hacker' | 'godlike' | 'good' | 'medium';
-
-export interface RatioThresholds {
-    fkdr: Record<TierKey, number>;
-    kdr: Record<TierKey, number>;
-    wlr: Record<TierKey, number>;
-}
-
-export interface RatioColors {
-    hacker: string;
-    godlike: string;
-    good: string;
-    medium: string;
-    bad: string;
-}
-
 export interface AppConfig {
     logPath: string;
     myUsername: string;
