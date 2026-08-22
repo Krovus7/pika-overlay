@@ -93,6 +93,12 @@ describe('normalizeConfig — v3 legacy migration', () => {
         const cfg = normalizeConfig({ fkdrThresholds: { good: 4.5, medium: 2 } });
         assert.deepEqual(cfg.fkdrThresholds, { good: 4.5, medium: 2 });
     });
+
+    it('config with ONLY fkdrThresholds (no ratioThresholds) still applies its values', () => {
+        const cfg = normalizeConfig({ fkdrThresholds: { good: 4.5, medium: 2 } });
+        assert.deepEqual(cfg.ratioThresholds.fkdr, { hacker: 20.0, godlike: 10.0, good: 4.5, medium: 2 });
+        assert.deepEqual(cfg.ratioThresholds.kdr, { hacker: 5.0, godlike: 2.5, good: 1.5, medium: 0.75 });
+    });
 });
 
 describe('ConfigStore — file behavior', () => {

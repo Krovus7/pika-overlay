@@ -7,6 +7,7 @@
 
 import type { BrowserWindow } from 'electron';
 
+import { IPC_EVENTS } from '../../shared/ipc-contract';
 import type { PlayerStats } from '../../shared/types';
 import { getPlayerStats } from '../api/apiClient';
 import type { ConfigStore } from '../config';
@@ -31,7 +32,7 @@ export async function lookup(
     deps.registry.add(key);
 
     const overlayWin = deps.getOverlayWin();
-    overlayWin?.webContents.send('player:loading', { username, source });
+    overlayWin?.webContents.send(IPC_EVENTS.PLAYER_LOADING, { username, source });
 
     const ivl = interval || deps.store.get('statsInterval') || 'total';
     const mod = mode || deps.store.get('statsMode') || 'ALL_MODES';
@@ -46,9 +47,9 @@ export async function lookup(
     if (!overlayWin) return stats;
 
     if (!stats || stats.error) {
-        overlayWin.webContents.send('player:error', { username, source });
+        overlayWin.webContents.send(IPC_EVENTS.PLAYER_ERROR, { username, source });
     } else {
-        overlayWin.webContents.send('player:stats', { ...stats, source });
+        overlayWin.webContents.send(IPC_EVENTS.PLAYER_STATS, { ...stats, source });
     }
 
     return stats;

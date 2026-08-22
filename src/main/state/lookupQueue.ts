@@ -41,7 +41,7 @@ export class LookupQueue {
             this.active++;
             Promise.resolve()
                 .then(() => this.worker(job))
-                .catch(err => console.error('[LookupQueue] Worker error:', (err as Error).message))
+                .catch(err => console.error('[LookupQueue] Worker error:', String(err)))
                 .finally(() => {
                     this.active--;
                     this.drain();

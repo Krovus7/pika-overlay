@@ -5,6 +5,7 @@
 import { app, Menu, Tray, type BrowserWindow } from 'electron';
 import * as path from 'node:path';
 
+import { IPC_EVENTS } from '../shared/ipc-contract';
 import pkg from '../../package.json';
 
 let tray: Tray | null = null;
@@ -22,7 +23,7 @@ export function createTray(rootDir: string, getOverlayWin: () => BrowserWindow |
             const win = getOverlayWin();
             if (win) {
                 win.show();
-                win.webContents.send('settings:show');
+                win.webContents.send(IPC_EVENTS.SETTINGS_SHOW);
             }
         } },
         { type: 'separator' },

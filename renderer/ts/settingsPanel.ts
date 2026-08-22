@@ -161,7 +161,10 @@ export function initSettingsPanel(api: PikaOverlayApi): void {
         const downloading = s.kind === 'downloading';
         updateProgressWrap.style.display = downloading ? '' : 'none';
         if (downloading) updateProgressBar.style.width = `${s.progress}%`;
-        btnUpdateApply.style.display = s.kind === 'available' || s.kind === 'ready' ? '' : 'none';
+        const showApply = s.kind === 'available' || s.kind === 'ready';
+        btnUpdateApply.style.display = showApply ? '' : 'none';
+        btnUpdateApply.disabled = false;
+        btnUpdateApply.textContent = '⬇ Update & restart';
     }
 
     async function refreshUpdateView(): Promise<void> {
@@ -264,6 +267,7 @@ export function initSettingsPanel(api: PikaOverlayApi): void {
         alwaysOnTopCb.checked = cfg.alwaysOnTop !== false;
         toggleHotkeyIn.value = String(cfg.toggleHotkey || 'F4');
         clearHotkeyIn.value = String(cfg.clearHotkey || '');
+        updateAutoCheckCb.checked = !!cfg.updateAutoCheck;
         opacitySlider.value = String(cfg.opacity ?? 0.92);
         opacityVal.textContent = Math.round(Number(cfg.opacity ?? 0.92) * 100) + '%';
 

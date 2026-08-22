@@ -156,6 +156,11 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
     const r = raw ?? {};
     const merged = { ...defaults, ...r } as RawConfig;
     const bounds = (merged.overlayBounds ?? {}) as RawConfig;
+    // A v3 config with ONLY fkdrThresholds (no ratioThresholds key) must still
+    // honor it: route through the flat branch by hiding the per-ratio default.
+    const legacyRatio = r.ratioThresholds === undefined && r.fkdrThresholds !== undefined
+        ? {}
+        : merged.ratioThresholds;
 
     return {
         logPath: str(merged.logPath, defaults.logPath),
@@ -176,7 +181,7 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
         statsInterval: enumOf(merged.statsInterval, VALID_INTERVALS, defaults.statsInterval),
         statsMode: enumOf(merged.statsMode, VALID_MODES, defaults.statsMode),
         overlayMode: enumOf(merged.overlayMode, ['detailed', 'compact'], defaults.overlayMode),
-        ratioThresholds: migrateThresholds(merged.ratioThresholds, merged.fkdrThresholds),
+        ratioThresholds: migrateThresholds(legacyRatio, merged.fkdrThresholds),
         ratioColors: {
             hacker: str((merged.ratioColors as RawConfig)?.hacker, defaults.ratioColors.hacker),
             godlike: str((merged.ratioColors as RawConfig)?.godlike, defaults.ratioColors.godlike),
