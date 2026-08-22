@@ -1,5 +1,6 @@
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 const ROOT = new URL('.', import.meta.url).pathname.replace(/\/$/, '').replace(/^\/([A-Za-z]:)/, '$1');
 
@@ -8,9 +9,14 @@ function run(cmd) {
 }
 
 async function bundleRenderer() {
+    const entry = ROOT + '/renderer/ts/overlay.ts';
+    if (!existsSync(entry)) {
+        console.log('[build] renderer/ts/overlay.ts missing — skipping renderer bundle');
+        return;
+    }
     console.log('[build] Bundling renderer (esbuild)...');
     await build({
-        entryPoints: [ROOT + '/renderer/ts/overlay.ts'],
+        entryPoints: [entry],
         bundle: true,
         format: 'iife',
         outfile: ROOT + '/renderer/bundle/overlay.js',
