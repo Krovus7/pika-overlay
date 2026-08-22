@@ -6,6 +6,7 @@
 
 import { COLUMN_DEFS } from '../../src/shared/columns';
 import type { PikaOverlayApi } from '../../src/shared/preload-api';
+import type { UpdateState } from '../../src/shared/types';
 
 const DEFAULT_COLORS: Record<string, string> = {
     hacker: '#f43f5e', godlike: '#d946ef', good: '#22c55e',
@@ -50,6 +51,7 @@ export function initSettingsPanel(api: PikaOverlayApi): void {
     const btnCancel = document.getElementById('btn-settings-cancel') as HTMLButtonElement;
     const btnCloseX = document.getElementById('btn-settings-close-x') as HTMLButtonElement;
     const btnSettings = document.getElementById('btn-settings') as HTMLButtonElement;
+    const saveStatus = document.getElementById('settings-save-status') as HTMLElement;
 
     const colorHacker = document.getElementById('colorHacker') as HTMLInputElement;
     const colorGodlike = document.getElementById('colorGodlike') as HTMLInputElement;
@@ -100,9 +102,87 @@ export function initSettingsPanel(api: PikaOverlayApi): void {
             document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById(`tab-${(btn as HTMLElement).dataset.tab}`)?.classList.add('active');
-            if ((btn as HTMLElement).dataset.tab === 'debug') void loadDebugLog();
+            const tab = (btn as HTMLElement).dataset.tab;
+            if (tab === 'debug') void loadDebugLog();
+            if (tab === 'updates') void refreshUpdateView();
         });
     });
+
+    // ─── Save status feedback ────────────────────────────────────────────────
+    let saveStatusTimer: ReturnType<typeof setTimeout> | null = null;
+    function showSaveStatus(text: string, ok: boolean): void {
+        if (saveStatusTimer) clearTimeout(saveStatusTimer);
+        saveStatus.textContent = text;
+        saveStatus.className = `settings-save-status show status-${ok ? 'ok' : 'err'}`;
+        saveStatusTimer = setTimeout(() => saveStatus.classList.remove('show'), 2500);
+    }
+
+    // ─── Updates tab (Velopack) ──────────────────────────────────────────────
+    const updateStatus = document.getElementById('updateStatus') as HTMLElement;
+    const btnUpdateCheck = document.getElementById('btnUpdateCheck') as HTMLButtonElement;
+    const btnUpdateApply = document.getElementById('btnUpdateApply') as HTMLButtonElement;
+    const updateProgressWrap = document.getElementById('updateProgressWrap') as HTMLElement;
+    const updateProgressBar = document.getElementById('updateProgressBar') as HTMLElement;
+    const updateAutoCheckCb = document.getElementById('updateAutoCheck') as HTMLInputElement;
+
+    function renderUpdateState(s: UpdateState): void {
+        updateStatus.className = 'settings-status-line';
+        switch (s.kind) {
+            case 'disabled':
+                updateStatus.textContent = s.message;
+                updateStatus.className = 'settings-status-line status-err';
+                break;
+            case 'idle':
+                updateStatus.textContent = 'No update check yet.';
+                break;
+            case 'checking':
+                updateStatus.textContent = 'Checking for updates…';
+                break;
+            case 'available':
+                updateStatus.textContent = `Update available: v${s.version}`;
+                updateStatus.className = 'settings-status-line status-ok';
+                break;
+            case 'uptodate':
+                updateStatus.textContent = 'You are up to date.';
+                updateStatus.className = 'settings-status-line status-ok';
+                break;
+            case 'downloading':
+                updateStatus.textContent = `Downloading… ${Math.round(s.progress)}%`;
+                break;
+            case 'ready':
+                updateStatus.textContent = `Downloaded v${s.version} — restarting…`;
+                updateStatus.className = 'settings-status-line status-ok';
+                break;
+            case 'error':
+                updateStatus.textContent = `Update error: ${s.message}`;
+                updateStatus.className = 'settings-status-line status-err';
+                break;
+        }
+        const downloading = s.kind === 'downloading';
+        updateProgressWrap.style.display = downloading ? '' : 'none';
+        if (downloading) updateProgressBar.style.width = `${s.progress}%`;
+        btnUpdateApply.style.display = s.kind === 'available' || s.kind === 'ready' ? '' : 'none';
+    }
+
+    async function refreshUpdateView(): Promise<void> {
+        updateAutoCheckCb.checked = !!(await api.getConfig('updateAutoCheck'));
+        renderUpdateState(await api.getUpdateState());
+    }
+
+    btnUpdateCheck.addEventListener('click', async () => {
+        btnUpdateCheck.disabled = true;
+        renderUpdateState(await api.checkForUpdates());
+        btnUpdateCheck.disabled = false;
+    });
+
+    btnUpdateApply.addEventListener('click', () => {
+        btnUpdateApply.disabled = true;
+        btnUpdateApply.textContent = '⬇ Downloading…';
+        void api.downloadAndApply();
+    });
+
+    // Live updates pushed from main while the panel is open
+    api.onUpdateState(s => renderUpdateState(s));
 
     // ─── Ratio sub-tab switching ─────────────────────────────────────────────
     document.querySelectorAll('.settings-ratio-tab').forEach(btn => {
@@ -370,55 +450,66 @@ export function initSettingsPanel(api: PikaOverlayApi): void {
 
     // ─── Save ────────────────────────────────────────────────────────────────
     btnSave.addEventListener('click', async () => {
-        columnListEl.querySelectorAll<HTMLInputElement>('input[data-col]').forEach(cb => {
-            colEnabled[cb.dataset.col!] = cb.checked;
-        });
-        colEnabled.player = true;
-
-        if (compactListEl) {
-            compactCols = new Set(['player']);
-            compactListEl.querySelectorAll<HTMLInputElement>('input[data-compact-col]').forEach(cb => {
-                if (cb.checked) compactCols.add(cb.dataset.compactCol!);
+        showSaveStatus('Saving…', true);
+        btnSave.disabled = true;
+        try {
+            columnListEl.querySelectorAll<HTMLInputElement>('input[data-col]').forEach(cb => {
+                colEnabled[cb.dataset.col!] = cb.checked;
             });
-        }
+            colEnabled.player = true;
 
-        const ratioThresholds: Record<string, Record<string, number>> = {};
-        for (const ratio of RATIOS) {
-            ratioThresholds[ratio] = {};
-            for (const tier of TIERS) {
-                const el = threshEl(ratio, tier);
-                ratioThresholds[ratio]![tier] = parseFloat(el?.value) || 0;
+            if (compactListEl) {
+                compactCols = new Set(['player']);
+                compactListEl.querySelectorAll<HTMLInputElement>('input[data-compact-col]').forEach(cb => {
+                    if (cb.checked) compactCols.add(cb.dataset.compactCol!);
+                });
             }
+
+            const ratioThresholds: Record<string, Record<string, number>> = {};
+            for (const ratio of RATIOS) {
+                ratioThresholds[ratio] = {};
+                for (const tier of TIERS) {
+                    const el = threshEl(ratio, tier);
+                    ratioThresholds[ratio]![tier] = parseFloat(el?.value) || 0;
+                }
+            }
+
+            const cfg = {
+                logPath: logPathInput.value.trim(),
+                myUsername: myUsernameInput.value.trim(),
+                pinSelf: pinSelfCb.checked,
+                isNicked: isNickedCb.checked,
+                myNickName: myNickNameInput.value.trim(),
+                alwaysOnTop: alwaysOnTopCb.checked,
+                toggleHotkey: toggleHotkeyIn.value.trim() || 'F4',
+                clearHotkey: clearHotkeyIn.value.trim() || '',
+                opacity: parseFloat(opacitySlider.value),
+                updateAutoCheck: updateAutoCheckCb.checked,
+                fkdrThresholds: {
+                    good: ratioThresholds.fkdr!.good,
+                    medium: ratioThresholds.fkdr!.medium,
+                },
+                ratioThresholds,
+                ratioColors: {
+                    hacker: colorHacker.value || '#f43f5e',
+                    godlike: colorGodlike.value || '#d946ef',
+                    good: colorGood.value || '#22c55e',
+                    medium: colorMedium.value || '#f59e0b',
+                    bad: colorBad.value || '#ef4444',
+                },
+                columnOrder: [...colOrder],
+                columnEnabled: { ...colEnabled },
+                compactColumns: [...compactCols],
+            };
+
+            await api.saveConfig(cfg);
+            showSaveStatus('✓ Saved', true);
+            setTimeout(closeSettings, 600);
+        } catch (err) {
+            console.error('[Settings] Save failed:', (err as Error).message);
+            showSaveStatus('✗ Failed to save', false);
+        } finally {
+            btnSave.disabled = false;
         }
-
-        const cfg = {
-            logPath: logPathInput.value.trim(),
-            myUsername: myUsernameInput.value.trim(),
-            pinSelf: pinSelfCb.checked,
-            isNicked: isNickedCb.checked,
-            myNickName: myNickNameInput.value.trim(),
-            alwaysOnTop: alwaysOnTopCb.checked,
-            toggleHotkey: toggleHotkeyIn.value.trim() || 'F4',
-            clearHotkey: clearHotkeyIn.value.trim() || '',
-            opacity: parseFloat(opacitySlider.value),
-            fkdrThresholds: {
-                good: ratioThresholds.fkdr!.good,
-                medium: ratioThresholds.fkdr!.medium,
-            },
-            ratioThresholds,
-            ratioColors: {
-                hacker: colorHacker.value || '#f43f5e',
-                godlike: colorGodlike.value || '#d946ef',
-                good: colorGood.value || '#22c55e',
-                medium: colorMedium.value || '#f59e0b',
-                bad: colorBad.value || '#ef4444',
-            },
-            columnOrder: [...colOrder],
-            columnEnabled: { ...colEnabled },
-            compactColumns: [...compactCols],
-        };
-
-        await api.saveConfig(cfg);
-        closeSettings();
     });
 }

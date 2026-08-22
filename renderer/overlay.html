@@ -108,6 +108,7 @@
       <button class="settings-tab-btn active" data-tab="general">📁 General</button>
       <button class="settings-tab-btn" data-tab="columns">📊 Columns</button>
       <button class="settings-tab-btn" data-tab="stats">🎨 Stats</button>
+      <button class="settings-tab-btn" data-tab="updates">🔄 Updates</button>
       <button class="settings-tab-btn" data-tab="debug">🐛 Debug</button>
     </nav>
 
@@ -355,6 +356,32 @@
         </section>
       </div>
 
+      <!-- ═══ TAB: Updates ═══ -->
+      <div id="tab-updates" class="settings-tab-panel">
+        <section class="settings-section">
+          <h2 class="settings-section-title">🔄 Updates</h2>
+          <p class="settings-section-desc">App updates are distributed via GitHub Releases.</p>
+          <div id="updateStatus" class="settings-status-line"></div>
+          <div class="settings-input-row" style="margin-top:10px;">
+            <button id="btnUpdateCheck" class="settings-btn-secondary">🔍 Check for updates</button>
+            <button id="btnUpdateApply" class="settings-btn-primary" style="display:none">⬇ Update &amp; restart</button>
+          </div>
+          <div id="updateProgressWrap" class="update-progress" style="display:none">
+            <div id="updateProgressBar" class="update-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="settings-form-row" style="margin-top:14px;">
+            <label for="updateAutoCheck">Check on startup</label>
+            <label class="settings-toggle">
+              <input type="checkbox" id="updateAutoCheck" />
+              <span class="settings-toggle-knob"></span>
+            </label>
+          </div>
+          <div class="settings-section-desc" style="margin-top: 10px; font-size: 11px; opacity: 0.8; line-height: 1.5;">
+            Checks silently at startup and never downloads without your action.
+          </div>
+        </section>
+      </div>
+
       <!-- ═══ TAB: Debug ═══ -->
       <div id="tab-debug" class="settings-tab-panel">
         <section class="settings-section">
@@ -368,6 +395,7 @@
 
     <!-- Actions Bar -->
     <div class="settings-actions-bar">
+      <span id="settings-save-status" class="settings-save-status"></span>
       <button id="btn-settings-cancel" class="settings-btn-secondary">Cancel</button>
       <button id="btn-settings-save" class="settings-btn-primary">💾 Save Settings</button>
     </div>
