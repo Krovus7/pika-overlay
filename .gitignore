@@ -1,0 +1,7 @@
+node_modules
+dist
+renderer/bundle
+config.json
+logs/
+*.log
+release/
