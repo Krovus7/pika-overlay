@@ -23,6 +23,9 @@ export const IPC_CHANNELS = {
     BROWSE_LOG_FILE: 'browse:logFile',
     TEST_LOG_PATH: 'test:logPath',
     DEBUG_LOG_LINES: 'debug:logLines',
+    UPDATE_GET_STATE: 'update:getState',
+    UPDATE_CHECK: 'update:check',
+    UPDATE_DOWNLOAD_APPLY: 'update:downloadApply',
 } as const;
 
 export const IPC_EVENTS = {
@@ -37,6 +40,7 @@ export const IPC_EVENTS = {
     PARTY_UPDATE: 'party:update',
     SETTINGS_SHOW: 'settings:show',
     CONFIG_UPDATED: 'config:updated',
+    UPDATE_STATE: 'update:state',
 } as const;
 
 export interface StatsPayload extends PlayerStats {

@@ -13,6 +13,7 @@ import { cache } from '../api/cache';
 import type { ConfigStore, AppConfig } from '../config';
 import type { LogWatcher } from '../log/logWatcher';
 import type { PartyState } from '../state';
+import { checkForUpdates, downloadAndApply, getUpdateState } from '../update/velopackUpdate';
 import { lookup, type LookupDeps } from './lookup';
 
 const MAX_LOG_LINES = 100;
@@ -134,4 +135,9 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
 
     ipcMain.handle(IPC_CHANNELS.TEST_LOG_PATH, (_e, p: string) => fs.existsSync(p));
     ipcMain.handle(IPC_CHANNELS.DEBUG_LOG_LINES, () => [...recentLogLines]);
+
+    // ─── Auto-update (Velopack) ─────────────────────────────────────────────
+    ipcMain.handle(IPC_CHANNELS.UPDATE_GET_STATE, () => getUpdateState());
+    ipcMain.handle(IPC_CHANNELS.UPDATE_CHECK, () => checkForUpdates());
+    ipcMain.handle(IPC_CHANNELS.UPDATE_DOWNLOAD_APPLY, () => downloadAndApply());
 }

@@ -7,7 +7,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import { IPC_CHANNELS, IPC_EVENTS, type StatsPayload } from './shared/ipc-contract';
 import type { PikaOverlayApi } from './shared/preload-api';
-import type { PlayerErrorInfo, PlayerLoading } from './shared/types';
+import type { PlayerErrorInfo, PlayerLoading, UpdateState } from './shared/types';
 
 function on<T>(channel: string, cb: (data: T) => void): void {
     ipcRenderer.removeAllListeners(channel);
@@ -52,6 +52,12 @@ const api: PikaOverlayApi = {
     testLogPath: (logPath) => ipcRenderer.invoke(IPC_CHANNELS.TEST_LOG_PATH, logPath),
     closeSettings: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CLOSE),
     getLogLines: () => ipcRenderer.invoke(IPC_CHANNELS.DEBUG_LOG_LINES),
+
+    // === Auto-update (Velopack) ===
+    getUpdateState: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_GET_STATE),
+    checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_CHECK),
+    downloadAndApply: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_DOWNLOAD_APPLY),
+    onUpdateState: (cb) => on<UpdateState>(IPC_EVENTS.UPDATE_STATE, cb),
 };
 
 contextBridge.exposeInMainWorld('pikaOverlay', api);

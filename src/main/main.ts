@@ -18,6 +18,9 @@ import { gameState, partyState, playerRegistry } from './state';
 import { LookupQueue } from './state/lookupQueue';
 import { createTray } from './tray';
 import { createOverlay, getOverlayWin, updateAlwaysOnTop } from './windowManager';
+import {
+    checkForUpdates, onUpdateStateChange, runStartupHooks,
+} from './update/velopackUpdate';
 
 // dist/src/main → project root (main.js is compiled, unlike v3's root main.js)
 const rootDir = path.join(__dirname, '..', '..', '..');
@@ -25,6 +28,9 @@ const rootDir = path.join(__dirname, '..', '..', '..');
 // Same config location as v3 (%APPDATA%\pika-overlay\config.json) in both dev
 // and packaged builds (ADR-0007). Must run before anything touches userData.
 app.setPath('userData', path.join(app.getPath('appData'), 'pika-overlay'));
+
+// Velopack startup hooks (first-run / pending restart) — packaged only
+runStartupHooks();
 
 function defaultLogPath(): string {
     const base = process.platform === 'win32'
@@ -186,6 +192,9 @@ app.whenReady().then(() => {
     };
     registerIpcHandlers(handlerDeps);
 
+    // Broadcast update state changes to the overlay (settings panel)
+    onUpdateStateChange(s => send(IPC_EVENTS.UPDATE_STATE, s));
+
     bindWatcherEvents(logWatcher, lookupQueue);
 
     // Start watcher — when nicked, use nick name for log detection
@@ -193,6 +202,9 @@ app.whenReady().then(() => {
         ? store.get('myNickName')
         : store.get('myUsername');
     logWatcher.start(store.get('logPath'), watcherName);
+
+    // Silent update check at startup (opt-out via settings)
+    if (store.get('updateAutoCheck')) void checkForUpdates();
 
     // Register hotkeys
     registerHotkeysFn();

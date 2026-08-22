@@ -3,7 +3,7 @@
  * Typed here so the renderer bundle shares the exact contract.
  */
 
-import type { PlayerErrorInfo, PlayerLoading, PlayerStats } from './types';
+import type { PlayerErrorInfo, PlayerLoading, PlayerStats, UpdateState } from './types';
 import type { StatsPayload } from './ipc-contract';
 
 export interface PikaOverlayApi {
@@ -44,4 +44,10 @@ export interface PikaOverlayApi {
     testLogPath: (logPath: string) => Promise<boolean>;
     closeSettings: () => Promise<void>;
     getLogLines: () => Promise<string[]>;
+
+    // === Auto-update (Velopack) ===
+    getUpdateState: () => Promise<UpdateState>;
+    checkForUpdates: () => Promise<UpdateState>;
+    downloadAndApply: () => Promise<UpdateState>;
+    onUpdateState: (cb: (s: UpdateState) => void) => void;
 }

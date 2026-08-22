@@ -23,6 +23,17 @@ export interface RatioColors {
     bad: string;
 }
 
+// ─── Auto-update state (Velopack, Task 10) ───────────────────────────────────
+export type UpdateState =
+    | { kind: 'disabled'; message: string }
+    | { kind: 'idle' }
+    | { kind: 'checking' }
+    | { kind: 'available'; version: string }
+    | { kind: 'uptodate' }
+    | { kind: 'downloading'; progress: number }
+    | { kind: 'ready'; version: string }
+    | { kind: 'error'; message: string };
+
 export interface PlayerStats {
     username: string;
     notFound: boolean;
