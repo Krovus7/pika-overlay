@@ -114,25 +114,25 @@ export function buildRow(p: PlayerRow, visCols: ColumnDef[], ctx: RenderContext)
             case 'guild':
                 return `<td class="val-dim guild-cell" title="${esc(p.guild || '')}">${esc(p.guild || '—')}</td>`;
             case 'fkdr':
-                return `<td style="color:${ratioColor(p.fkdr, 'fkdr', ctx)};font-weight:600">${fmt(p.fkdr)}</td>`;
+                return `<td class="num" style="color:${ratioColor(p.fkdr, 'fkdr', ctx)};font-weight:600">${fmt(p.fkdr)}</td>`;
             case 'finals':
-                return `<td class="val-dim">${p.finalKills ?? '—'}</td>`;
+                return `<td class="val-dim num">${p.finalKills ?? '—'}</td>`;
             case 'kdr':
-                return `<td style="color:${ratioColor(p.kdr, 'kdr', ctx)};font-weight:600">${fmt(p.kdr)}</td>`;
+                return `<td class="num" style="color:${ratioColor(p.kdr, 'kdr', ctx)};font-weight:600">${fmt(p.kdr)}</td>`;
             case 'wlr':
-                return `<td style="color:${ratioColor(p.wlr, 'wlr', ctx)};font-weight:600">${fmt(p.wlr)}</td>`;
+                return `<td class="num" style="color:${ratioColor(p.wlr, 'wlr', ctx)};font-weight:600">${fmt(p.wlr)}</td>`;
             case 'wins':
-                return `<td class="val-dim">${p.wins ?? '—'}</td>`;
+                return `<td class="val-dim num">${p.wins ?? '—'}</td>`;
             case 'beds':
-                return `<td class="val-dim">${p.bedsDestroyed ?? '—'}</td>`;
+                return `<td class="val-dim num">${p.bedsDestroyed ?? '—'}</td>`;
             case 'winstreak':
-                return `<td class="val-dim">${p.winstreak ?? '—'}</td>`;
+                return `<td class="val-dim num">${p.winstreak ?? '—'}</td>`;
             case 'kills':
-                return `<td class="val-dim">${p.kills ?? '—'}</td>`;
+                return `<td class="val-dim num">${p.kills ?? '—'}</td>`;
             case 'deaths':
-                return `<td class="val-dim">${p.deaths ?? '—'}</td>`;
+                return `<td class="val-dim num">${p.deaths ?? '—'}</td>`;
             case 'bowkills':
-                return `<td class="val-dim">${p.bowKills ?? '—'}</td>`;
+                return `<td class="val-dim num">${p.bowKills ?? '—'}</td>`;
             case 'source':
                 return `<td>${srcBadge(p.source)}</td>`;
             default:
