@@ -78,6 +78,10 @@ void api.getAllConfig().then(cfg => {
     dropdowns.applyConfig(cfg);
     buildHeaders();
     scheduleRender();
+}).catch(err => {
+    console.error('[Overlay] Config load failed:', String(err));
+    statusBadge.textContent = 'Config load failed';
+    statusBadge.className = 'badge badge-loading';
 });
 
 // ─── IPC listeners ───────────────────────────────────────────────────────────

@@ -448,7 +448,6 @@ th.sorted   { color: var(--accent); }
 #stats-table th.col-bow {
   text-align: right;
 }
-#stats-table td.num:empty { text-align: right; }
 
 /* ─── Keyboard focus (v4.1): visible rings, no reliance on hover/color only ── */
 .icon-btn:focus-visible,

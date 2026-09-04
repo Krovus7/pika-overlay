@@ -19,9 +19,13 @@ const pending = new Map();
 let msgId = 0;
 
 function send(method, params = {}) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const id = ++msgId;
-        pending.set(id, resolve);
+        const timer = setTimeout(() => {
+            pending.delete(id);
+            reject(new Error(`CDP timeout: ${method}`));
+        }, 30000);
+        pending.set(id, { resolve, reject, timer });
         ws.send(JSON.stringify({ id, method, params }));
     });
 }
@@ -62,7 +66,9 @@ async function main() {
     ws.onmessage = ev => {
         const msg = JSON.parse(ev.data);
         if (msg.id && pending.has(msg.id)) {
-            pending.get(msg.id)(msg);
+            const entry = pending.get(msg.id);
+            clearTimeout(entry.timer);
+            entry.resolve(msg);
             pending.delete(msg.id);
         }
     };

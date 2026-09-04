@@ -1,4 +1,0 @@
-
-[LogWatcher] Watching: C:\Users\Jozef\AppData\Roaming\.minecraft\logs\blclient\minecraft\latest.log
-[Hotkey] Registered: =
-[Hotkey] Registered: F5

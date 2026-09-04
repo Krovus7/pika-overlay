@@ -1,48 +1,48 @@
 {
-    "name":  "pika-overlay",
-    "version":  "4.1.0",
-    "description":  "Pika-Network BedWars Stats Overlay v4",
-    "main":  "dist/src/main/main.js",
-    "author":  "AcquaPanna",
-    "license":  "ISC",
-    "scripts":  {
-                    "start":  "electron .",
-                    "build":  "node build.mjs",
-                    "typecheck":  "tsc -p tsconfig.json --noEmit \u0026\u0026 tsc -p tsconfig.renderer.json --noEmit",
-                    "test":  "npm run build \u0026\u0026 node --test \"dist/tests/*.test.js\"",
-                    "pack":  "node build.mjs pack",
-                    "release":  "node build.mjs release"
-                },
-    "build":  {
-                  "appId":  "com.pika.overlay",
-                  "productName":  "PikaOverlay",
-                  "directories":  {
-                                      "output":  "release"
-                                  },
-                  "files":  [
-                                "dist/**/*",
-                                "renderer/overlay.html",
-                                "renderer/overlay.css",
-                                "renderer/bundle/*.js",
-                                "assets/*",
-                                "package.json"
-                            ],
-                  "asarUnpack":  [
-                                     "node_modules/velopack/**",
-                                     "node_modules/@neon-rs/**"
-                                 ],
-                  "win":  {
-                              "target":  "dir"
-                          }
-              },
-    "dependencies":  {
-                         "velopack":  "^1.2.0"
-                     },
-    "devDependencies":  {
-                            "@types/node":  "^26.2.0",
-                            "electron":  "^43.4.1",
-                            "electron-builder":  "^26.15.3",
-                            "esbuild":  "^0.28.2",
-                            "typescript":  "^7.0.2"
-                        }
+  "name": "pika-overlay",
+  "version": "4.1.0",
+  "description": "Pika-Network BedWars Stats Overlay v4",
+  "main": "dist/src/main/main.js",
+  "author": "AcquaPanna",
+  "license": "ISC",
+  "scripts": {
+    "start": "electron .",
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.renderer.json --noEmit && tsc -p tsconfig.preload.json --noEmit",
+    "test": "npm run build && node --test \"dist/tests/*.test.js\"",
+    "pack": "node build.mjs pack",
+    "release": "node build.mjs release"
+  },
+  "build": {
+    "appId": "com.pika.overlay",
+    "productName": "PikaOverlay",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "renderer/overlay.html",
+      "renderer/overlay.css",
+      "renderer/bundle/*.js",
+      "assets/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/velopack/**",
+      "node_modules/@neon-rs/**"
+    ],
+    "win": {
+      "target": "dir"
+    }
+  },
+  "dependencies": {
+    "velopack": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
 }

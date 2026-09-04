@@ -35,7 +35,11 @@ let msgId = 0;
 function send(method, params = {}) {
     return new Promise((resolve, reject) => {
         const id = ++msgId;
-        pending.set(id, { resolve, reject });
+        const timer = setTimeout(() => {
+            pending.delete(id);
+            reject(new Error(`CDP timeout: ${method}`));
+        }, 30000);
+        pending.set(id, { resolve, reject, timer });
         ws.send(JSON.stringify({ id, method, params }));
     });
 }
@@ -91,7 +95,9 @@ async function main() {
     ws.onmessage = ev => {
         const msg = JSON.parse(ev.data);
         if (msg.id && pending.has(msg.id)) {
-            pending.get(msg.id).resolve(msg);
+            const entry = pending.get(msg.id);
+            clearTimeout(entry.timer);
+            entry.resolve(msg);
             pending.delete(msg.id);
         }
     };
@@ -147,6 +153,7 @@ async function main() {
 async function finish() {
     let pass = results.filter(r => r.ok).length;
     let fail = results.length - pass;
+    if (results.length === 0) fail = 1; // no steps executed = failure, never a silent pass
     console.log(`\n[smoke] ${pass} passed, ${fail} failed`);
     try { ws?.close(); } catch { /* ignore */ }
     child.kill('SIGKILL');

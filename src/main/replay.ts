@@ -77,11 +77,11 @@ export async function driveReplay(deps: ReplayDeps): Promise<void> {
     await shot('09-settings-debug.png');
     await js(`document.getElementById('btn-settings-close-x').click(); true`);
 
-    // Compact layout
-    await js(`document.getElementById('btn-toggle-view').click(); true`);
+    // Compact layout — toggled via DOM only (no config mutation in replay mode)
+    await js(`document.body.classList.add('layout-compact'); true`);
     await sleep(800);
     await shot('10-compact.png');
-    await js(`document.getElementById('btn-toggle-view').click(); true`);
+    await js(`document.body.classList.remove('layout-compact'); true`);
 
     // Low opacity + contrast switcher (visual only, no config change)
     await js(`document.documentElement.style.setProperty('--bg-alpha','0.08');
