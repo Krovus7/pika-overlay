@@ -57,19 +57,28 @@ for pre-releases (test cycle) instead of stable.
 
 ## Update cycle verification (before public release)
 
+**Verified 2026-09-04 (4.0.2 → 4.1.0, in-app, delta):**
+`scripts/update-cycle.mjs` drives the installed app over CDP: Updates tab →
+"Update available: v4.1.0" → apply → download delta → app exits → updater
+installs → disk `sq.version` = 4.1.0 → smoke 11/11. The full
+check/download/apply/restart chain is now proven against the GitHub feed.
+
+Manual checklist before a major public release:
+
 1. **Clean install:** on a machine/VM without v3, install `Setup.exe` and
    verify first-run + tray + overlay.
 2. **Upgrade from v3:** install over an existing v3 config
    (`%APPDATA%\pika-overlay\config.json`) — settings must survive and
    `config.json.bak` must appear.
-3. **v4.0.0 → v4.0.1:** release a patch (or pre-release), then in the installed
-   app: Settings → Updates → "Check for updates" → "Update & restart".
+3. **In-app update:** from the installed app: Settings → Updates →
+   "Check for updates" → "Update & restart" (or `scripts/update-cycle.mjs`).
 
 ## Dev-mode notes
 
 - `start.bat` clears `ELECTRON_RUN_AS_NODE` (historical startup-crash cause,
-  HANDOVER v2.1) and launches the unpackaged app.
+  HANDOVER v2.1) and launches the unpackaged app. **The installed app also
+  fails to start from shells where `ELECTRON_RUN_AS_NODE=1` is set** — always
+  launch from the Start menu/Explorer or clear the var first.
 - Auto-update is disabled in dev (`app.isPackaged` guard): Settings → Updates
   shows a "disabled" message. The update UI is fully testable in the packaged
   app.
-- Never run `electron .` from a shell where `ELECTRON_RUN_AS_NODE=1` is set.
