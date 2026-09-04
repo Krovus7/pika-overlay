@@ -19,7 +19,7 @@ export function createOverlay(store: ConfigStore, rootDir: string): BrowserWindo
 
     const bounds = store.get('overlayBounds') || { x: 20, y: 60, width: 960, height: 600 };
     const iconPath = path.join(rootDir, 'assets', 'icon.png');
-    const preloadPath = path.join(rootDir, 'dist', 'src', 'preload.js');
+    const preloadPath = path.join(rootDir, 'dist', 'src', 'preload.bundle.js');
     const htmlPath = path.join(rootDir, 'renderer', 'overlay.html');
 
     overlayWin = new BrowserWindow({

@@ -29,6 +29,22 @@ async function bundleRenderer() {
     });
 }
 
+// Sandboxed preloads cannot require local modules (ADR-0008) — the preload
+// must be a single file with only `electron` as the external require.
+async function bundlePreload() {
+    console.log('[build] Bundling preload (esbuild)...');
+    await build({
+        entryPoints: [ROOT + '/src/preload.ts'],
+        bundle: true,
+        format: 'cjs',
+        platform: 'node',
+        external: ['electron'],
+        outfile: ROOT + '/dist/src/preload.bundle.js',
+        target: ['node18'],
+        logLevel: 'info',
+    });
+}
+
 function compileMain() {
     console.log('[build] Compiling main process + tests (tsc)...');
     run('npx tsc -p tsconfig.json');
@@ -36,6 +52,7 @@ function compileMain() {
 
 async function buildAll() {
     await bundleRenderer();
+    await bundlePreload();
     compileMain();
     console.log('[build] Done.');
 }

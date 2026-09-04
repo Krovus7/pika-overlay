@@ -61,6 +61,17 @@ const loBtnLight = document.getElementById('lo-btn-light') as HTMLButtonElement;
 
 const LO_OPACITY_THRESHOLD = 0.15;
 
+// ─── Defensive guard ─────────────────────────────────────────────────────────
+// If the preload bridge failed (sandboxed preload without bundling), the UI
+// would silently die on the first api call. Show it in the badge instead.
+if (!window.pikaOverlay) {
+    statusBadge.textContent = 'Preload failed — check DevTools';
+    statusBadge.className = 'badge badge-loading';
+} else {
+    start();
+}
+
+function start(): void {
 // ─── Bootstrap: load config then build UI ────────────────────────────────────
 void api.getAllConfig().then(cfg => {
     applyConfig(cfg);
@@ -437,3 +448,4 @@ function updateFooterAndStatus(): void {
 
 // ─── Settings panel (inline) ──────────────────────────────────────────────────
 initSettingsPanel(api);
+}
