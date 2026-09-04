@@ -21,6 +21,7 @@ import { createOverlay, getOverlayWin, updateAlwaysOnTop } from './windowManager
 import {
     checkForUpdates, onUpdateStateChange, runStartupHooks,
 } from './update/velopackUpdate';
+import { driveReplay, replayFilePath } from './replay';
 
 // dist/src/main → project root (main.js is compiled, unlike v3's root main.js)
 const rootDir = path.join(__dirname, '..', '..', '..');
@@ -201,7 +202,15 @@ app.whenReady().then(() => {
     const watcherName = store.get('isNicked') && store.get('myNickName')
         ? store.get('myNickName')
         : store.get('myUsername');
-    logWatcher.start(store.get('logPath'), watcherName);
+    const replayPath = replayFilePath();
+    logWatcher.start(
+        replayPath ?? store.get('logPath'),
+        watcherName,
+        replayPath ? { fromBeginning: true, pollMs: 50 } : undefined,
+    );
+
+    // Dev-only screenshot drive (offline verification)
+    if (replayPath) void driveReplay({ getOverlayWin, rootDir });
 
     // Silent update check at startup (opt-out via settings)
     if (store.get('updateAutoCheck')) void checkForUpdates();

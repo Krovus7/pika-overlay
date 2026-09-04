@@ -6,3 +6,6 @@ logs/
 *.log
 release/
 smoke-*.txt
+artifacts/
+so.txt
+se.txt

@@ -19,11 +19,13 @@ export class LogWatcher extends EventEmitter {
     private logPath: string | null = null;
     private pos = 0;
     private timer: NodeJS.Timeout | null = null;
+    private pollMs = POLL_MS;
     private readonly parser = new LineParser((event, ...args) => this.emit(event, ...args));
 
-    start(logPath: string, myUsername = ''): boolean {
+    start(logPath: string, myUsername = '', opts: { fromBeginning?: boolean; pollMs?: number } = {}): boolean {
         if (this.timer) this.stop();
         this.logPath = logPath;
+        this.pollMs = opts.pollMs ?? POLL_MS;
         this.parser.setMyUsername(myUsername);
 
         if (!fs.existsSync(logPath)) {
@@ -32,12 +34,12 @@ export class LogWatcher extends EventEmitter {
         }
 
         try {
-            this.pos = fs.statSync(logPath).size;
+            this.pos = opts.fromBeginning ? 0 : fs.statSync(logPath).size;
         } catch {
             this.pos = 0;
         }
 
-        this.timer = setInterval(() => this.poll(), POLL_MS);
+        this.timer = setInterval(() => this.poll(), this.pollMs);
         console.log(`[LogWatcher] Watching: ${logPath}`);
         return true;
     }
