@@ -1,6 +1,6 @@
 /**
- * Replays real Minecraft logs through BOTH the v4 parser (LineParser) and the
- * v3 parser (pika-overlay-v3 logWatcher singleton) and reports:
+ * Replays real Minecraft logs through BOTH the current parser (LineParser) and
+ * the frozen v3 reference parser (scripts/reference/v3-logWatcher.js) and reports:
  *   - events per file (detected by source, quit, party, lifecycle, sync)
  *   - unique detected names
  *   - anti-false-positive violations (invalid MC names, grammar blocklist)
@@ -8,7 +8,7 @@
  *
  * Usage:
  *   node scripts/replay-logs.mjs [file...] [--username NAME]
- * Default corpus: pika-overlay-v3/logs/*.log + blclient *.log.gz +
+ * Default corpus: artifacts/corpus-v3/*.log (local, not in git) + blclient *.log.gz +
  * blclient/minecraft/latest.log. .gz files are decompressed to COPIES in
  * artifacts/logs/ (originals untouched).
  *
@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 const require = createRequire(import.meta.url);
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const V3_LOGS = path.join(ROOT, '..', 'pika-overlay-v3', 'logs');
+const V3_LOGS = path.join(ROOT, 'artifacts', 'corpus-v3');
 const BL_DIR = path.join(process.env.APPDATA, '.minecraft', 'logs', 'blclient', 'minecraft');
 
 let myUsername = 'AcquaPanna';
@@ -35,7 +35,7 @@ if (userIdx >= 0 && process.argv[userIdx + 1]) myUsername = process.argv[userIdx
 
 const v4 = require(path.join(ROOT, 'dist', 'src', 'main', 'log', 'lineParser.js'));
 const v4Names = require(path.join(ROOT, 'dist', 'src', 'main', 'log', 'nameCleaner.js'));
-const v3 = require(path.join(ROOT, '..', 'pika-overlay-v3', 'src', 'logWatcher.js'));
+const v3 = require(path.join(ROOT, 'scripts', 'reference', 'v3-logWatcher.js'));
 
 const v4LineParser = v4.LineParser;
 const { isCommonWord } = v4Names;
@@ -173,7 +173,7 @@ for (const file of files) {
 }
 
 let md = '# Replay report — real logs against v3 vs v4 parsers\n\n';
-md += `Corpus: ${files.length} files, username: ${myUsername}, parser: dist (v4) vs pika-overlay-v3/src/logWatcher.js\n\n`;
+md += `Corpus: ${files.length} files, username: ${myUsername}, parser: dist (current) vs scripts/reference/v3-logWatcher.js\n\n`;
 md += '| File | Chat lines | Detected | Sources | Party | Game lifecycle | Violations | v3/v4 diff |\n';
 md += '|---|---|---|---|---|---|---|---|\n';
 for (const s of summary) {
