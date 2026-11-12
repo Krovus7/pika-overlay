@@ -11,6 +11,8 @@ import * as path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { BrowserWindow } from 'electron';
 
+import { captureSettingsShots } from './devShotsSettings';
+
 export interface ShotsDeps {
     getOverlayWin: () => BrowserWindow | null;
     rootDir: string;
@@ -82,9 +84,7 @@ export async function driveShots(deps: ShotsDeps): Promise<void> {
         await shot('v5-12-low-opacity-light.png');
         await js(`window.__pikaDemoOpacity(0.92)`);
 
-        await js(`document.getElementById('btn-settings').click()`);
-        await shot('v5-13-settings.png');
-        await js(`document.getElementById('btn-settings-close-x').click()`);
+        await captureSettingsShots({ js, shot, win });
 
         await js('window.__pikaDemoClear()');
         await shot('v5-14-empty.png');

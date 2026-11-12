@@ -39,6 +39,7 @@ export interface AppConfig {
     apiKey: string; // v5: Pika API key (/apikey in-game), sent as X-Api-Key
     uiScale: number; // v5: overlay zoom factor
     rowDensity: 'comfortable' | 'dense';
+    theme: 'dark' | 'light'; // light = light panels + dark text, for bright game scenes
     nickedOnTop: boolean;
     highlightSuspects: boolean;
 }
@@ -97,6 +98,7 @@ export function defaultConfig(): AppConfig {
         apiKey: '',
         uiScale: 1,
         rowDensity: 'comfortable',
+        theme: 'dark',
         nickedOnTop: true,
         highlightSuspects: true,
     };
@@ -210,6 +212,7 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
         apiKey: str(merged.apiKey, defaults.apiKey).trim(),
         uiScale: Math.min(1.5, Math.max(0.8, num(merged.uiScale, defaults.uiScale))),
         rowDensity: enumOf(merged.rowDensity, ['comfortable', 'dense'], defaults.rowDensity),
+        theme: enumOf(merged.theme, ['dark', 'light'], defaults.theme),
         nickedOnTop: bool(merged.nickedOnTop, defaults.nickedOnTop),
         highlightSuspects: bool(merged.highlightSuspects, defaults.highlightSuspects),
     };

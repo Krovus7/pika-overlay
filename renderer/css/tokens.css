@@ -49,3 +49,60 @@
 
 body.density-dense { --row-h: 28px; }
 body.layout-compact { --row-h: 26px; }
+
+/* ─── Theme contract (v5) ──────────────────────────────────────────────────
+ * Semantic tokens every stylesheet must use instead of hard-coded whites,
+ * blacks or navy values. The theme is the `data-theme` attribute on <html>
+ * ("dark" default, "light"), set from the `theme` config key.
+ *   dark  = navy panels, light text  → dark game scenes / texture packs
+ *   light = light panels, navy text  → bright game scenes / texture packs
+ * Neutral surfaces are rgb triplets so alpha can be applied at the use site:
+ *   background: rgba(var(--panel-rgb), var(--bg-alpha));
+ *   border-color: rgba(var(--ink-rgb), 0.08);
+ */
+:root {
+  --panel-rgb:    8, 10, 18;      /* window background (× --bg-alpha) */
+  --surface-rgb:  16, 18, 32;     /* raised surfaces: title bar, header, menus, settings */
+  --ink-rgb:      255, 255, 255;  /* overlay ink: borders, hover, zebra, field fills */
+  --halo-rgb:     0, 0, 0;        /* text halo at low opacity (opposite of the text) */
+  --shadow-rgb:   0, 0, 0;
+
+  /* Text-safe variants of the palette colours (same hue, tuned per theme) */
+  --accent-text:  #b4aafc;
+  --good-text:    #22c55e;
+  --medium-text:  #f59e0b;
+  --bad-text:     #ef4444;
+  --teal-text:    #4ecdc4;
+  --party-text:   #d060e8;
+  --on-accent:    #ffffff;        /* text on a solid accent / bad fill */
+
+  --field-bg:     rgba(var(--ink-rgb), 0.04);
+  --field-border: rgba(var(--ink-rgb), 0.10);
+}
+
+:root[data-theme="light"] {
+  --panel-rgb:    243, 244, 250;
+  --surface-rgb:  252, 252, 255;
+  --ink-rgb:      20, 22, 42;
+  --halo-rgb:     255, 255, 255;
+  --shadow-rgb:   30, 32, 60;
+
+  --text:         #14162a;
+  --text-dim:     #52577a;
+  --text-muted:   #9a9fb8;
+
+  --accent-text:  #5a45e0;
+  --good-text:    #15803d;
+  --medium-text:  #b45309;
+  --bad-text:     #dc2626;
+  --teal-text:    #0f766e;
+  --party-text:   #a21caf;
+
+  --border:        rgba(var(--ink-rgb), 0.10);
+  --border-strong: rgba(var(--ink-rgb), 0.18);
+  --hover:         rgba(var(--ink-rgb), 0.06);
+  --bg-row-hover:  rgba(var(--ink-rgb), 0.07);
+  --bg-surface:    rgba(var(--surface-rgb), 0.97);
+  --field-bg:      rgba(var(--ink-rgb), 0.035);
+  --field-border:  rgba(var(--ink-rgb), 0.14);
+}

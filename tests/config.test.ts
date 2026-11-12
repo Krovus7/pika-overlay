@@ -76,6 +76,9 @@ describe('normalizeConfig — v5 keys', () => {
     it('rowDensity accepts only the two modes; booleans fall back when mistyped', () => {
         assert.equal(normalizeConfig({ rowDensity: 'dense' }).rowDensity, 'dense');
         assert.equal(normalizeConfig({ rowDensity: 'tiny' }).rowDensity, 'comfortable');
+        assert.equal(normalizeConfig({}).theme, 'dark');
+        assert.equal(normalizeConfig({ theme: 'light' }).theme, 'light');
+        assert.equal(normalizeConfig({ theme: 'sepia' }).theme, 'dark');
         assert.equal(normalizeConfig({ nickedOnTop: false }).nickedOnTop, false);
         assert.equal(normalizeConfig({ nickedOnTop: 'no' }).nickedOnTop, true);
         assert.equal(normalizeConfig({ highlightSuspects: false }).highlightSuspects, false);
