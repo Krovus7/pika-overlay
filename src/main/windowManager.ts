@@ -8,6 +8,8 @@ import * as path from 'node:path';
 
 import type { ConfigStore } from './config';
 
+const BOUNDS_SAVE_DEBOUNCE_MS = 400;
+
 let overlayWin: BrowserWindow | null = null;
 
 export function getOverlayWin(): BrowserWindow | null {
@@ -45,13 +47,23 @@ export function createOverlay(store: ConfigStore, rootDir: string): BrowserWindo
         overlayWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     }
 
+    // moved/resized fire continuously while dragging — persist once it settles
+    let boundsTimer: NodeJS.Timeout | null = null;
     const saveBounds = () => {
-        if (!overlayWin) return;
+        if (boundsTimer) clearTimeout(boundsTimer);
+        boundsTimer = null;
+        if (!overlayWin || overlayWin.isDestroyed()) return;
         store.set('overlayBounds', overlayWin.getBounds());
     };
+    const saveBoundsDebounced = () => {
+        if (boundsTimer) clearTimeout(boundsTimer);
+        boundsTimer = setTimeout(saveBounds, BOUNDS_SAVE_DEBOUNCE_MS);
+    };
 
-    overlayWin.on('moved', saveBounds);
-    overlayWin.on('resized', saveBounds);
+    overlayWin.on('moved', saveBoundsDebounced);
+    overlayWin.on('resized', saveBoundsDebounced);
+    overlayWin.on('close', saveBounds);
+    overlayWin.webContents.on('did-finish-load', () => applyUiScale(store));
     overlayWin.on('closed', () => { overlayWin = null; });
 
     return overlayWin;
@@ -67,4 +79,15 @@ export function updateAlwaysOnTop(store: ConfigStore): void {
         overlayWin.setAlwaysOnTop(false);
         overlayWin.setVisibleOnAllWorkspaces(false);
     }
+}
+
+/** Zoom is applied once the page has loaded and again on every config change */
+export function applyUiScale(store: ConfigStore): void {
+    if (!overlayWin || overlayWin.isDestroyed()) return;
+    overlayWin.webContents.setZoomFactor(store.get('uiScale'));
+}
+
+export function applyWindowConfig(store: ConfigStore): void {
+    updateAlwaysOnTop(store);
+    applyUiScale(store);
 }

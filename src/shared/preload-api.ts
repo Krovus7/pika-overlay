@@ -3,14 +3,13 @@
  * Typed here so the renderer bundle shares the exact contract.
  */
 
-import type { PlayerErrorInfo, PlayerLoading, PlayerStats, UpdateState } from './types';
+import type { ApiHealth, ApiKeyTestResult, PlayerLoading, UpdateState } from './types';
 import type { StatsPayload } from './ipc-contract';
 
 export interface PikaOverlayApi {
     // === Overlay events ===
     onPlayerStats: (cb: (data: StatsPayload) => void) => void;
     onPlayerLoading: (cb: (data: PlayerLoading) => void) => void;
-    onPlayerError: (cb: (data: PlayerErrorInfo) => void) => void;
     onPlayerRemove: (cb: (username: string) => void) => void;
     onPlayersClear: (cb: () => void) => void;
     onGamePregame: (cb: () => void) => void;
@@ -23,6 +22,8 @@ export interface PikaOverlayApi {
     // === Actions from renderer ===
     lookupPlayer: (username: string, interval: string | null, mode: string | null) => Promise<unknown>;
     lookupBulk: (names: string[], interval: string | null, mode: string | null) => Promise<unknown>;
+    /** Re-run the lookup of a row already shown (keeps its original source) */
+    retryPlayer: (username: string) => Promise<void>;
     clearPlayers: () => Promise<void>;
     openSettings: () => Promise<void>;
     closeOverlay: () => Promise<void>;
@@ -31,7 +32,8 @@ export interface PikaOverlayApi {
     // === Stats interval and mode ===
     setStatsInterval: (interval: string) => Promise<void>;
     setStatsMode: (mode: string) => Promise<void>;
-    refetchAll: (names: string[], interval: string, mode: string | null) => Promise<unknown>;
+    /** Re-fetch every shown player for a new period/mode (sources preserved) */
+    refetchAll: (interval: string, mode: string | null) => Promise<void>;
 
     // === Config ===
     getConfig: (key: string) => Promise<unknown>;
@@ -50,4 +52,10 @@ export interface PikaOverlayApi {
     checkForUpdates: () => Promise<UpdateState>;
     downloadAndApply: () => Promise<UpdateState>;
     onUpdateState: (cb: (s: UpdateState) => void) => void;
+
+    // === API health + key (v5) ===
+    getApiHealth: () => Promise<ApiHealth>;
+    onApiHealth: (cb: (h: ApiHealth) => void) => void;
+    /** Validates a key against the live API without saving it */
+    testApiKey: (key: string) => Promise<ApiKeyTestResult>;
 }

@@ -11,7 +11,7 @@ import { LookupQueue } from './lookupQueue';
 
 export { GameState } from './gameState';
 export { PartyState } from './partyState';
-export { PlayerRegistry } from './playerRegistry';
+export { PlayerRegistry, type RegisteredPlayer } from './playerRegistry';
 export { LookupQueue, LOOKUP_CONCURRENCY, type LookupJob } from './lookupQueue';
 
 export const gameState = new GameState();

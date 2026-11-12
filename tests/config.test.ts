@@ -51,6 +51,41 @@ describe('normalizeConfig — defaults', () => {
     });
 });
 
+describe('normalizeConfig — v5 keys', () => {
+    it('defaults', () => {
+        const cfg = normalizeConfig(null);
+        assert.equal(cfg.apiKey, '');
+        assert.equal(cfg.uiScale, 1);
+        assert.equal(cfg.rowDensity, 'comfortable');
+        assert.equal(cfg.nickedOnTop, true);
+        assert.equal(cfg.highlightSuspects, true);
+    });
+
+    it('apiKey is trimmed and must be a string', () => {
+        assert.equal(normalizeConfig({ apiKey: '  abc123  ' }).apiKey, 'abc123');
+        assert.equal(normalizeConfig({ apiKey: 42 }).apiKey, '');
+    });
+
+    it('uiScale is clamped to [0.8, 1.5]', () => {
+        assert.equal(normalizeConfig({ uiScale: 0.1 }).uiScale, 0.8);
+        assert.equal(normalizeConfig({ uiScale: 9 }).uiScale, 1.5);
+        assert.equal(normalizeConfig({ uiScale: 1.25 }).uiScale, 1.25);
+        assert.equal(normalizeConfig({ uiScale: 'big' }).uiScale, 1);
+    });
+
+    it('rowDensity accepts only the two modes; booleans fall back when mistyped', () => {
+        assert.equal(normalizeConfig({ rowDensity: 'dense' }).rowDensity, 'dense');
+        assert.equal(normalizeConfig({ rowDensity: 'tiny' }).rowDensity, 'comfortable');
+        assert.equal(normalizeConfig({ nickedOnTop: false }).nickedOnTop, false);
+        assert.equal(normalizeConfig({ nickedOnTop: 'no' }).nickedOnTop, true);
+        assert.equal(normalizeConfig({ highlightSuspects: false }).highlightSuspects, false);
+    });
+
+    it('TRIPLES is a valid stats mode', () => {
+        assert.equal(normalizeConfig({ statsMode: 'TRIPLES' }).statsMode, 'TRIPLES');
+    });
+});
+
 describe('normalizeConfig — v3 legacy migration', () => {
     it('flat ratioThresholds + fkdrThresholds migrate to per-ratio (flat wins, v3 precedence)', () => {
         const cfg = normalizeConfig({
@@ -146,6 +181,38 @@ describe('ConfigStore — file behavior', () => {
         assert.equal(reloaded.get('pinSelf'), true);
         assert.equal(reloaded.get('statsInterval'), 'weekly');
         assert.equal(reloaded.get('statsMode'), 'SOLO');
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('set / setMany validate: clamps and enums always hold', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pika-cfg-'));
+        const configPath = path.join(dir, 'config.json');
+        const store = new ConfigStore(configPath);
+        store.set('uiScale', 99);
+        store.set('statsInterval', 'hourly');
+        store.set('apiKey', '  key  ');
+        assert.equal(store.get('uiScale'), 1.5);
+        assert.equal(store.get('statsInterval'), 'total');
+        assert.equal(store.get('apiKey'), 'key');
+
+        store.setMany({ opacity: 5, rowDensity: 'nope', statsMode: 'SOLO' });
+        assert.equal(store.get('opacity'), 1);
+        assert.equal(store.get('rowDensity'), 'comfortable');
+        assert.equal(store.get('statsMode'), 'SOLO');
+
+        const onDisk = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        assert.equal(onDisk.uiScale, 1.5);
+        assert.equal(onDisk.apiKey, 'key');
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('set keeps legacy fkdrThresholds and unrelated keys intact', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pika-cfg-'));
+        const store = new ConfigStore(path.join(dir, 'config.json'));
+        store.setMany({ ratioThresholds: { fkdr: { hacker: 50 } } });
+        store.set('pinSelf', true);
+        assert.equal(store.get('ratioThresholds').fkdr.hacker, 50);
+        assert.equal(store.get('ratioThresholds').fkdr.good, 3.0);
         fs.rmSync(dir, { recursive: true, force: true });
     });
 });

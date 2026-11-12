@@ -9,6 +9,8 @@ export interface LookupJob {
     source: string;
     interval: string | null;
     mode: string | null;
+    /** Re-run an already registered player (keeps registry entry and source) */
+    refresh?: boolean;
 }
 
 export const LOOKUP_CONCURRENCY = 6;

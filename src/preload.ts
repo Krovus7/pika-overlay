@@ -7,7 +7,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import { IPC_CHANNELS, IPC_EVENTS, type StatsPayload } from './shared/ipc-contract';
 import type { PikaOverlayApi } from './shared/preload-api';
-import type { PlayerErrorInfo, PlayerLoading, UpdateState } from './shared/types';
+import type { ApiHealth, PlayerLoading, UpdateState } from './shared/types';
 
 function on<T>(channel: string, cb: (data: T) => void): void {
     ipcRenderer.removeAllListeners(channel);
@@ -18,7 +18,6 @@ const api: PikaOverlayApi = {
     // === Overlay events ===
     onPlayerStats: (cb) => on<StatsPayload>(IPC_EVENTS.PLAYER_STATS, cb),
     onPlayerLoading: (cb) => on<PlayerLoading>(IPC_EVENTS.PLAYER_LOADING, cb),
-    onPlayerError: (cb) => on<PlayerErrorInfo>(IPC_EVENTS.PLAYER_ERROR, cb),
     onPlayerRemove: (cb) => on<string>(IPC_EVENTS.PLAYER_REMOVE, cb),
     onPlayersClear: (cb) => on<void>(IPC_EVENTS.PLAYERS_CLEAR, cb),
     onGamePregame: (cb) => on<void>(IPC_EVENTS.GAME_PREGAME, cb),
@@ -31,6 +30,7 @@ const api: PikaOverlayApi = {
     // === Actions from renderer ===
     lookupPlayer: (username, interval, mode) => ipcRenderer.invoke(IPC_CHANNELS.LOOKUP_PLAYER, username, interval, mode),
     lookupBulk: (names, interval, mode) => ipcRenderer.invoke(IPC_CHANNELS.LOOKUP_BULK, names, interval, mode),
+    retryPlayer: (username) => ipcRenderer.invoke(IPC_CHANNELS.LOOKUP_RETRY, username),
     clearPlayers: () => ipcRenderer.invoke(IPC_CHANNELS.PLAYERS_CLEAR),
     openSettings: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_OPEN),
     closeOverlay: () => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_CLOSE),
@@ -39,7 +39,7 @@ const api: PikaOverlayApi = {
     // === Stats interval and mode ===
     setStatsInterval: (interval) => ipcRenderer.invoke(IPC_CHANNELS.STATS_SET_INTERVAL, interval),
     setStatsMode: (mode) => ipcRenderer.invoke(IPC_CHANNELS.STATS_SET_MODE, mode),
-    refetchAll: (names, interval, mode) => ipcRenderer.invoke(IPC_CHANNELS.STATS_REFETCH_ALL, names, interval, mode),
+    refetchAll: (interval, mode) => ipcRenderer.invoke(IPC_CHANNELS.STATS_REFETCH_ALL, interval, mode),
 
     // === Config ===
     getConfig: (key) => ipcRenderer.invoke(IPC_CHANNELS.CONFIG_GET, key),
@@ -58,6 +58,11 @@ const api: PikaOverlayApi = {
     checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_CHECK),
     downloadAndApply: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_DOWNLOAD_APPLY),
     onUpdateState: (cb) => on<UpdateState>(IPC_EVENTS.UPDATE_STATE, cb),
+
+    // === API health + key (v5) ===
+    getApiHealth: () => ipcRenderer.invoke(IPC_CHANNELS.API_GET_HEALTH),
+    onApiHealth: (cb) => on<ApiHealth>(IPC_EVENTS.API_HEALTH, cb),
+    testApiKey: (key) => ipcRenderer.invoke(IPC_CHANNELS.API_TEST_KEY, key),
 };
 
 contextBridge.exposeInMainWorld('pikaOverlay', api);

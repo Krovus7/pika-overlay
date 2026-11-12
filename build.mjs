@@ -25,6 +25,8 @@ async function bundleRenderer() {
         format: 'iife',
         outfile: ROOT + '/renderer/bundle/overlay.js',
         target: ['chrome120'],
+        // Single source of truth for the version shown in the UI: package.json
+        define: { __APP_VERSION__: JSON.stringify(readVersion()) },
         logLevel: 'info',
     });
 }
@@ -83,6 +85,8 @@ async function releaseCmd() {
 const cmd = process.argv[2] ?? 'build';
 if (cmd === 'build') {
     await buildAll();
+} else if (cmd === 'renderer') {
+    await bundleRenderer();
 } else if (cmd === 'pack') {
     await packCmd();
 } else if (cmd === 'release') {

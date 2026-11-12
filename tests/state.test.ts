@@ -34,6 +34,35 @@ describe('PlayerRegistry', () => {
         assert.deepEqual(reg.snapshot().sort(), ['a', 'c']);
     });
 
+    it('remembers the detected name and source per lowercased key', () => {
+        const reg = new PlayerRegistry();
+        reg.add('AcquaPanna', 'tab_list');
+        assert.deepEqual(reg.get('acquapanna'), { name: 'AcquaPanna', source: 'tab_list' });
+        assert.deepEqual(reg.get('ACQUAPANNA'), { name: 'AcquaPanna', source: 'tab_list' });
+        assert.equal(reg.get('nobody'), undefined);
+    });
+
+    it('a second add keeps the original name and source', () => {
+        const reg = new PlayerRegistry();
+        reg.add('Dream', 'join');
+        assert.equal(reg.add('DREAM', 'manual'), false);
+        assert.deepEqual(reg.get('dream'), { name: 'Dream', source: 'join' });
+    });
+
+    it('entries lists every player; delete/clearExcept/clear drop their metadata', () => {
+        const reg = new PlayerRegistry();
+        reg.add('A', 'join');
+        reg.add('B', 'party');
+        reg.add('C', 'bulk');
+        assert.deepEqual(reg.entries().map(e => `${e.name}:${e.source}`), ['A:join', 'B:party', 'C:bulk']);
+        reg.delete('a');
+        assert.equal(reg.get('a'), undefined);
+        reg.clearExcept(new Set(['b']));
+        assert.deepEqual(reg.entries(), [{ name: 'B', source: 'party' }]);
+        reg.clear();
+        assert.deepEqual(reg.entries(), []);
+    });
+
     it('clear returns removed keys and empties the registry', () => {
         const reg = new PlayerRegistry();
         reg.add('A');

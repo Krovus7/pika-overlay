@@ -36,6 +36,11 @@ export interface AppConfig {
     compactColumns: string[];
     fkdrThresholds: { good: number; medium: number }; // legacy v3 key — kept, migrated
     updateAutoCheck: boolean; // v4: silent update check at startup
+    apiKey: string; // v5: Pika API key (/apikey in-game), sent as X-Api-Key
+    uiScale: number; // v5: overlay zoom factor
+    rowDensity: 'comfortable' | 'dense';
+    nickedOnTop: boolean;
+    highlightSuspects: boolean;
 }
 
 export type RawConfig = Record<string, unknown>;
@@ -45,7 +50,7 @@ const KNOWN_COLUMNS = [
     'beds', 'winstreak', 'kills', 'deaths', 'bowkills', 'source',
 ];
 const VALID_INTERVALS: StatsInterval[] = ['total', 'weekly', 'monthly', 'yearly'];
-const VALID_MODES: StatsMode[] = ['ALL_MODES', 'SOLO', 'DOUBLES', 'QUAD'];
+const VALID_MODES: StatsMode[] = ['ALL_MODES', 'SOLO', 'DOUBLES', 'TRIPLES', 'QUAD'];
 const VALID_TIERS: TierKey[] = ['hacker', 'godlike', 'good', 'medium'];
 
 const DEFAULT_THRESHOLDS: Record<RatioKey, Record<TierKey, number>> = {
@@ -89,6 +94,11 @@ export function defaultConfig(): AppConfig {
         compactColumns: ['rank', 'player', 'fkdr', 'winstreak', 'source'],
         fkdrThresholds: { good: 3.0, medium: 1.0 },
         updateAutoCheck: true,
+        apiKey: '',
+        uiScale: 1,
+        rowDensity: 'comfortable',
+        nickedOnTop: true,
+        highlightSuspects: true,
     };
 }
 
@@ -197,6 +207,11 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
             medium: num((merged.fkdrThresholds as RawConfig)?.medium, 1.0),
         },
         updateAutoCheck: bool(merged.updateAutoCheck, defaults.updateAutoCheck),
+        apiKey: str(merged.apiKey, defaults.apiKey).trim(),
+        uiScale: Math.min(1.5, Math.max(0.8, num(merged.uiScale, defaults.uiScale))),
+        rowDensity: enumOf(merged.rowDensity, ['comfortable', 'dense'], defaults.rowDensity),
+        nickedOnTop: bool(merged.nickedOnTop, defaults.nickedOnTop),
+        highlightSuspects: bool(merged.highlightSuspects, defaults.highlightSuspects),
     };
 }
 
@@ -253,12 +268,12 @@ export class ConfigStore {
     }
 
     set(key: keyof AppConfig, value: unknown): void {
-        (this.data as unknown as RawConfig)[key] = value;
+        this.data = normalizeConfig({ ...this.data, [key]: value });
         this.persist();
     }
 
     setMany(cfg: RawConfig): void {
-        Object.assign(this.data, cfg);
+        this.data = normalizeConfig({ ...this.data, ...cfg });
         this.persist();
     }
 

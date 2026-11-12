@@ -18,6 +18,8 @@ const POLL_MS = 500;
 export class LogWatcher extends EventEmitter {
     private logPath: string | null = null;
     private pos = 0;
+    /** Bytes after the last newline read so far — an unfinished line */
+    private tail: Buffer = Buffer.alloc(0);
     private timer: NodeJS.Timeout | null = null;
     private pollMs = POLL_MS;
     private readonly parser = new LineParser((event, ...args) => this.emit(event, ...args));
@@ -27,6 +29,7 @@ export class LogWatcher extends EventEmitter {
         this.logPath = logPath;
         this.pollMs = opts.pollMs ?? POLL_MS;
         this.parser.setMyUsername(myUsername);
+        this.tail = Buffer.alloc(0);
 
         if (!fs.existsSync(logPath)) {
             console.warn(`[LogWatcher] Log not found: ${logPath}`);
@@ -56,7 +59,10 @@ export class LogWatcher extends EventEmitter {
         let stat: fs.Stats;
         try { stat = fs.statSync(this.logPath); } catch { return; }
 
-        if (stat.size < this.pos) this.pos = 0;    // file rotated
+        if (stat.size < this.pos) {                // file rotated
+            this.pos = 0;
+            this.tail = Buffer.alloc(0);
+        }
         if (stat.size === this.pos) return;        // nothing new
 
         let buf: Buffer;
@@ -71,7 +77,13 @@ export class LogWatcher extends EventEmitter {
             return; // file locked, retry next tick
         }
 
-        const lines = buf.toString('utf8').split('\n');
+        // A read can end mid-line: parse complete lines only, carry the rest over
+        const data = Buffer.concat([this.tail, buf]);
+        const lastNewline = data.lastIndexOf(0x0a);
+        this.tail = lastNewline === -1 ? data : data.subarray(lastNewline + 1);
+        if (lastNewline === -1) return;
+
+        const lines = data.subarray(0, lastNewline).toString('utf8').split('\n');
         for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed) continue;
