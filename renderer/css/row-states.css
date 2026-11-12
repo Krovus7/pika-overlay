@@ -1,0 +1,90 @@
+/* Status rows: a pill carries the state, a dim note explains it. */
+.status-wrap { display: flex; align-items: center; min-width: 0; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  height: 18px;
+  padding: 0 8px 0 6px;
+  border: 1px solid transparent;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.pill .ic { width: 11px; height: 11px; stroke-width: 2.4; }
+
+.pill-nicked  { background: var(--bad); color: #fff; }
+.pill-neutral { border-color: rgba(255, 255, 255, 0.28); color: #c3c8da; }
+.pill-muted   { background: rgba(255, 255, 255, 0.07); color: var(--text-dim); }
+.pill-new     { background: var(--teal-tint); border-color: rgba(78, 205, 196, 0.45); color: var(--accent2); }
+.pill-warn    { background: var(--medium-tint); border-color: rgba(245, 158, 11, 0.4); color: var(--medium); }
+.pill-key     { background: rgba(255, 255, 255, 0.05); border-color: var(--border-strong); color: var(--text-dim); }
+
+.status-note {
+  margin-left: 9px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 20px;
+  margin-left: 8px;
+  padding: 0 8px;
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.retry-btn:hover { background: var(--medium-tint); border-color: rgba(245, 158, 11, 0.5); }
+.retry-btn .ic { width: 11px; height: 11px; }
+.retry-btn.is-busy { opacity: 0.5; pointer-events: none; }
+
+/* Nicked: the one state that must never be missed */
+#stats-body tr.row-nicked td { background: rgba(239, 68, 68, calc(var(--bg-alpha) * 0.11)); }
+#stats-body tr.row-nicked:hover td { background: rgba(239, 68, 68, calc(var(--bg-alpha) * 0.18)); }
+.row-nicked .player-name { color: var(--bad); font-weight: 700; }
+.row-nicked .status-note { color: #f08a8a; }
+
+.row-status .player-name { color: var(--text); }
+.row-status.row-nicked .player-name { color: var(--bad); }
+
+/* Loading: name visible, stat cells are skeletons */
+.row-loading .player-name { color: var(--text-dim); }
+.skel {
+  display: inline-block;
+  vertical-align: middle;
+  width: 70%;
+  max-width: 38px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.13) 50%, rgba(255, 255, 255, 0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.skel-wide { max-width: 70px; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* Graceful degradation: drop the note first, then the pill label */
+@media (max-width: 640px) {
+  .status-note { display: none; }
+}
+@media (max-width: 440px) {
+  .pill:not(.pill-nicked) .pill-label, .retry-btn span { display: none; }
+  .pill:not(.pill-nicked) { padding: 0 5px; }
+}

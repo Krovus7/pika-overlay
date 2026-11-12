@@ -1,0 +1,51 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('../fonts/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  /* Palette */
+  --navy:         rgb(8, 10, 18);
+  --surface:      rgb(16, 18, 32);
+  --accent:       #7c6af7;
+  --accent2:      #4ecdc4;
+  --text:         #eaedf5;
+  --text-dim:     #7b819a;
+  --text-muted:   #414660;
+  --good:         #22c55e;
+  --medium:       #f59e0b;
+  --bad:          #ef4444;
+  --party:        #d060e8;
+
+  /* Background opacity (set from config) — backgrounds only, never text */
+  --bg-alpha:     0.92;
+  --bg-surface:   rgba(16, 18, 32, 0.97);
+
+  /* Neutral steps and tints */
+  --border:       rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --hover:        rgba(255, 255, 255, 0.06);
+  --bg-row-hover: rgba(255, 255, 255, 0.065);
+  --accent-tint:  rgba(124, 106, 247, 0.16);
+  --accent-line:  rgba(124, 106, 247, 0.4);
+  --teal-tint:    rgba(78, 205, 196, 0.14);
+  --bad-tint:     rgba(239, 68, 68, 0.14);
+  --medium-tint:  rgba(245, 158, 11, 0.14);
+  --party-tint:   rgba(208, 96, 232, 0.14);
+
+  --radius:       8px;
+  --radius-sm:    5px;
+  --font:         'Inter', system-ui, sans-serif;
+
+  --ease:         cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast:       120ms;
+  --t-med:        150ms;
+
+  --row-h:        34px;
+}
+
+body.density-dense { --row-h: 28px; }
+body.layout-compact { --row-h: 26px; }

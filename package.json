@@ -22,7 +22,8 @@
     "files": [
       "dist/**/*",
       "renderer/overlay.html",
-      "renderer/overlay.css",
+      "renderer/css/*.css",
+      "renderer/fonts/*",
       "renderer/bundle/*.js",
       "assets/*",
       "package.json"

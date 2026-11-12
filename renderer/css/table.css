@@ -1,0 +1,139 @@
+.table-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  contain: strict;
+}
+
+#stats-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+/* ─── Header ───────────────────────────────────────────────────────────────── */
+#stats-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 28px;
+  padding: 0 10px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  background: rgba(14, 16, 30, max(0.96, calc(var(--bg-alpha) * 0.99)));
+  border-bottom: 1px solid var(--border-strong);
+  transition: color var(--t-fast);
+}
+#stats-table th:first-child { padding-left: 13px; }
+#stats-table th.num { text-align: right; padding: 0 8px; }
+
+.th-in { display: inline-flex; align-items: center; gap: 3px; }
+th.num .th-in { flex-direction: row-reverse; }
+
+.sort-ic {
+  width: 9px; height: 9px;
+  opacity: 0;
+  stroke-width: 2.5;
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+th.sortable { cursor: pointer; }
+th.sortable:hover { color: var(--text); }
+th.sortable:hover .sort-ic { opacity: 0.45; }
+th.sorted { color: var(--text); }
+th.sorted .sort-ic { opacity: 1; color: var(--accent); }
+th.sorted.asc .sort-ic { transform: rotate(180deg); }
+
+/* ─── Cells ────────────────────────────────────────────────────────────────── */
+#stats-body td {
+  height: var(--row-h);
+  padding: 0 10px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background var(--t-fast);
+}
+#stats-body td:first-child { padding-left: 13px; box-shadow: inset 3px 0 0 var(--rail, transparent); }
+body.density-dense #stats-body td { font-size: 12.5px; }
+
+#stats-body tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
+#stats-body tr:hover td { background: var(--bg-row-hover); }
+
+#stats-body td.num {
+  padding: 0 8px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+.val-dim { color: var(--text-dim); }
+.guild-cell { color: var(--text-dim); font-size: 12px; }
+
+.player-name { font-weight: 600; color: var(--text); }
+.player-name .ic { vertical-align: -2px; margin-right: 5px; }
+
+/* ─── Rank, level, source, tags ───────────────────────────────────────────── */
+.rank-tag, .level-tag {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 14px;
+  padding: 0 4px;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+#stats-body td.col-rank { padding-right: 4px; }
+.level-tag { background: var(--accent-tint); color: #b4aafc; margin-right: 3px; }
+
+.src-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.src-badge .ic { width: 12px; height: 12px; }
+.src-manual, .src-bulk { color: #b4aafc; }
+.src-log { color: var(--accent2); }
+.src-party { color: var(--party); }
+
+.tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0.06em;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.tag-you { background: var(--teal-tint); color: var(--accent2); }
+.tag-bot { background: var(--medium-tint); color: var(--medium); }
+.party-ic { color: var(--party); }
+
+/* ─── Row rails: self, suspect, party, nicked ──────────────────────────────── */
+.row-self    { --rail: var(--accent2); }
+.row-suspect { --rail: var(--medium); }
+.row-party   { --rail: var(--party); }
+.row-nicked  { --rail: var(--bad); }
+
+#stats-body tr.row-self td    { background: rgba(78, 205, 196, calc(var(--bg-alpha) * 0.06)); }
+#stats-body tr.row-suspect td { background: rgba(245, 158, 11, calc(var(--bg-alpha) * 0.06)); }
+#stats-body tr.row-party td   { background: rgba(208, 96, 232, calc(var(--bg-alpha) * 0.06)); }
+#stats-body tr.row-self:hover td    { background: rgba(78, 205, 196, calc(var(--bg-alpha) * 0.12)); }
+#stats-body tr.row-suspect:hover td { background: rgba(245, 158, 11, calc(var(--bg-alpha) * 0.12)); }
+#stats-body tr.row-party:hover td   { background: rgba(208, 96, 232, calc(var(--bg-alpha) * 0.12)); }
+
+/* ─── Motion: only newly inserted rows fade in ─────────────────────────────── */
+tr.row-enter { animation: row-in 140ms var(--ease) both; }
+@keyframes row-in { from { opacity: 0; } to { opacity: 1; } }

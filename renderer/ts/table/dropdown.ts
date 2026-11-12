@@ -16,6 +16,7 @@ const MODE_LABELS: Record<string, string> = {
     ALL_MODES: 'Overall',
     SOLO: 'Solo',
     DOUBLES: 'Duo',
+    TRIPLES: 'Triples',
     QUAD: 'Quad',
 };
 
@@ -75,6 +76,7 @@ export function createDropdowns(handlers: DropdownHandlers): Dropdowns {
     btnPeriod.addEventListener('click', e => { e.stopPropagation(); openFilter('period'); });
     btnMode.addEventListener('click', e => { e.stopPropagation(); openFilter('mode'); });
     document.addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
     periodDropdown.addEventListener('click', e => {
         const opt = (e.target as HTMLElement).closest('.filter-option') as HTMLElement | null;

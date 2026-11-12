@@ -1,0 +1,44 @@
+/* Below 15% background opacity the game shows through: raise text contrast.
+   Backgrounds keep following --bg-alpha; only text colours change here. */
+
+body.lo-dark {
+  --text:       #f2f4fa;
+  --text-dim:   #b4bbd4;
+  --text-muted: #8890b8;
+}
+body.lo-dark #stats-body td,
+body.lo-dark #stats-table th,
+body.lo-dark .status-pill,
+body.lo-dark .footer-bar,
+body.lo-dark .api-banner { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75); }
+body.lo-dark .player-name { color: #fff; font-weight: 700; }
+body.lo-dark .level-tag { color: #d0caff; background: rgba(124, 106, 247, 0.3); }
+body.lo-dark .pill-muted, body.lo-dark .pill-key, body.lo-dark .pill-neutral { color: #d3d8ea; }
+body.lo-dark .row-nicked .player-name { color: #ff6b6b; }
+
+body.lo-light {
+  --text:       #1a1c28;
+  --text-dim:   #343749;
+  --text-muted: #5b5f7a;
+}
+body.lo-light .player-name { color: #0a0b14; font-weight: 700; }
+body.lo-light .row-nicked .player-name { color: #b91c1c; }
+body.lo-light #stats-table th { color: #3a3d54; background: rgba(205, 208, 232, max(0.96, calc(var(--bg-alpha) * 0.99))); }
+body.lo-light .level-tag { color: #fff; background: rgba(100, 82, 220, 0.85); }
+body.lo-light #search-input { color: #0a0b14; }
+body.lo-light #search-input::placeholder { color: #4a4d65; }
+body.lo-light .pill-muted, body.lo-light .pill-key, body.lo-light .pill-neutral,
+body.lo-light .status-pill, body.lo-light .src-badge { color: #2e3145; }
+body.lo-light .pill-warn { color: #92560a; }
+body.lo-light .pill-new { color: #0f6d66; }
+body.lo-light .status-note { color: #343749; }
+body.lo-light .icon-btn, body.lo-light .filter-btn, body.lo-light .search-icon { color: #343749; }
+body.lo-light .logo { color: #0a0b14; }
+body.lo-light .rank-tag { filter: brightness(0.5) saturate(1.6); }
+body.lo-light .tag-you { color: #0f6d66; }
+body.lo-light .tag-bot { color: #92560a; }
+body.lo-light .src-log { color: #0f6d66; }
+body.lo-light .src-manual, body.lo-light .src-bulk { color: #4b3fc4; }
+body.lo-light .src-party { color: #9b2bb3; }
+body.lo-light #stats-body tr:hover td { background: rgba(0, 0, 0, 0.06); }
+body.lo-light #stats-body td[style*="color"] { filter: brightness(0.62) saturate(1.4); }

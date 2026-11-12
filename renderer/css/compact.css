@@ -1,0 +1,21 @@
+body.layout-compact .search-bar,
+body.layout-compact .footer-bar { display: none; }
+
+body.layout-compact .titlebar { height: 32px; min-height: 32px; padding-left: 10px; }
+body.layout-compact .logo { font-size: 12px; }
+body.layout-compact .logo-version,
+body.layout-compact .status-note { display: none; }
+body.layout-compact .status-pill { height: 18px; font-size: 9.5px; }
+body.layout-compact .icon-btn { width: 24px; height: 24px; }
+
+body.layout-compact #stats-table th { height: 24px; padding: 0 6px; font-size: 9.5px; }
+body.layout-compact #stats-body td { padding: 0 6px; font-size: 11.5px; }
+body.layout-compact #stats-body td:first-child,
+body.layout-compact #stats-table th:first-child { padding-left: 9px; }
+body.layout-compact .src-badge span { display: none; }
+body.layout-compact .pill-long .pill-label,
+body.layout-compact .row-error .pill-label,
+body.layout-compact .retry-btn span { display: none; }
+body.layout-compact .pill-long, body.layout-compact .row-error .pill { padding: 0 5px; }
+
+body.layout-compact .api-banner { min-height: 24px; padding: 3px 8px 3px 10px; font-size: 10.5px; }

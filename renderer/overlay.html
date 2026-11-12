@@ -3,48 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'" />
   <title>Pika Overlay</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="overlay.css" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/titlebar.css" />
+  <link rel="stylesheet" href="css/search.css" />
+  <link rel="stylesheet" href="css/banner.css" />
+  <link rel="stylesheet" href="css/table.css" />
+  <link rel="stylesheet" href="css/row-states.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+  <link rel="stylesheet" href="css/compact.css" />
+  <link rel="stylesheet" href="css/low-opacity.css" />
+  <link rel="stylesheet" href="css/settings.css" />
 </head>
 <body>
+  <!-- Icon sprite: stroke icons, currentColor, referenced with <use href="#i-name"> -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-sword" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6M16 16l4 4M19 21l2-2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.5"/><circle cx="9" cy="17" r="2.5"/></symbol>
+    <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-circle-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-log-in" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></symbol>
+    <symbol id="i-diamond" viewBox="0 0 24 24"><path d="m12 3 9 9-9 9-9-9z"/></symbol>
+    <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/></symbol>
+  </svg>
+
   <!-- Title bar -->
   <div id="titlebar" class="titlebar">
     <div class="titlebar-left">
-      <span class="logo">⚔ Pika<span class="logo-accent">Overlay</span></span>
+      <span class="logo"><svg class="ic"><use href="#i-sword"/></svg><span>Pika<span class="logo-accent">Overlay</span></span></span>
       <span class="logo-version">v4.1.0</span>
-      <span id="status-badge" class="badge badge-idle">Idle</span>
+      <span id="status-badge" class="status-pill is-idle">Idle</span>
     </div>
     <div class="titlebar-right">
       <!-- Low-opacity contrast switcher — shown by JS when opacity < 15% -->
       <div id="lo-switcher" title="Text contrast mode for low-opacity background">
-        <button id="lo-btn-dark"  class="lo-btn active" title="Dark text contrast (for dark/default textures)">🌙 Dark</button>
-        <button id="lo-btn-light" class="lo-btn"        title="Light text contrast (for bright/white textures)">☀ Light</button>
+        <button id="lo-btn-dark" class="lo-btn active" title="Light text (for dark game scenes)"><svg class="ic"><use href="#i-moon"/></svg>Dark</button>
+        <button id="lo-btn-light" class="lo-btn" title="Dark text (for bright game scenes)"><svg class="ic"><use href="#i-sun"/></svg>Light</button>
       </div>
-      <button id="btn-toggle-view" class="icon-btn btn-layout-toggle" title="Toggle Compact / Detailed Layout">◧</button>
-      <button id="btn-clear"    class="icon-btn" title="Clear players">🗑</button>
-      <button id="btn-settings" class="icon-btn" title="Settings">⚙</button>
-      <button id="btn-minimize" class="icon-btn" title="Minimize">─</button>
-      <button id="btn-close"    class="icon-btn btn-close-x" title="Hide">✕</button>
+      <button id="btn-toggle-view" class="icon-btn" title="Switch to Compact layout"><svg class="ic"><use href="#i-layout"/></svg></button>
+      <button id="btn-clear" class="icon-btn" title="Clear players"><svg class="ic"><use href="#i-trash"/></svg></button>
+      <button id="btn-settings" class="icon-btn" title="Settings"><svg class="ic"><use href="#i-sliders"/></svg></button>
+      <button id="btn-minimize" class="icon-btn" title="Minimize"><svg class="ic"><use href="#i-minus"/></svg></button>
+      <button id="btn-close" class="icon-btn btn-close-x" title="Hide"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
   </div>
 
   <!-- Search bar (hidden in compact mode) -->
   <div class="search-bar">
     <div class="search-input-wrap">
-      <span class="search-icon">🔍</span>
+      <svg class="ic search-icon"><use href="#i-search"/></svg>
       <input id="search-input" type="text"
-        placeholder="Search player or paste multiple names…"
+        placeholder="Search a player or paste names"
+        title="Press Enter to search. Paste several names for a bulk lookup. Period and mode apply to every row."
         autocomplete="off" spellcheck="false" />
       <button id="btn-lookup" class="btn-primary">Search</button>
       <div class="period-divider"></div>
 
-      <!-- Period dropdown -->
       <div class="filter-dropdown-wrap" id="period-wrap">
         <button class="filter-btn" id="btn-period" title="Stats time period">
           <span id="period-label">All Time</span>
-          <span class="filter-chevron">▾</span>
+          <svg class="ic filter-chevron"><use href="#i-chevron"/></svg>
         </button>
         <div class="filter-dropdown" id="period-dropdown">
           <div class="filter-option selected" data-value="total">All Time</div>
@@ -54,21 +93,27 @@
         </div>
       </div>
 
-      <!-- Mode dropdown -->
       <div class="filter-dropdown-wrap" id="mode-wrap">
         <button class="filter-btn" id="btn-mode" title="Game mode">
           <span id="mode-label">Overall</span>
-          <span class="filter-chevron">▾</span>
+          <svg class="ic filter-chevron"><use href="#i-chevron"/></svg>
         </button>
         <div class="filter-dropdown" id="mode-dropdown">
           <div class="filter-option selected" data-value="ALL_MODES">Overall</div>
           <div class="filter-option" data-value="SOLO">Solo</div>
           <div class="filter-option" data-value="DOUBLES">Duo</div>
+          <div class="filter-option" data-value="TRIPLES">Triples</div>
           <div class="filter-option" data-value="QUAD">Quad</div>
         </div>
       </div>
     </div>
-    <div class="search-hint">Press <kbd>Enter</kbd> to search · Paste multiple names for bulk lookup · Period &amp; mode apply to all stats</div>
+  </div>
+
+  <!-- API health banner (visible only when health is not ok) -->
+  <div id="api-banner" class="api-banner" role="status" hidden>
+    <svg class="ic"><use id="banner-icon" href="#i-key"/></svg>
+    <span id="banner-text" class="banner-text"></span>
+    <button id="banner-settings" class="banner-btn" hidden>Open Settings</button>
   </div>
 
   <!-- Stats table -->
@@ -79,20 +124,20 @@
     </table>
 
     <div id="empty-state" class="empty-state">
-      <div class="empty-icon">🏠</div>
-      <div class="empty-title">No players detected</div>
-      <div class="empty-sub">
-        Players are detected automatically from the kill feed.<br />
-        Or search for a username manually above.
-      </div>
+      <div class="empty-icon"><svg class="ic"><use id="empty-icon-use" href="#i-radar"/></svg></div>
+      <div id="empty-title" class="empty-title">Waiting for players</div>
+      <div id="empty-sub" class="empty-sub"></div>
+      <button id="empty-action" class="btn-primary empty-action" hidden>Open Settings</button>
     </div>
   </div>
 
   <!-- Footer (hidden in compact mode) -->
   <div class="footer-bar">
-    <span id="footer-count">0 players</span>
-    <span id="footer-by" class="footer-by">by AcquaPanna</span>
-    <span class="footer-api">stats.pika-network.net</span>
+    <div id="footer-count">0 players</div>
+    <div class="footer-meta">
+      <span id="footer-by">by AcquaPanna</span>
+      <span class="footer-api">stats.pika-network.net</span>
+    </div>
   </div>
 
   <!-- Inline Settings Panel Modal -->
