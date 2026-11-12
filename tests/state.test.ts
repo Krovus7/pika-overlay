@@ -111,6 +111,53 @@ describe('LookupQueue', () => {
         assert.ok(cond(), 'condition not met within timeout');
     }
 
+    it('party and manual jobs run before the backlog, FIFO within each class', async () => {
+        const order: string[] = [];
+        let open: () => void = () => {};
+        const gate = new Promise<void>(resolve => { open = resolve; });
+        const queue = new LookupQueue(async job => {
+            await gate;
+            order.push(job.username);
+        }, 1);
+        const job = (username: string, source: string) => ({ username, source, interval: null, mode: null });
+
+        queue.enqueue(job('first', 'tab_list')); // starts immediately, holds the single slot
+        queue.enqueue(job('tab1', 'tab_list'));
+        queue.enqueue(job('tab2', 'join'));
+        queue.enqueue(job('mate1', 'party'));
+        queue.enqueue(job('typed', 'manual'));
+        queue.enqueue(job('tab3', 'kill_feed'));
+        queue.enqueue(job('mate2', 'party'));
+
+        open();
+        await waitFor(() => order.length === 7);
+        assert.deepEqual(order, ['first', 'mate1', 'typed', 'mate2', 'tab1', 'tab2', 'tab3']);
+    });
+
+    it('dropPending removes only jobs that have not started', async () => {
+        const order: string[] = [];
+        let open: () => void = () => {};
+        const gate = new Promise<void>(resolve => { open = resolve; });
+        const queue = new LookupQueue(async job => {
+            await gate;
+            order.push(job.username);
+        }, 1);
+        const job = (username: string, source: string) => ({ username, source, interval: null, mode: null });
+
+        queue.enqueue(job('running', 'join'));
+        queue.enqueue(job('stale1', 'join'));
+        queue.enqueue(job('mate', 'party'));
+        queue.enqueue(job('stale2', 'tab_list'));
+
+        const dropped = queue.dropPending(j => j.source !== 'party');
+        assert.equal(dropped, 2);
+        assert.equal(queue.pendingCount, 1);
+
+        open();
+        await waitFor(() => order.length === 2);
+        assert.deepEqual(order, ['running', 'mate'], 'the running job is never dropped');
+    });
+
     it('never exceeds concurrency and processes in FIFO order', async () => {
         let concurrent = 0;
         let maxConcurrent = 0;

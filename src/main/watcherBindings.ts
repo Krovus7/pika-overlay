@@ -8,6 +8,7 @@
 import { IPC_EVENTS } from '../shared/ipc-contract';
 import { pushLogLine } from './ipc/handlers';
 import type { LogWatcher } from './log/logWatcher';
+import { USER_TYPED_SOURCES } from '../shared/types';
 import type { GameState, LookupQueue, PartyState, PlayerRegistry } from './state';
 
 export interface WatcherBindingDeps {
@@ -31,6 +32,12 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
     };
     const enqueue = (username: string, source: string): void =>
         queue.enqueue({ username, source, interval: null, mode: null });
+    // The lobby changed: lookups still waiting for players of the old one would
+    // bring them back on screen and spend API budget for nothing.
+    const dropStaleLookups = (): void => {
+        queue.dropPending(job =>
+            !job.refresh && !USER_TYPED_SOURCES.includes(job.source) && !party.has(job.username.toLowerCase()));
+    };
 
     logWatcher.on('log_line', (line: string) => pushLogLine(line));
 
@@ -45,6 +52,7 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
     logWatcher.on('game_start', () => {
         game.setInGame(true);
         // Pin party members, clear other players from tracking
+        dropStaleLookups();
         removeShownExcept(new Set(party.snapshot()));
         send(IPC_EVENTS.GAME_START);
     });
@@ -56,6 +64,7 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
 
     logWatcher.on('players_clear', () => {
         game.setInGame(false);
+        dropStaleLookups();
         removeShownExcept(new Set(party.snapshot()));
         send(IPC_EVENTS.PLAYERS_CLEAR);
     });

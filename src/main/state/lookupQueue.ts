@@ -1,7 +1,10 @@
 /**
- * Lookup queue — FIFO queue with bounded concurrency (v3 rule: max 6 lookups,
- * ~12 HTTP in-flight; never raise above 8 without load tests — HANDOVER v2.7).
- * Worker errors are logged, never silent, and never break the queue.
+ * Lookup queue — bounded concurrency (v3 rule: max 6 lookups, ~12 HTTP
+ * in-flight; never raise above 8 without load tests — HANDOVER v2.7).
+ * The API budget is 120 requests/minute, so order matters when a backlog
+ * builds: party members and names the user typed go ahead of the backlog
+ * (FIFO within each class), and pending jobs can be dropped when the lobby
+ * they belong to is gone. Worker errors are logged and never break the queue.
  */
 
 export interface LookupJob {
@@ -15,6 +18,8 @@ export interface LookupJob {
 
 export const LOOKUP_CONCURRENCY = 6;
 
+const PRIORITY_SOURCES: ReadonlySet<string> = new Set(['party', 'manual']);
+
 export class LookupQueue {
     private active = 0;
     private jobs: LookupJob[] = [];
@@ -25,8 +30,20 @@ export class LookupQueue {
     ) {}
 
     enqueue(job: LookupJob): void {
-        this.jobs.push(job);
+        if (PRIORITY_SOURCES.has(job.source)) {
+            const firstBacklog = this.jobs.findIndex(j => !PRIORITY_SOURCES.has(j.source));
+            this.jobs.splice(firstBacklog === -1 ? this.jobs.length : firstBacklog, 0, job);
+        } else {
+            this.jobs.push(job);
+        }
         this.drain();
+    }
+
+    /** Drops jobs that have not started yet. Returns how many were dropped. */
+    dropPending(shouldDrop: (job: LookupJob) => boolean): number {
+        const before = this.jobs.length;
+        this.jobs = this.jobs.filter(job => !shouldDrop(job));
+        return before - this.jobs.length;
     }
 
     get activeCount(): number {
