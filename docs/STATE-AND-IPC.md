@@ -11,7 +11,7 @@ calling each other.
 | `playerRegistry.ts` | shown players, key = lowercased name → `{ name, source }`; `add/get/has/delete/entries/clearExcept/clear/snapshot` | watcher bindings, `LookupService`, `players:clear`, key-change refresh |
 | `partyState.ts` | party member keys (pinned rows) | watcher bindings, `players:clear`, queue drop filter |
 | `gameState.ts` | match running flag + players eliminated in the current match | watcher bindings |
-| `lookupQueue.ts` | pending jobs; `LOOKUP_CONCURRENCY = 6`; `party` and `manual` jobs go ahead of the backlog (FIFO within each class); `dropPending(predicate)` | watcher bindings, `lookup:bulk`, `refreshAll` |
+| `lookupQueue.ts` | pending jobs; `LOOKUP_CONCURRENCY = 6`; `party` and `manual` jobs go ahead of the backlog (FIFO within each class); a job with a free slot starts inside `enqueue`, so the player is registered before the next log event is handled; `dropPending(predicate)` | watcher bindings, `lookup:bulk`, `refreshAll` |
 
 `registry.add(name, source)` keeps an existing entry unchanged, so a row keeps
 the source it was first found with; `refresh` re-runs a registered player with
@@ -92,8 +92,8 @@ Types: `PlayerResult`, `PlayerStatus`, `ApiHealth`, `ApiKeyTestResult`,
 | `players_clear` | game state reset; drop pending non-party lookups; remove non-party rows; `players:clear` |
 | `player_detected` | a `tab_list` detection of a player eliminated in this match is ignored; the user's own pre-game join enqueues a fresh refresh of the party rows and of the own row (once per 20 s); else enqueue (source kept) |
 | `player_quit` | marks the player eliminated (once a match started); party members keep their row; else drop their queued lookup, registry delete + `player:remove` |
-| `party_members` | remove rows of members no longer listed; replace party; `party:update`; enqueue each member fresh (source `party`) |
-| `party_joined` | add to party; `party:update`; enqueue fresh (source `party`) |
+| `party_members` | remove rows of members no longer listed; replace party; `party:update`; enqueue each member fresh (source `party`; a row already shown takes the `party` source) |
+| `party_joined` | add to party; `party:update`; enqueue fresh (source `party`; a row already shown takes the `party` source) |
 | `party_left` | delete from party, remove row; `party:update` |
 | `party_clear` | remove all party rows; clear party; `party:update` with `[]` |
 
