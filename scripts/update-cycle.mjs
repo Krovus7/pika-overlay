@@ -17,6 +17,18 @@ const cwd = process.argv[3];
 const installDir = process.argv[4];
 const expectedVersion = process.argv[5] ?? '4.1.0';
 
+// The Updates tab of v4 has element ids; the v5 one is built in code, so its
+// controls are found by their text inside #tab-updates.
+const UPDATES_UI = `(() => {
+    const scope = document.getElementById('tab-updates') ?? document;
+    const byText = re => [...scope.querySelectorAll('button')].find(b => re.test(b.textContent));
+    return {
+        check: document.getElementById('btnUpdateCheck') ?? byText(/Check for updates/),
+        apply: document.getElementById('btnUpdateApply') ?? byText(/Update (and|&) restart/),
+        status: (document.getElementById('updateStatus') ?? scope.querySelector('.s-status'))?.textContent ?? '',
+    };
+})()`;
+
 const child = spawn(exe, [`--remote-debugging-port=${PORT}`], { cwd, stdio: 'ignore' });
 
 let ws = null;
@@ -97,13 +109,13 @@ async function main() {
         return panel.classList.contains('visible');
     })()`, 15000, 'settings visible');
     await evaluate(`document.querySelector('.settings-tab-btn[data-tab="updates"]').click(); true`);
-    await evaluate(`document.getElementById('btnUpdateCheck').click(); true`);
+    await evaluate(`${UPDATES_UI}.check.click(); true`);
 
     const available = await waitFor(
-        `(document.getElementById('updateStatus')?.textContent || '').includes('Update available')`,
+        `/Update available|is available/.test(${UPDATES_UI}.status)`,
         60000, 'update available',
     );
-    const status = await evaluate(`document.getElementById('updateStatus').textContent`);
+    const status = await evaluate(`${UPDATES_UI}.status`);
     console.log(`[update-cycle] status: ${status}`);
     if (!available) process.exit(1);
 
@@ -111,7 +123,7 @@ async function main() {
     ws.send(JSON.stringify({
         id: ++msgId,
         method: 'Runtime.evaluate',
-        params: { expression: `document.getElementById('btnUpdateApply').click(); true` },
+        params: { expression: `${UPDATES_UI}.apply.click(); true` },
     }));
 
     console.log('[update-cycle] apply clicked — waiting for app exit + install…');

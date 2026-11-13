@@ -167,6 +167,11 @@ Windows keeps out of the taskbar. After the fix, on the packaged 5.0.1 build:
 | after the title-bar X | window hidden → no taskbar button, process alive (tray) |
 | `npm test` / smoke on the packaged build | 242 pass / 16/16 |
 
+5.0.1 was then published and the installed 5.0.0 updated in-app
+(`scripts/update-cycle.mjs`, passed). On the installed 5.0.1: the window is
+visible, not a tool window and topmost; the Start-menu shortcut shows the app
+icon.
+
 Not checked by eye: the taskbar button and the tray icon themselves, and
 whether the overlay still stays above the game now that it is a normal window.
 

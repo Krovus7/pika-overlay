@@ -56,8 +56,7 @@ vpk upload github -o release -c win --repoUrl https://github.com/Krovus7/pika-ov
 ```
 
 5.0.0 was published on 2026-11-13 by running these three steps by hand;
-`npm run release` was changed afterwards to run the same steps and has not
-been run end to end in that form.
+5.0.1 was published the same day with `npm run release` itself.
 
 The tag is derived from `package.json` version (e.g. `v5.0.0`). Use `--pre`
 for pre-releases (test cycle) instead of stable.
@@ -84,6 +83,9 @@ check/download/apply/restart chain is now proven against the GitHub feed.
 with target `5.0.0` on an installed 4.1.0: "Update available: v5.0.0" →
 apply → app exits → disk `sq.version` = 5.0.0 → app restarts; then
 `scripts/smoke.mjs` on the installed 5.0.0: 16/16, settings and API key kept.
+
+**Verified 2026-11-13 (5.0.0 → 5.0.1, in-app, delta):** same script, which
+now also drives the v5 Updates tab (controls found by text).
 
 `update-cycle.mjs` takes the target version as its fifth argument
 (`<exe> <cwd> <installDir> [version]`, default `4.1.0`).
