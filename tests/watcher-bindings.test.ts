@@ -118,6 +118,18 @@ describe('watcher bindings — party pinned', () => {
         assert.deepEqual(shown(r), ['friend']);
     });
 
+    it('a player already shown who joins the party gets the party source', async () => {
+        const r = rig();
+        r.log.emit('player_detected', 'Friend', 'kill_feed');
+        await r.settle();
+        r.jobs.length = 0;
+
+        r.log.emit('party_joined', 'Friend');
+        await r.settle();
+        assert.equal(r.registry.get('friend')?.source, 'party');
+        assert.deepEqual(r.jobs.map(j => `${j.username}:${j.refresh ? 'refresh' : 'lookup'}`), ['Friend:refresh']);
+    });
+
     it('leaving the party removes the row', async () => {
         const r = rig();
         r.log.emit('party_joined', 'Friend');

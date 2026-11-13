@@ -43,9 +43,12 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
     };
     const enqueue = (username: string, source: string): void =>
         queue.enqueue({ username, source, interval: null, mode: null });
-    // Skips the cache; a row that is already shown is updated in place
-    const enqueueFresh = (username: string, source: string): void =>
+    // Skips the cache; a row that is already shown is updated in place, and
+    // takes the party label when that is why it is refreshed
+    const enqueueFresh = (username: string, source: string): void => {
+        if (source === 'party') registry.setSource(username, source);
         queue.enqueue({ username, source, interval: null, mode: null, fresh: true, refresh: registry.has(username) });
+    };
     const refreshOwnSide = (self: string, source: string): void => {
         const now = Date.now();
         if (now - lastLobbyRefresh < LOBBY_REFRESH_MIN_GAP_MS) {

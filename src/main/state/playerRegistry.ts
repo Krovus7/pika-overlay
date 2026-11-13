@@ -29,6 +29,12 @@ export class PlayerRegistry {
         return this.players.get(username.toLowerCase());
     }
 
+    /** Relabels a registered player (someone already shown joins the party) */
+    setSource(username: string, source: string): void {
+        const entry = this.players.get(username.toLowerCase());
+        if (entry) entry.source = source;
+    }
+
     /** Every registered player with its detected name and source */
     entries(): RegisteredPlayer[] {
         return [...this.players.values()];

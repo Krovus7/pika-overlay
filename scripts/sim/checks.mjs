@@ -31,13 +31,13 @@ export class Checker {
         this.errorRows = 0;
         model.hooks = {
             loading: (k, prev, source) => {
-                if (prev && prev.source !== source) this.vio.add('SOURCE_STABILITY', `${k}: row source ${prev.source} -> loading event source ${source}`);
+                if (this.relabelled(k, prev, source)) this.vio.add('SOURCE_STABILITY', `${k}: row source ${prev.source} -> loading event source ${source}`);
                 this.loadingSince.set(k, Date.now());
                 this.touch();
             },
             stats: (k, data, applied, prev) => {
                 if (!applied) return;
-                if (prev && prev.source !== data.source) this.vio.add('SOURCE_STABILITY', `${k}: row source ${prev.source} -> stats source ${data.source}`);
+                if (this.relabelled(k, prev, data.source)) this.vio.add('SOURCE_STABILITY', `${k}: row source ${prev.source} -> stats source ${data.source}`);
                 this.loadingSince.delete(k);
                 this.classify(data);
                 this.touch();
@@ -47,6 +47,11 @@ export class Checker {
                 this.touch();
             },
         };
+    }
+
+    /** A row keeps its source; the one allowed change is to 'party' when the player joins the party */
+    relabelled(k, prev, source) {
+        return !!prev && prev.source !== source && !(source === 'party' && this.oracle.party.has(k));
     }
 
     touch() { this.dirty = true; this.dirtyQ = true; }

@@ -72,6 +72,16 @@ describe('PlayerRegistry', () => {
     });
 });
 
+describe('PlayerRegistry.setSource', () => {
+    it('relabels a registered player and ignores an unknown one', () => {
+        const registry = new PlayerRegistry();
+        registry.add('Friend', 'kill_feed');
+        registry.setSource('FRIEND', 'party');
+        registry.setSource('Nobody', 'party');
+        assert.deepEqual(registry.entries(), [{ name: 'Friend', source: 'party' }]);
+    });
+});
+
 describe('PartyState', () => {
     it('add/delete/has with case normalization', () => {
         const party = new PartyState();
