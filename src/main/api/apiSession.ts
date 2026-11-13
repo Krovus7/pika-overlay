@@ -21,3 +21,13 @@ export function setApiKey(next: string): void {
     cache.clear();
     rateLimiter.reset();
 }
+
+/**
+ * The key in use was flagged invalid but just passed a live test (a stray 401,
+ * or the key was re-enabled): lookups may resume. Returns true when it re-armed.
+ */
+export function confirmApiKey(testedKey: string): boolean {
+    if (!apiKey || testedKey.trim() !== apiKey || !health.isAuthBlocked()) return false;
+    health.setKeyStatus('ok');
+    return true;
+}

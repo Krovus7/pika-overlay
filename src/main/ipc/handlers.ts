@@ -10,12 +10,13 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { IPC_CHANNELS, IPC_EVENTS } from '../../shared/ipc-contract';
-import { cache } from '../api/cache';
 import type { ConfigStore } from '../config';
 import type { LogWatcher } from '../log/logWatcher';
+import { redactSecrets } from '../log/redact';
 import type { LookupQueue, PartyState } from '../state';
 import { checkForUpdates, downloadAndApply, getUpdateState } from '../update/velopackUpdate';
 import { registerApiHandlers } from './apiHandlers';
+import { clearPlayers } from './clearPlayers';
 import { broadcastConfig, registerConfigHandlers } from './configHandlers';
 import type { LookupDeps, LookupService } from './lookup';
 
@@ -23,7 +24,7 @@ const MAX_LOG_LINES = 100;
 const recentLogLines: string[] = [];
 
 export function pushLogLine(line: string): void {
-    recentLogLines.push(line);
+    recentLogLines.push(redactSecrets(line));
     if (recentLogLines.length > MAX_LOG_LINES) recentLogLines.shift();
 }
 
@@ -50,16 +51,18 @@ function defaultLogFolder(): string {
 export function registerIpcHandlers(deps: HandlerDeps): void {
     const { store, getOverlayWin, service, queue } = deps;
 
-    ipcMain.handle(IPC_CHANNELS.LOOKUP_PLAYER, (_e, username: string, interval: string | null, mode: string | null) =>
-        service.lookup(username, 'manual', interval, mode));
+    // Renderer input is checked here: a malformed call is ignored, never thrown on.
+    ipcMain.handle(IPC_CHANNELS.LOOKUP_PLAYER, (_e, username: unknown, interval: string | null, mode: string | null) =>
+        (typeof username === 'string' ? service.lookup(username, 'manual', interval, mode) : null));
 
-    ipcMain.handle(IPC_CHANNELS.LOOKUP_BULK, (_e, names: string[], interval: string | null, mode: string | null) => {
-        for (const username of names) queue.enqueue({ username, source: 'bulk', interval, mode });
-        return names.length;
+    ipcMain.handle(IPC_CHANNELS.LOOKUP_BULK, (_e, names: unknown, interval: string | null, mode: string | null) => {
+        const usernames = Array.isArray(names) ? names.filter((n): n is string => typeof n === 'string') : [];
+        for (const username of usernames) queue.enqueue({ username, source: 'bulk', interval, mode });
+        return usernames.length;
     });
 
-    ipcMain.handle(IPC_CHANNELS.LOOKUP_RETRY, async (_e, username: string) => {
-        await service.retry(username);
+    ipcMain.handle(IPC_CHANNELS.LOOKUP_RETRY, async (_e, username: unknown) => {
+        if (typeof username === 'string') await service.retry(username);
     });
 
     ipcMain.handle(IPC_CHANNELS.STATS_SET_INTERVAL, (_e, interval: string) => {
@@ -78,13 +81,12 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
         service.refreshAll(queue, store.get('statsInterval'), store.get('statsMode'));
     });
 
-    ipcMain.handle(IPC_CHANNELS.PLAYERS_CLEAR, () => {
-        // Party members are pinned — preserve them across manual clears.
-        const removed = deps.registry.clearExcept(new Set(deps.party.snapshot()));
-        cache.clear();
-        for (const key of removed) getOverlayWin()?.webContents.send(IPC_EVENTS.PLAYER_REMOVE, key);
-        getOverlayWin()?.webContents.send(IPC_EVENTS.PLAYERS_CLEAR);
-    });
+    ipcMain.handle(IPC_CHANNELS.PLAYERS_CLEAR, () => clearPlayers({
+        registry: deps.registry,
+        party: deps.party,
+        queue,
+        send: (channel, ...args) => getOverlayWin()?.webContents.send(channel, ...args),
+    }));
 
     ipcMain.handle(IPC_CHANNELS.SETTINGS_OPEN, () => {
         getOverlayWin()?.webContents.send(IPC_EVENTS.SETTINGS_SHOW);
@@ -104,7 +106,7 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
         return canceled ? null : filePaths[0];
     });
 
-    ipcMain.handle(IPC_CHANNELS.TEST_LOG_PATH, (_e, p: string) => fs.existsSync(p));
+    ipcMain.handle(IPC_CHANNELS.TEST_LOG_PATH, (_e, p: unknown) => typeof p === 'string' && fs.existsSync(p));
     ipcMain.handle(IPC_CHANNELS.DEBUG_LOG_LINES, () => [...recentLogLines]);
 
     // ─── Auto-update (Velopack) ─────────────────────────────────────────────

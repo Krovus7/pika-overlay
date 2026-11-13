@@ -8,11 +8,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { setApiKey } from './api/apiSession';
-import { cache } from './api/cache';
 import { ConfigStore } from './config';
 import { driveShots, shotsRequested } from './devShots';
 import { registerHotkeys, unregisterAll } from './hotkeyManager';
 import { IPC_EVENTS } from '../shared/ipc-contract';
+import { clearPlayers } from './ipc/clearPlayers';
 import { registerIpcHandlers, type HandlerDeps } from './ipc/handlers';
 import { LookupService, type LookupDeps } from './ipc/lookup';
 import { LogWatcher } from './log/logWatcher';
@@ -58,11 +58,7 @@ app.whenReady().then(() => {
     const registerHotkeysFn = () => registerHotkeys({
         store,
         getOverlayWin,
-        onClear: () => {
-            playerRegistry.clear();
-            cache.clear();
-            send(IPC_EVENTS.PLAYERS_CLEAR);
-        },
+        onClear: () => clearPlayers({ registry: playerRegistry, party: partyState, queue, send }),
     });
 
     const handlerDeps: HandlerDeps = {

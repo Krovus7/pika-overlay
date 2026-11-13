@@ -283,7 +283,11 @@ export class ConfigStore {
     persist(): void {
         try {
             fs.mkdirSync(path.dirname(this.configPath), { recursive: true });
-            fs.writeFileSync(this.configPath, JSON.stringify(this.data, null, 2));
+            // Write-then-rename: a crash mid-write must not leave a truncated config
+            // (it holds the API key and every setting).
+            const tmpPath = `${this.configPath}.tmp`;
+            fs.writeFileSync(tmpPath, JSON.stringify(this.data, null, 2));
+            fs.renameSync(tmpPath, this.configPath);
         } catch (e) {
             console.error('[Config] Failed to write config:', (e as Error).message);
         }

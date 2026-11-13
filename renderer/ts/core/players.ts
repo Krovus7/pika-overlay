@@ -17,9 +17,10 @@ export function applyResult(data: StatsPayload): void {
     scheduleRender();
 }
 
+/** Main decides what leaves the table (it never removes a pinned party member); no second guess here. */
 export function removeRow(username: string): void {
     const key = username.toLowerCase();
-    if (state.party.has(key) || !state.players.delete(key)) return;
+    if (!state.players.delete(key)) return;
     scheduleRender();
 }
 

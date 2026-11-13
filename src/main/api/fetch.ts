@@ -19,11 +19,21 @@ export interface RetryOptions {
     timeoutMs?: number;
 }
 
-export function fetchWithTimeout(url: string, ms = 10_000, apiKey = ''): Promise<Response> {
+/**
+ * The timeout covers headers AND body: the body is read here and handed back
+ * as a buffered Response, so a server that stalls mid-body cannot hang a lookup.
+ */
+export async function fetchWithTimeout(url: string, ms = 10_000, apiKey = ''): Promise<Response> {
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), ms);
     const headers: Record<string, string> = apiKey ? { 'X-Api-Key': apiKey } : {};
-    return fetch(url, { signal: ctrl.signal, headers }).finally(() => clearTimeout(tid));
+    try {
+        const res = await fetch(url, { signal: ctrl.signal, headers });
+        const text = await res.text();
+        return new Response(text === '' ? null : text, { status: res.status, statusText: res.statusText, headers: res.headers });
+    } finally {
+        clearTimeout(tid);
+    }
 }
 
 /** Pause length after 429/503: retry-after, else x-ratelimit-reset, else backoff */
@@ -33,10 +43,11 @@ function pauseDelayMs(res: Response, baseDelayMs: number, attempt: number): numb
     return seconds ? seconds * 1000 : baseDelayMs * Math.pow(2, attempt);
 }
 
-async function sendThroughGate(url: string, timeoutMs: number): Promise<Response> {
+async function sendThroughGate(url: string, timeoutMs: number): Promise<{ res: Response; sentKey: string }> {
     const release = await rateLimiter.acquire();
+    const sentKey = getApiKey();
     try {
-        return await fetchWithTimeout(url, timeoutMs, getApiKey());
+        return { res: await fetchWithTimeout(url, timeoutMs, sentKey), sentKey };
     } finally {
         release();
     }
@@ -46,8 +57,9 @@ export async function fetchWithRetry(url: string, opts: RetryOptions = {}): Prom
     const { maxRetries = 3, baseDelayMs = 600, timeoutMs = 10_000 } = opts;
     for (let attempt = 0; ; attempt++) {
         let res: Response;
+        let sentKey: string;
         try {
-            res = await sendThroughGate(url, timeoutMs);
+            ({ res, sentKey } = await sendThroughGate(url, timeoutMs));
         } catch (err) {
             const isAbort = (err as Error).name === 'AbortError';
             if (isAbort && attempt < maxRetries) {
@@ -64,7 +76,8 @@ export async function fetchWithRetry(url: string, opts: RetryOptions = {}): Prom
         rateLimiter.observe(readRateHeaders(res.headers));
 
         if (res.status === 401) {
-            health.setKeyStatus('key_invalid');
+            // A late answer to a request sent with a replaced key says nothing about the current one.
+            if (sentKey === getApiKey()) health.setKeyStatus('key_invalid');
             return res;
         }
         if (res.status === 429 || res.status === 503) {

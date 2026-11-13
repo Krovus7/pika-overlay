@@ -79,6 +79,7 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
         const key = username.toLowerCase();
         // Pin party members — never remove them via kill feed
         if (party.has(key)) return;
+        queue.dropPending(job => !job.refresh && job.username.toLowerCase() === key);
         removeShown(key);
     });
 
