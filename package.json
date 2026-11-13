@@ -1,6 +1,6 @@
 {
   "name": "pika-overlay",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Pika-Network BedWars Stats Overlay v5",
   "main": "dist/src/main/main.js",
   "author": "AcquaPanna",
@@ -34,7 +34,8 @@
       "node_modules/@neon-rs/**"
     ],
     "win": {
-      "target": "dir"
+      "target": "dir",
+      "icon": "assets/icon.ico"
     }
   },
   "dependencies": {

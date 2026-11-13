@@ -32,6 +32,9 @@ This runs, in order:
    `assets/icon.svg` / `assets/icon-small.svg` (`scripts/make-icon.mjs`, runs
    inside Electron) and commit the result. `vpk pack` uses `assets/icon.ico`.
 2. `npx electron-builder --dir` — `release/win-unpacked` (input for vpk).
+   `build.win.icon` in `package.json` embeds `assets/icon.ico` in
+   `PikaOverlay.exe`; shortcuts and the Velopack launcher take their icon
+   from it (5.0.0 shipped without it and showed the default Electron icon).
 3. `vpk pack -u pika-overlay -v <version> -p release/win-unpacked -o release -c win -e PikaOverlay.exe -i assets/icon.ico --packTitle "Pika Overlay" --packAuthors "AcquaPanna"`
    — produces in `release/`:
    - `pika-overlay-win-Setup.exe` — installer

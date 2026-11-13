@@ -153,6 +153,23 @@ The first attempt of `update-cycle.mjs` timed out opening Settings: the
 script clicked before the page had attached its handlers. The script now
 clicks until the panel opens; the app was not at fault.
 
+## 5f. 5.0.1: exe icon and taskbar — 2026-11-13 (Code-Verified)
+
+Reported by the owner on the installed 5.0.0: shortcut with an old icon, no
+taskbar button. Causes: the packaged exe carried the default Electron icon
+(no `build.win.icon`); the window was created with `type: 'toolbar'`, which
+Windows keeps out of the taskbar. After the fix, on the packaged 5.0.1 build:
+
+| Check | Result |
+|---|---|
+| icon extracted from `PikaOverlay.exe`, from the Velopack launcher in the portable zip and from `Setup.exe` | the app icon |
+| window styles while shown (`GetWindowLongPtr`) | visible, not a tool window, topmost → taskbar button |
+| after the title-bar X | window hidden → no taskbar button, process alive (tray) |
+| `npm test` / smoke on the packaged build | 242 pass / 16/16 |
+
+Not checked by eye: the taskbar button and the tray icon themselves, and
+whether the overlay still stays above the game now that it is a normal window.
+
 ## 6. Not verified — Gate B open
 
 None of the following has been done; no claim about it is made anywhere in

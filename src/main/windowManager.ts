@@ -30,7 +30,8 @@ export function createOverlay(store: ConfigStore, rootDir: string): BrowserWindo
         frame: false,
         icon: iconPath,
         alwaysOnTop: store.get('alwaysOnTop'),
-        type: 'toolbar',
+        // A normal window (not a 'toolbar' one): it has a taskbar button while
+        // shown. The close button hides it, which leaves only the tray icon.
         skipTaskbar: false,
         resizable: true,
         webPreferences: {

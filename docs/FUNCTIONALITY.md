@@ -189,6 +189,14 @@ Defaults, ranges and validation of every key: `src/main/config.ts`
 (`opacity` clamped to 0.05–1, `uiScale` to 0.8–1.5, enums fall back to the
 default, `apiKey` is trimmed).
 
+## Window, taskbar and tray
+
+`src/main/windowManager.ts`, `src/main/tray.ts`, `src/main/ipc/handlers.ts`:
+the overlay is a normal frameless window, so it has a taskbar button while it
+is shown. The title-bar **X** hides the window (`overlay:close`): the taskbar
+button goes away and the app stays in the tray, from where it can be shown
+again or quit. The minimize button minimizes to the taskbar.
+
 ## Hotkeys
 
 Global shortcuts registered by `src/main/hotkeyManager.ts` (re-registered on
