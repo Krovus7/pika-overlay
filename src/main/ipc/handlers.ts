@@ -12,21 +12,13 @@ import * as path from 'node:path';
 import { IPC_CHANNELS, IPC_EVENTS } from '../../shared/ipc-contract';
 import type { ConfigStore } from '../config';
 import type { LogWatcher } from '../log/logWatcher';
-import { redactSecrets } from '../log/redact';
+import { getRecentLogLines } from '../log/debugLines';
 import type { LookupQueue, PartyState } from '../state';
 import { checkForUpdates, downloadAndApply, getUpdateState } from '../update/velopackUpdate';
 import { registerApiHandlers } from './apiHandlers';
 import { clearPlayers } from './clearPlayers';
 import { broadcastConfig, registerConfigHandlers } from './configHandlers';
 import type { LookupDeps, LookupService } from './lookup';
-
-const MAX_LOG_LINES = 100;
-const recentLogLines: string[] = [];
-
-export function pushLogLine(line: string): void {
-    recentLogLines.push(redactSecrets(line));
-    if (recentLogLines.length > MAX_LOG_LINES) recentLogLines.shift();
-}
 
 export interface HandlerDeps extends LookupDeps {
     getOverlayWin: () => BrowserWindow | null;
@@ -107,7 +99,7 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
     });
 
     ipcMain.handle(IPC_CHANNELS.TEST_LOG_PATH, (_e, p: unknown) => typeof p === 'string' && fs.existsSync(p));
-    ipcMain.handle(IPC_CHANNELS.DEBUG_LOG_LINES, () => [...recentLogLines]);
+    ipcMain.handle(IPC_CHANNELS.DEBUG_LOG_LINES, () => getRecentLogLines());
 
     // ─── Auto-update (Velopack) ─────────────────────────────────────────────
     ipcMain.handle(IPC_CHANNELS.UPDATE_GET_STATE, () => getUpdateState());

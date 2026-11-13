@@ -4,7 +4,7 @@
  */
 
 import { applyConfigToState } from './core/config';
-import { addLoadingRow, applyResult, clearTable, removeRow } from './core/players';
+import { addLoadingRow, applyResult, clearTable, removeRow, setParty } from './core/players';
 import { state } from './core/state';
 import { registerDemo } from './demo/demo';
 import { initSettingsPanel, notifySettingsConfig } from './settingsPanel';
@@ -77,7 +77,7 @@ function bindIpc(): void {
     api.onGamePregame(() => setGameStatus('queue', 'In queue'));
     api.onGameStart(() => { clearTable(true); setGameStatus('game', 'In game'); });
     api.onGameEnd(() => setGameStatus('idle', 'Idle'));
-    api.onPartyUpdate(members => { state.party = new Set(members); scheduleRender(); });
+    api.onPartyUpdate(setParty);
     api.onConfigUpdate(applyConfig);
     api.onApiHealth(setHealth);
 }

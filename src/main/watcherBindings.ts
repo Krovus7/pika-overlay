@@ -6,7 +6,7 @@
  */
 
 import { IPC_EVENTS } from '../shared/ipc-contract';
-import { pushLogLine } from './ipc/handlers';
+import { pushLogLine } from './log/debugLines';
 import type { LogWatcher } from './log/logWatcher';
 import { USER_TYPED_SOURCES } from '../shared/types';
 import type { GameState, LookupQueue, PartyState, PlayerRegistry } from './state';

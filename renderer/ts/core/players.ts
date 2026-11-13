@@ -2,35 +2,30 @@
 
 import type { StatsPayload } from '../../../src/shared/ipc-contract';
 import { renderNow, scheduleRender } from '../table/render';
+import * as store from './playerStore';
 import { state } from './state';
 
 export function addLoadingRow(username: string, source: string): void {
-    state.players.set(username.toLowerCase(), { username, source, status: 'loading' });
+    store.addLoading(state, username, source);
     scheduleRender();
 }
 
 /** Results for names no longer in the table (player left, table cleared) are dropped. */
 export function applyResult(data: StatsPayload): void {
-    const key = data.username.toLowerCase();
-    if (!state.players.has(key)) return;
-    state.players.set(key, data);
-    scheduleRender();
+    if (store.applyResult(state, data)) scheduleRender();
 }
 
 /** Main decides what leaves the table (it never removes a pinned party member); no second guess here. */
 export function removeRow(username: string): void {
-    const key = username.toLowerCase();
-    if (!state.players.delete(key)) return;
-    scheduleRender();
+    if (store.removeRow(state, username)) scheduleRender();
 }
 
 export function clearTable(keepParty = false): void {
-    if (keepParty && state.party.size > 0) {
-        for (const key of state.players.keys()) {
-            if (!state.party.has(key)) state.players.delete(key);
-        }
-    } else {
-        state.players.clear();
-    }
+    store.clearTable(state, keepParty);
     renderNow();
+}
+
+export function setParty(members: Iterable<string>): void {
+    store.setParty(state, members);
+    scheduleRender();
 }
