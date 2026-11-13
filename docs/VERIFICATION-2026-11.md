@@ -130,6 +130,16 @@ the live replays looked up names from old logs against today's API, so a
 NICKED row there can be a renamed account. The changes after the first D10
 round (sections 5b) were not screened by a separate reviewer.
 
+## 5d. Packaged build — 2026-11-13 (Code-Verified)
+
+`npm run pack` completed: `release/pika-overlay-win-Setup.exe`,
+`pika-overlay-win-Portable.zip`, `pika-overlay-5.0.0-full.nupkg` and the feed
+files (unsigned, as before). `scripts/smoke.mjs` against the packaged
+`release/win-unpacked/PikaOverlay.exe` and the live API: 16/16.
+
+Not run: the installer itself and the portable zip. The machine used keeps an
+installed 4.1.0 for the update-cycle check, which needs a published 5.0.0.
+
 ## 6. Not verified — Gate B open
 
 None of the following has been done; no claim about it is made anywhere in
@@ -140,7 +150,7 @@ the docs.
   real texture packs, the overlay staying on top of the game window, or the
   chat format of Pika today (the newest Pika match in the corpus is from
   August 2026).
-- The packaged build and the installer (`npm run pack`).
+- The installer (`Setup.exe`) on a clean machine and the portable zip.
 - The in-app update from 4.1.0 to 5.0.0 (the last verified update cycle was
   4.0.2 → 4.1.0, recorded in `docs/RELEASING.md`).
 
