@@ -26,5 +26,9 @@ Ogni decisione architetturale del progetto viene registrata come ADR:
 | 0005 | Redesign del pannello Impostazioni (overlay invariato) | Accepted |
 | 0006 | `node:test` come framework di test | Accepted |
 | 0007 | Config compatibile v3 con migrazione non distruttiva | Accepted |
+| 0008 | Preload bundled with esbuild (sandbox stays on) | Accepted |
+| 0009 | Design direction v4.1 (CSS-first, reversible) | Accepted |
+| 0010 | Player status model, API key and rate budget (v5) | Accepted |
+| 0011 | Dark and light themes, continuous legibility floor (v5) | Accepted |
 
 Le ADR numerate vivono nei file `0001-*.md`, `0002-*.md`, ecc.
