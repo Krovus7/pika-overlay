@@ -13,8 +13,9 @@
   --accent:       #7c6af7;
   --accent2:      #4ecdc4;
   --text:         #eaedf5;
-  --text-dim:     #7b819a;
-  --text-muted:   #414660;
+  /* Secondary text steps toward the primary as the backing fades (--lo, see below) */
+  --text-dim:     color-mix(in srgb, #c3c8da calc(var(--lo) * 60%), #838aa4);
+  --text-muted:   color-mix(in srgb, #8a90ad calc(var(--lo) * 100%), #414660);
   --good:         #22c55e;
   --medium:       #f59e0b;
   --bad:          #ef4444;
@@ -78,6 +79,41 @@ body.layout-compact { --row-h: 26px; }
 
   --field-bg:     rgba(var(--ink-rgb), 0.04);
   --field-border: rgba(var(--ink-rgb), 0.10);
+
+  /* v5 overlay tokens (defined for both themes) */
+  --accent-rgb:   124, 106, 247;
+  --accent2-rgb:  78, 205, 196;
+  --medium-rgb:   245, 158, 11;
+  --bad-rgb:      239, 68, 68;
+  --party-rgb:    208, 96, 232;
+  --accent-ink:   #7c6af7;        /* accent as icon / logo / ring colour */
+  --accent-solid: #7c6af7;        /* solid accent fill under --on-accent text */
+  --accent-solid-hover: #8d7dff;
+  --accent-solid-press: #6a59e6;
+  --bad-ink:      #ef4444;        /* red for text on the nicked tint */
+  --bad-solid:    #ef4444;        /* solid fill under --on-accent text */
+  --text-soft:    #c3c8da;        /* between --text and --text-dim */
+  --bad-soft:     #f08a8a;
+  --good-tint:    rgba(34, 197, 94, 0.14);
+  --medium-line:  rgba(245, 158, 11, 0.4);
+  --bad-line:     rgba(239, 68, 68, 0.4);
+  --teal-line:    rgba(78, 205, 196, 0.45);
+  --faint:        rgba(var(--ink-rgb), 0.05);   /* zebra, row hairlines */
+  --dropdown-rgb: 13, 15, 28;
+  --tint-a:       0.06;           /* base alpha of row meaning tints */
+  --tint-a-strong: 0.11;          /* nicked */
+  --tier-l-max:   1;              /* lightness cap for user tier colours */
+
+  /* Legibility floor. --lo (0 at full opacity .. 1 at the lowest) is set from
+     JS next to --bg-alpha; everything below is continuous in it. */
+  --lo:           0;
+  --scrim-max:    0.72;
+  --scrim-a:      calc(var(--lo) * var(--scrim-max));        /* extra backing behind each row */
+  --chrome-a:     max(0.8, var(--bg-alpha));     /* title bar, header */
+  --chrome-a-soft: max(0.78, calc(var(--bg-alpha) * 0.9)); /* search, footer */
+  --halo:         0 0 1px rgba(var(--halo-rgb), calc(var(--lo) * 1)),
+                  0 0 2px rgba(var(--halo-rgb), calc(var(--lo) * 0.85)),
+                  0 1px 5px rgba(var(--halo-rgb), calc(var(--lo) * 0.75));
 }
 
 :root[data-theme="light"] {
@@ -88,8 +124,8 @@ body.layout-compact { --row-h: 26px; }
   --shadow-rgb:   30, 32, 60;
 
   --text:         #14162a;
-  --text-dim:     #52577a;
-  --text-muted:   #9a9fb8;
+  --text-dim:     color-mix(in srgb, #2a2e4c calc(var(--lo) * 55%), #52577a);
+  --text-muted:   color-mix(in srgb, #5d6282 calc(var(--lo) * 100%), #9a9fb8);
 
   --accent-text:  #5a45e0;
   --good-text:    #15803d;
@@ -97,12 +133,33 @@ body.layout-compact { --row-h: 26px; }
   --bad-text:     #dc2626;
   --teal-text:    #0f766e;
   --party-text:   #a21caf;
+  --accent-ink:   #5a45e0;
+  --accent-solid: #6a56ee;
+  --accent-solid-hover: #5b46e0;
+  --accent-solid-press: #4d39c9;
+  --bad-ink:      #b91c1c;
+  --bad-solid:    #dc2626;
+  --text-soft:    #353a5e;
+  --bad-soft:     #b91c1c;
+  --dropdown-rgb: 252, 252, 255;
+  --tint-a:       0.09;
+  --tint-a-strong: 0.13;
+  --tier-l-max:   0.46;
+  --scrim-max:    0.86;           /* light panels need more backing over dark scenes */
 
-  --border:        rgba(var(--ink-rgb), 0.10);
+  --border:       rgba(var(--ink-rgb), 0.10);
   --border-strong: rgba(var(--ink-rgb), 0.18);
   --hover:         rgba(var(--ink-rgb), 0.06);
   --bg-row-hover:  rgba(var(--ink-rgb), 0.07);
   --bg-surface:    rgba(var(--surface-rgb), 0.97);
   --field-bg:      rgba(var(--ink-rgb), 0.035);
   --field-border:  rgba(var(--ink-rgb), 0.14);
+  --accent-tint:   rgba(124, 106, 247, 0.14);
+  --good-tint:     rgba(21, 128, 61, 0.12);
+  --teal-tint:     rgba(15, 118, 110, 0.12);
+  --medium-tint:   rgba(180, 83, 9, 0.12);
+  --bad-tint:      rgba(220, 38, 38, 0.10);
+  --medium-line:   rgba(180, 83, 9, 0.4);
+  --bad-line:      rgba(220, 38, 38, 0.4);
+  --teal-line:     rgba(15, 118, 110, 0.45);
 }

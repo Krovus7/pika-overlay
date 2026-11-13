@@ -31,12 +31,9 @@ export function ratioColor(v: number | undefined, key: RatioKey, ctx: RenderCont
     return ctx.colors.bad;
 }
 
-export function hexWithAlpha(hex: string, alpha: number): string {
-    if (!hex || hex.length < 7) return `rgba(170,170,170,${alpha})`;
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
+/** Colors end up in an inline style attribute: only plain hex values pass. */
+export function safeHex(color: string | null | undefined, fallback = '#aaaaaa'): string {
+    return color && /^#[0-9a-f]{3,8}$/i.test(color) ? color : fallback;
 }
 
 const PERIOD_WORDS: Record<string, string> = { weekly: 'this week', monthly: 'this month', yearly: 'this year' };

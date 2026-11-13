@@ -83,15 +83,14 @@ export async function driveReplay(deps: ReplayDeps): Promise<void> {
     await shot('10-compact.png');
     await js(`document.body.classList.remove('layout-compact'); true`);
 
-    // Low opacity + contrast switcher (visual only, no config change)
-    await js(`document.documentElement.style.setProperty('--bg-alpha','0.08');
-        document.getElementById('lo-switcher').classList.add('visible');
-        document.body.classList.add('lo-dark'); true`);
+    // Low opacity in both themes (visual only, no config change)
+    await js(`window.__pikaDemoOpacity(0.08); window.__pikaDemoTheme('dark'); true`);
     await sleep(800);
     await shot('11-low-opacity-dark.png');
-    await js(`document.body.classList.remove('lo-dark'); document.body.classList.add('lo-light'); true`);
+    await js(`window.__pikaDemoTheme('light'); true`);
     await sleep(800);
     await shot('12-low-opacity-light.png');
+    await js(`window.__pikaDemoOpacity(0.92); window.__pikaDemoTheme('dark'); true`);
 
     console.log('[replay] done — screenshots in artifacts/screens/');
     process.exit(0);

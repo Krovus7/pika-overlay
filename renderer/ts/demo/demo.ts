@@ -11,7 +11,9 @@ import { state } from '../core/state';
 import { buildHeaders } from '../table/header';
 import { renderNow } from '../table/render';
 import { setHealth } from '../ui/banner';
-import { applyOpacity, setLoMode } from '../ui/lowOpacity';
+import { applyOpacity } from '../ui/lowOpacity';
+import { setThemeDom } from '../ui/theme';
+import { setBackdrop } from './backdrops';
 import { DEMO_PARTY, DEMO_SELF, demoRows } from './demoRows';
 
 function healthOf(kind: string): ApiHealth {
@@ -42,9 +44,8 @@ export function registerDemo(): void {
         buildHeaders();
         renderNow();
     };
-    window.__pikaDemoOpacity = (alpha, contrast = 'dark') => {
-        applyOpacity(alpha);
-        setLoMode(contrast, false);
-    };
+    window.__pikaDemoOpacity = alpha => applyOpacity(alpha);
+    window.__pikaDemoTheme = theme => setThemeDom(theme);
+    window.__pikaDemoBackdrop = scene => setBackdrop(scene);
     window.__pikaDemoDensity = dense => document.body.classList.toggle('density-dense', dense);
 }

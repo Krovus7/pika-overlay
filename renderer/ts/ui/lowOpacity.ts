@@ -1,51 +1,19 @@
-/** Low-opacity contrast switcher (dark/light text) shown below 15% opacity. */
+/**
+ * Background opacity -> CSS variables. --bg-alpha is the user's setting;
+ * --lo is "how much legibility help is needed" (0 = none, 1 = maximum) and
+ * drives the row scrims, the text halo and the row tint boost continuously.
+ */
 
-const LO_OPACITY_THRESHOLD = 0.15;
+const LO_FULL_HELP_ALPHA = 0.05;
+const LO_NO_HELP_ALPHA = 0.75;
 
-const loSwitcher = document.getElementById('lo-switcher') as HTMLElement;
-const loBtnDark = document.getElementById('lo-btn-dark') as HTMLButtonElement;
-const loBtnLight = document.getElementById('lo-btn-light') as HTMLButtonElement;
-
-type LoMode = 'dark' | 'light';
-
-function readStoredMode(): LoMode {
-    try {
-        return localStorage.getItem('loMode') === 'light' ? 'light' : 'dark';
-    } catch (err) {
-        console.warn('[Overlay] localStorage unavailable:', String(err));
-        return 'dark';
-    }
-}
-
-let loMode: LoMode = readStoredMode();
-let isLow = false;
-
-function applyClasses(): void {
-    document.body.classList.remove('lo-dark', 'lo-light');
-    if (isLow) document.body.classList.add(`lo-${loMode}`);
-    loBtnDark.classList.toggle('active', loMode === 'dark');
-    loBtnLight.classList.toggle('active', loMode === 'light');
-}
-
-/** `persist: false` is used by the demo/screenshot driver so it never touches stored settings. */
-export function setLoMode(mode: LoMode, persist = true): void {
-    loMode = mode;
-    if (persist) {
-        try {
-            localStorage.setItem('loMode', mode);
-        } catch (err) {
-            console.warn('[Overlay] Could not persist contrast mode:', String(err));
-        }
-    }
-    applyClasses();
+export function legibilityNeed(alpha: number): number {
+    const t = (LO_NO_HELP_ALPHA - alpha) / (LO_NO_HELP_ALPHA - LO_FULL_HELP_ALPHA);
+    return Math.min(1, Math.max(0, t));
 }
 
 export function applyOpacity(alpha: number): void {
-    document.documentElement.style.setProperty('--bg-alpha', String(alpha));
-    isLow = alpha < LO_OPACITY_THRESHOLD;
-    loSwitcher.classList.toggle('visible', isLow);
-    applyClasses();
+    const style = document.documentElement.style;
+    style.setProperty('--bg-alpha', String(alpha));
+    style.setProperty('--lo', legibilityNeed(alpha).toFixed(3));
 }
-
-loBtnDark.addEventListener('click', () => setLoMode('dark'));
-loBtnLight.addEventListener('click', () => setLoMode('light'));

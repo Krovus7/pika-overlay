@@ -15,11 +15,13 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
-  background: rgba(8, 10, 18, var(--bg-alpha));
-  border: 1px solid rgba(255, 255, 255, calc(var(--bg-alpha) * 0.08));
+  background: rgba(var(--panel-rgb), var(--bg-alpha));
+  border: 1px solid rgba(var(--ink-rgb), calc(var(--bg-alpha) * 0.08 + var(--lo) * 0.12));
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(124, 106, 247, calc(var(--bg-alpha) * 0.12));
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb), calc(var(--bg-alpha) * 0.12));
+  /* The opacity setting never touches text; the halo takes over as backing fades. */
+  text-shadow: var(--halo);
 }
 
 .ic {
@@ -35,17 +37,18 @@ body {
 button { font-family: var(--font); color: inherit; }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-ink);
   outline-offset: 1px;
 }
 #search-input:focus-visible { outline: none; }
 
-/* Thin scrollbars */
-* { scrollbar-width: thin; scrollbar-color: rgba(124, 106, 247, 0.3) transparent; }
+/* Thin scrollbars, no arrow buttons. The standard scrollbar-* properties are
+   deliberately not used: they would disable these pseudo-elements. */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(124, 106, 247, 0.3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(124, 106, 247, 0.55); }
+::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb), 0.38); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--accent-rgb), 0.6); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

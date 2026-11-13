@@ -17,12 +17,12 @@
 }
 .pill .ic { width: 11px; height: 11px; stroke-width: 2.4; }
 
-.pill-nicked  { background: var(--bad); color: #fff; }
-.pill-neutral { border-color: rgba(255, 255, 255, 0.28); color: #c3c8da; }
-.pill-muted   { background: rgba(255, 255, 255, 0.07); color: var(--text-dim); }
-.pill-new     { background: var(--teal-tint); border-color: rgba(78, 205, 196, 0.45); color: var(--accent2); }
-.pill-warn    { background: var(--medium-tint); border-color: rgba(245, 158, 11, 0.4); color: var(--medium); }
-.pill-key     { background: rgba(255, 255, 255, 0.05); border-color: var(--border-strong); color: var(--text-dim); }
+.pill-nicked  { background: var(--bad-solid); color: var(--on-accent); text-shadow: none; }
+.pill-neutral { border-color: rgba(var(--ink-rgb), 0.3); color: var(--text-soft); }
+.pill-muted   { background: rgba(var(--ink-rgb), 0.08); color: var(--text-dim); }
+.pill-new     { background: var(--teal-tint); border-color: var(--teal-line); color: var(--teal-text); }
+.pill-warn    { background: var(--medium-tint); border-color: var(--medium-line); color: var(--medium-text); }
+.pill-key     { background: rgba(var(--ink-rgb), 0.06); border-color: var(--border-strong); color: var(--text-dim); }
 
 .status-note {
   margin-left: 9px;
@@ -51,18 +51,16 @@
   cursor: pointer;
   transition: background var(--t-fast), border-color var(--t-fast);
 }
-.retry-btn:hover { background: var(--medium-tint); border-color: rgba(245, 158, 11, 0.5); }
+.retry-btn:hover { background: var(--medium-tint); border-color: var(--medium-line); }
 .retry-btn .ic { width: 11px; height: 11px; }
 .retry-btn.is-busy { opacity: 0.5; pointer-events: none; }
 
-/* Nicked: the one state that must never be missed */
-#stats-body tr.row-nicked td { background: rgba(239, 68, 68, calc(var(--bg-alpha) * 0.11)); }
-#stats-body tr.row-nicked:hover td { background: rgba(239, 68, 68, calc(var(--bg-alpha) * 0.18)); }
-.row-nicked .player-name { color: var(--bad); font-weight: 700; }
-.row-nicked .status-note { color: #f08a8a; }
+/* Nicked: the one state that must never be missed (tint and rail live in table.css) */
+.row-nicked .player-name { color: var(--bad-ink); font-weight: 700; }
+.row-nicked .status-note { color: var(--bad-soft); }
 
 .row-status .player-name { color: var(--text); }
-.row-status.row-nicked .player-name { color: var(--bad); }
+.row-status.row-nicked .player-name { color: var(--bad-ink); }
 
 /* Loading: name visible, stat cells are skeletons */
 .row-loading .player-name { color: var(--text-dim); }
@@ -73,7 +71,7 @@
   max-width: 38px;
   height: 8px;
   border-radius: 4px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.13) 50%, rgba(255, 255, 255, 0.05) 75%);
+  background: linear-gradient(90deg, rgba(var(--ink-rgb), 0.07) 25%, rgba(var(--ink-rgb), 0.17) 50%, rgba(var(--ink-rgb), 0.07) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
 }

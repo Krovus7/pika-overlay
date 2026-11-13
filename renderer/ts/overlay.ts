@@ -7,7 +7,7 @@ import { applyConfigToState } from './core/config';
 import { addLoadingRow, applyResult, clearTable, removeRow } from './core/players';
 import { state } from './core/state';
 import { registerDemo } from './demo/demo';
-import { initSettingsPanel } from './settingsPanel';
+import { initSettingsPanel, notifySettingsConfig } from './settingsPanel';
 import { initRowActions } from './table/actions';
 import { createDropdowns } from './table/dropdown';
 import { buildHeaders, initHeader } from './table/header';
@@ -16,6 +16,7 @@ import { applyAppearance, applyLayoutClass } from './ui/appearance';
 import { setHealth } from './ui/banner';
 import { setGameStatus, showFatal } from './ui/gameStatus';
 import { initSearch } from './ui/search';
+import { initThemeToggle } from './ui/theme';
 
 const api = window.pikaOverlay;
 
@@ -24,8 +25,9 @@ function logFailure(what: string): (err: unknown) => void {
 }
 
 function applyConfig(cfg: Record<string, unknown>): void {
+    notifySettingsConfig(cfg);
     applyConfigToState(cfg);
-    applyAppearance(cfg);
+    applyAppearance(cfg, api);
     dropdowns.applyConfig(cfg);
     buildHeaders();
     scheduleRender();
@@ -85,6 +87,7 @@ function start(): void {
     initRowActions();
     initSearch();
     bindControls();
+    initThemeToggle(api);
     bindIpc();
     initSettingsPanel(api);
     registerDemo();

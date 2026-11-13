@@ -3,7 +3,7 @@
   align-items: center;
   flex-shrink: 0;
   padding: 7px 10px;
-  background: rgba(12, 14, 26, max(0.55, calc(var(--bg-alpha) * 0.88)));
+  background: rgba(var(--panel-rgb), var(--chrome-a-soft));
   border-bottom: 1px solid var(--border);
 }
 
@@ -15,14 +15,14 @@
   min-width: 0;
   height: 34px;
   padding: 0 4px 0 10px;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid var(--border-strong);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius);
   transition: border-color var(--t-med), box-shadow var(--t-med);
 }
 .search-input-wrap:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(124, 106, 247, 0.16);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
 }
 
 .search-icon { color: var(--text-dim); }
@@ -43,18 +43,19 @@
 .btn-primary {
   height: 26px;
   padding: 0 14px;
-  background: var(--accent);
+  background: var(--accent-solid);
   border: none;
   border-radius: var(--radius-sm);
-  color: #fff;
+  color: var(--on-accent);
+  text-shadow: none;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
   transition: background var(--t-fast);
 }
-.btn-primary:hover  { background: #8d7dff; }
-.btn-primary:active { background: #6a59e6; }
+.btn-primary:hover  { background: var(--accent-solid-hover); }
+.btn-primary:active { background: var(--accent-solid-press); }
 
 .period-divider {
   width: 1px; height: 16px;
@@ -86,7 +87,7 @@
 .filter-btn.open {
   background: var(--accent-tint);
   border-color: var(--accent-line);
-  color: #c4bcff;
+  color: var(--accent-text);
 }
 .filter-chevron { width: 11px; height: 11px; transition: transform var(--t-med) var(--ease); }
 .filter-btn.open .filter-chevron { transform: rotate(180deg); }
@@ -94,10 +95,11 @@
 .filter-dropdown {
   position: fixed;
   min-width: 112px;
-  background: rgb(13, 15, 28);
+  background: rgb(var(--dropdown-rgb));
   border: 1px solid var(--accent-line);
   border-radius: var(--radius);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.55);
+  text-shadow: none;
   z-index: 9999;
   overflow: hidden;
   transform-origin: top right;
@@ -121,7 +123,7 @@
   transition: background var(--t-fast), color var(--t-fast);
 }
 .filter-option:hover { background: var(--accent-tint); color: var(--text); }
-.filter-option.selected { color: #c4bcff; font-weight: 600; }
+.filter-option.selected { color: var(--accent-text); font-weight: 600; }
 .filter-option::before {
   content: '';
   width: 9px; height: 5px;
@@ -131,4 +133,4 @@
   border-bottom: 2px solid transparent;
   transform: rotate(-45deg);
 }
-.filter-option.selected::before { border-color: var(--accent); }
+.filter-option.selected::before { border-color: var(--accent-ink); }

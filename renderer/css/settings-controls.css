@@ -1,0 +1,174 @@
+/* Settings building blocks: groups, rows, inputs, switches, segmented, sliders, buttons, status. */
+.s-group { margin: 0 0 22px; }
+.s-group-title { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: -0.1px; }
+.s-group-intro { margin: 0 0 9px; max-width: 64ch; font-size: 12px; line-height: 1.5; color: var(--text-dim); }
+
+.s-list { border: 1px solid var(--s-line); border-radius: var(--radius); background: var(--s-fill); }
+.s-list > * + * { border-top: 1px solid var(--s-line); }
+.s-list > [hidden] { display: none; }
+
+.s-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 12px;
+}
+.s-row-text { flex: 1 1 230px; min-width: 0; }
+.s-row-control { flex: 0 1 auto; display: flex; flex-direction: column; align-items: flex-end; max-width: 100%; }
+.s-label { font-size: 13px; font-weight: 600; }
+.s-hint { margin: 2px 0 0; max-width: 60ch; font-size: 11.5px; line-height: 1.5; color: var(--text-dim); }
+.s-block { padding: 12px; }
+.s-block > * + * { margin-top: 10px; }
+.s-block > .s-btn { margin-top: 12px; }
+.s-block > .s-hint { margin-top: 10px; }
+.s-value { font-size: 13px; font-weight: 600; }
+
+.s-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.s-inline > .s-input { flex: 1 1 220px; min-width: 0; }
+.s-actions { gap: 8px; }
+.s-inline-note { font-size: 12px; color: var(--text-dim); }
+
+/* Text fields */
+.s-input {
+  box-sizing: border-box;
+  width: 250px;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  background: var(--field-bg);
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.s-input::placeholder { color: var(--text-muted); }
+.s-input:hover { border-color: var(--border-strong); }
+.s-input:focus { border-color: var(--accent); }
+.s-input[aria-invalid="true"] { border-color: var(--bad-text); }
+.s-mono { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12px; }
+.s-num { width: 100%; text-align: center; font-variant-numeric: tabular-nums; }
+.s-key-input { letter-spacing: 0.04em; }
+
+/* Buttons */
+.s-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  background: var(--field-bg);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+.s-btn .ic { width: 14px; height: 14px; }
+.s-btn:hover:not(:disabled) { background: var(--s-fill-strong); border-color: var(--border-strong); }
+.s-btn:disabled { opacity: 0.45; cursor: default; }
+.s-btn:not(:has(.s-btn-label)) { width: 30px; padding: 0; }
+.s-btn-ghost { border-color: transparent; background: none; color: var(--text-dim); }
+.s-btn-ghost:hover:not(:disabled) { color: var(--text); }
+.s-btn-primary { border-color: transparent; background: var(--accent); color: var(--on-accent); }
+.s-btn-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); border-color: transparent; }
+
+/* Switch */
+.s-switch { position: relative; display: inline-block; flex-shrink: 0; width: 36px; height: 20px; }
+.s-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.s-switch-track {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 99px;
+  background: rgba(var(--ink-rgb), 0.2);
+  transition: background var(--t-med);
+  pointer-events: none;
+}
+.s-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgb(var(--surface-rgb));
+  box-shadow: 0 0 0 1px rgba(var(--ink-rgb), 0.18);
+  transition: transform var(--t-med) var(--ease);
+}
+.s-switch input:checked + .s-switch-track { background: var(--accent); }
+.s-switch input:checked + .s-switch-track::after { transform: translateX(16px); box-shadow: none; }
+.s-switch input:focus-visible + .s-switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.s-switch input:disabled { cursor: default; }
+.s-switch input:disabled + .s-switch-track { opacity: 0.45; }
+
+/* Segmented control */
+.s-segmented { display: inline-flex; padding: 2px; border: 1px solid var(--field-border); border-radius: 8px; background: var(--field-bg); }
+.s-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.s-seg-btn .ic { width: 13px; height: 13px; }
+.s-seg-btn:hover { color: var(--text); }
+.s-seg-btn.is-on { background: var(--s-tint); color: var(--accent-text); box-shadow: inset 0 0 0 1px var(--accent-line); }
+
+/* Slider */
+.s-slider { display: flex; align-items: center; gap: 10px; }
+.s-slider input { width: 170px; max-width: 100%; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.s-slider-value { min-width: 38px; text-align: right; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Inline status line */
+.s-status { display: flex; align-items: flex-start; gap: 7px; font-size: 12.5px; line-height: 1.45; }
+.s-status:empty { display: none; }
+.s-status .ic { width: 15px; height: 15px; margin-top: 1px; }
+.s-status.tone-ok { color: var(--good-text); }
+.s-status.tone-warn { color: var(--medium-text); }
+.s-status.tone-bad { color: var(--bad-text); }
+.s-status.tone-info { color: var(--accent-text); }
+.s-status-big { font-size: 13.5px; font-weight: 600; }
+
+/* Inline code (commands such as /apikey) */
+.settings-panel code {
+  padding: 1px 5px;
+  border: 1px solid var(--s-line);
+  border-radius: 4px;
+  background: var(--s-fill);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--accent-text);
+}
+
+/* Keycap */
+.s-kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 7px;
+  border: 1px solid var(--field-border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: rgb(var(--surface-rgb));
+  font: 600 12px var(--font);
+  text-align: center;
+  color: var(--text);
+}
+
+/* Author display rules above would otherwise defeat the hidden attribute */
+.settings-panel [hidden] { display: none !important; }

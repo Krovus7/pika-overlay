@@ -8,7 +8,8 @@
 #stats-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0;
+  /* Rows detach into separate strips as the backing fades, letting the game through the gaps */
+  border-spacing: 0 calc(var(--lo) * 2px);
   table-layout: fixed;
 }
 
@@ -27,7 +28,7 @@
   color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
-  background: rgba(14, 16, 30, max(0.96, calc(var(--bg-alpha) * 0.99)));
+  background: rgba(var(--surface-rgb), max(0.94, var(--bg-alpha)));
   border-bottom: 1px solid var(--border-strong);
   transition: color var(--t-fast);
 }
@@ -58,14 +59,21 @@ th.sorted.asc .sort-ic { transform: rotate(180deg); }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--faint);
+  background: linear-gradient(var(--row-tint, transparent), var(--row-tint, transparent)), rgba(var(--panel-rgb), var(--scrim-a));
   transition: background var(--t-fast);
 }
+#stats-body td:first-child { border-radius: calc(var(--lo) * 5px) 0 0 calc(var(--lo) * 5px); }
+#stats-body td:last-child  { border-radius: 0 calc(var(--lo) * 5px) calc(var(--lo) * 5px) 0; }
 #stats-body td:first-child { padding-left: 13px; box-shadow: inset 3px 0 0 var(--rail, transparent); }
 body.density-dense #stats-body td { font-size: 12.5px; }
 
-#stats-body tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
-#stats-body tr:hover td { background: var(--bg-row-hover); }
+#stats-body tr:nth-child(even) { --row-tint: rgba(var(--ink-rgb), 0.025); }
+#stats-body tr:hover { --row-tint: var(--bg-row-hover); }
+
+/* Tier colours are user hex values tuned for dark. They arrive as --tier; the light theme caps the lightness (same hue and chroma) so they read on a light panel. */
+.tiered { color: var(--tier); }
+:root[data-theme="light"] .tiered { color: oklch(from var(--tier) min(l, var(--tier-l-max)) min(c, 0.2) h); }
 
 #stats-body td.num {
   padding: 0 8px;
@@ -91,7 +99,9 @@ body.density-dense #stats-body td { font-size: 12.5px; }
   vertical-align: middle;
 }
 #stats-body td.col-rank { padding-right: 4px; }
-.level-tag { background: var(--accent-tint); color: #b4aafc; margin-right: 3px; }
+.level-tag { background: var(--accent-tint); color: var(--accent-text); margin-right: 3px; }
+.rank-tag { background: color-mix(in srgb, var(--tier) 22%, transparent); }
+:root[data-theme="light"] .rank-tag { background: color-mix(in srgb, var(--tier) 16%, transparent); }
 
 .src-badge {
   display: inline-flex;
@@ -102,9 +112,9 @@ body.density-dense #stats-body td { font-size: 12.5px; }
   color: var(--text-dim);
 }
 .src-badge .ic { width: 12px; height: 12px; }
-.src-manual, .src-bulk { color: #b4aafc; }
-.src-log { color: var(--accent2); }
-.src-party { color: var(--party); }
+.src-manual, .src-bulk { color: var(--accent-text); }
+.src-log { color: var(--teal-text); }
+.src-party { color: var(--party-text); }
 
 .tag {
   display: inline-block;
@@ -117,22 +127,20 @@ body.density-dense #stats-body td { font-size: 12.5px; }
   border-radius: 3px;
   vertical-align: middle;
 }
-.tag-you { background: var(--teal-tint); color: var(--accent2); }
-.tag-bot { background: var(--medium-tint); color: var(--medium); }
-.party-ic { color: var(--party); }
+.tag-you { background: var(--teal-tint); color: var(--teal-text); }
+.tag-bot { background: var(--medium-tint); color: var(--medium-text); }
+.party-ic { color: var(--party-text); }
 
-/* ─── Row rails: self, suspect, party, nicked ──────────────────────────────── */
-.row-self    { --rail: var(--accent2); }
-.row-suspect { --rail: var(--medium); }
-.row-party   { --rail: var(--party); }
-.row-nicked  { --rail: var(--bad); }
-
-#stats-body tr.row-self td    { background: rgba(78, 205, 196, calc(var(--bg-alpha) * 0.06)); }
-#stats-body tr.row-suspect td { background: rgba(245, 158, 11, calc(var(--bg-alpha) * 0.06)); }
-#stats-body tr.row-party td   { background: rgba(208, 96, 232, calc(var(--bg-alpha) * 0.06)); }
-#stats-body tr.row-self:hover td    { background: rgba(78, 205, 196, calc(var(--bg-alpha) * 0.12)); }
-#stats-body tr.row-suspect:hover td { background: rgba(245, 158, 11, calc(var(--bg-alpha) * 0.12)); }
-#stats-body tr.row-party:hover td   { background: rgba(208, 96, 232, calc(var(--bg-alpha) * 0.12)); }
+/* ─── Row rails and meaning tints: self, suspect, party, nicked ───────────────
+   Rails are solid; the tint strengthens as the backing fades so a row keeps its meaning. */
+#stats-body tr.row-self    { --rail: var(--teal-text);   --row-tint: rgba(var(--accent2-rgb), calc(var(--tint-a) + var(--lo) * 0.08)); }
+#stats-body tr.row-suspect { --rail: var(--medium-text); --row-tint: rgba(var(--medium-rgb),  calc(var(--tint-a) + var(--lo) * 0.08)); }
+#stats-body tr.row-party   { --rail: var(--party-text);  --row-tint: rgba(var(--party-rgb),   calc(var(--tint-a) + var(--lo) * 0.08)); }
+#stats-body tr.row-nicked  { --rail: var(--bad-ink);    --row-tint: rgba(var(--bad-rgb),     calc(var(--tint-a-strong) + var(--lo) * 0.12)); }
+#stats-body tr.row-self:hover    { --row-tint: rgba(var(--accent2-rgb), calc(var(--tint-a) * 2 + var(--lo) * 0.08)); }
+#stats-body tr.row-suspect:hover { --row-tint: rgba(var(--medium-rgb),  calc(var(--tint-a) * 2 + var(--lo) * 0.08)); }
+#stats-body tr.row-party:hover   { --row-tint: rgba(var(--party-rgb),   calc(var(--tint-a) * 2 + var(--lo) * 0.08)); }
+#stats-body tr.row-nicked:hover  { --row-tint: rgba(var(--bad-rgb),     calc(var(--tint-a-strong) * 1.6 + var(--lo) * 0.12)); }
 
 /* ─── Motion: only newly inserted rows fade in ─────────────────────────────── */
 tr.row-enter { animation: row-in 140ms var(--ease) both; }

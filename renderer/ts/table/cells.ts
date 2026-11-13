@@ -2,7 +2,7 @@
 
 import type { PlayerProfileInfo, PlayerStats } from '../../../src/shared/types';
 import { icon } from '../ui/icons';
-import { esc, fmt, fmtInt, hexWithAlpha, ratioColor } from './format';
+import { esc, fmt, fmtInt, ratioColor, safeHex } from './format';
 import { srcBadge } from './sourceBadge';
 import type { RenderContext, RowView } from './types';
 
@@ -11,7 +11,7 @@ export function rankCell(info: PlayerProfileInfo | null): string {
     if (info?.level != null && info.level > 0) parts.push(`<span class="level-tag">Lv.${info.level}</span>`);
     if (info?.rank?.text) {
         const { text, color } = info.rank;
-        parts.push(`<span class="rank-tag" style="background:${hexWithAlpha(color, 0.22)};color:${color}">${esc(text)}</span>`);
+        parts.push(`<span class="rank-tag tiered" style="--tier:${safeHex(color)}">${esc(text)}</span>`);
     }
     return `<td class="col-rank">${parts.length ? parts.join('') : '<span class="val-dim">—</span>'}</td>`;
 }
@@ -37,7 +37,7 @@ function dimNum(v: number | undefined): string {
 }
 
 function ratioCell(v: number | undefined, key: 'fkdr' | 'kdr' | 'wlr', ctx: RenderContext): string {
-    return `<td class="num" style="color:${ratioColor(v, key, ctx)};font-weight:600">${fmt(v)}</td>`;
+    return `<td class="num tiered" style="--tier:${safeHex(ratioColor(v, key, ctx))};font-weight:600">${fmt(v)}</td>`;
 }
 
 export function statCell(colId: string, p: PlayerStats, ctx: RenderContext): string {

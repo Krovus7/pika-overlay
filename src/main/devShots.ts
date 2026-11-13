@@ -32,6 +32,22 @@ async function waitForPage(win: BrowserWindow): Promise<void> {
     await sleep(1500); // config + health round trips, fonts
 }
 
+const THEMES = ['dark', 'light'] as const;
+
+type Js = (expr: string) => Promise<unknown>;
+type Shot = (name: string) => Promise<void>;
+
+/** Applies each state once, then captures it in both themes: v5-NN-name-dark/light.png */
+async function captureBothThemes(js: Js, shot: Shot, steps: Array<[string, string, () => Promise<unknown>]>): Promise<void> {
+    for (const [n, name, apply] of steps) {
+        await apply();
+        for (const theme of THEMES) {
+            await js(`window.__pikaDemoTheme('${theme}')`);
+            await shot(`v5-${n}-${name}-${theme}.png`);
+        }
+    }
+}
+
 export async function driveShots(deps: ShotsDeps): Promise<void> {
     const win = deps.getOverlayWin();
     if (!win) {
@@ -53,43 +69,62 @@ export async function driveShots(deps: ShotsDeps): Promise<void> {
     try {
         await waitForPage(win);
         await js('window.__pikaDemo()');
-        await shot('v5-01-base.png');
-
-        await js('window.__pikaDemoDensity(true)');
-        await shot('v5-02-dense.png');
+        await captureBothThemes(js, shot, [
+            ['01', 'base', async () => undefined],
+            ['03', 'dense', () => js('window.__pikaDemoDensity(true)')],
+        ]);
         await js('window.__pikaDemoDensity(false)');
 
-        for (const [n, kind] of [['03', 'key_missing'], ['04', 'key_invalid'], ['05', 'rate_limited'], ['06', 'unreachable']] as const) {
+        await captureBothThemes(js, shot, [
+            ['04', 'banner-rate-limited', () => js(`window.__pikaDemoHealth('rate_limited')`)],
+        ]);
+        for (const [n, kind] of [['05', 'key_missing'], ['06', 'key_invalid'], ['07', 'unreachable']] as const) {
             await js(`window.__pikaDemoHealth('${kind}')`);
             await shot(`v5-${n}-banner-${kind}.png`);
         }
         await js(`window.__pikaDemoHealth('ok')`);
 
-        await js(`document.getElementById('btn-period').click()`);
-        await shot('v5-07-dropdown-period.png');
+        await captureBothThemes(js, shot, [['08', 'dropdown-period', () => js(`document.getElementById('btn-period').click()`)]]);
         await js(`document.body.click()`);
 
         const original = win.getBounds();
+        await captureBothThemes(js, shot, [['09', 'compact', () => js(`window.__pikaDemoLayout('compact')`)]]);
         win.setBounds({ ...original, width: NARROW_WIDTH });
-        await shot('v5-08-narrow.png');
-        await js(`window.__pikaDemoLayout('compact')`);
-        await shot('v5-09-narrow-compact.png');
+        await shot('v5-10-narrow-compact.png');
         win.setBounds(original);
-        await shot('v5-10-compact.png');
         await js(`window.__pikaDemoLayout('detailed')`);
+        win.setBounds({ ...original, width: NARROW_WIDTH });
+        await shot('v5-11-narrow.png');
+        win.setBounds(original);
 
-        await js(`window.__pikaDemoOpacity(0.08, 'dark')`);
-        await shot('v5-11-low-opacity-dark.png');
-        await js(`window.__pikaDemoOpacity(0.08, 'light')`);
-        await shot('v5-12-low-opacity-light.png');
-        await js(`window.__pikaDemoOpacity(0.92)`);
+        // Opacity ladder, plain (transparent window) in both themes
+        let n = 12;
+        for (const theme of THEMES) {
+            await js(`window.__pikaDemoTheme('${theme}')`);
+            for (const alpha of [1, 0.5, 0.2, 0.05]) {
+                await js(`window.__pikaDemoOpacity(${alpha})`);
+                await shot(`v5-${n++}-${theme}-opacity-${Math.round(alpha * 100)}.png`);
+            }
+        }
+
+        // Low opacity over a bright and a dark game scene, all four theme/scene pairs
+        n = 21;
+        for (const [theme, scene] of [['dark', 'dark'], ['dark', 'bright'], ['light', 'bright'], ['light', 'dark']] as const) {
+            await js(`window.__pikaDemoTheme('${theme}'); window.__pikaDemoBackdrop('${scene}')`);
+            for (const alpha of [0.2, 0.05]) {
+                await js(`window.__pikaDemoOpacity(${alpha})`);
+                await shot(`v5-${n++}-${theme}-over-${scene}-${Math.round(alpha * 100)}.png`);
+            }
+        }
+        await js(`window.__pikaDemoBackdrop('none'); window.__pikaDemoTheme('dark'); window.__pikaDemoOpacity(0.92)`);
 
         await captureSettingsShots({ js, shot, win });
 
         await js('window.__pikaDemoClear()');
-        await shot('v5-14-empty.png');
+        await captureBothThemes(js, shot, [['30', 'empty', async () => undefined]]);
         await js(`window.__pikaDemoHealth('key_missing')`);
-        await shot('v5-15-empty-key-missing.png');
+        await captureBothThemes(js, shot, [['32', 'empty-key-missing', async () => undefined]]);
+        await js(`window.__pikaDemoTheme('dark')`);
 
         console.log('[shots] done — screenshots in artifacts/screens/');
     } catch (err) {
