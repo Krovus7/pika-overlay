@@ -137,8 +137,21 @@ round (sections 5b) were not screened by a separate reviewer.
 files (unsigned, as before). `scripts/smoke.mjs` against the packaged
 `release/win-unpacked/PikaOverlay.exe` and the live API: 16/16.
 
-Not run: the installer itself and the portable zip. The machine used keeps an
-installed 4.1.0 for the update-cycle check, which needs a published 5.0.0.
+Not run: the installer itself and the portable zip.
+
+## 5e. Release and in-app update — 2026-11-13 (Field-Verified on one machine)
+
+5.0.0 was published to GitHub Releases (tag `v5.0.0`, full and delta
+packages, `Setup.exe`, portable zip; the released build passed the smoke
+test 16/16 before upload). On a machine with 4.1.0 installed,
+`scripts/update-cycle.mjs` drove the installed app: "Update available:
+v5.0.0" → apply → exit → `sq.version` 5.0.0 → restart. `scripts/smoke.mjs`
+on the installed 5.0.0: 16/16 against the live API; the existing settings and
+the API key survived the update.
+
+The first attempt of `update-cycle.mjs` timed out opening Settings: the
+script clicked before the page had attached its handlers. The script now
+clicks until the panel opens; the app was not at fault.
 
 ## 6. Not verified — Gate B open
 
@@ -151,12 +164,13 @@ the docs.
   chat format of Pika today (the newest Pika match in the corpus is from
   August 2026).
 - The installer (`Setup.exe`) on a clean machine and the portable zip.
-- The in-app update from 4.1.0 to 5.0.0 (the last verified update cycle was
-  4.0.2 → 4.1.0, recorded in `docs/RELEASING.md`).
+- The update on a machine whose config was last written by 4.1.0 (the test
+  machine's config had already been written by v5 development builds; the
+  migration of older configs is covered by `tests/config.test.ts` only).
 
 ## 7. Conclusion
 
 Gate A: typecheck and tests green, parser replay without divergence, live API
 classification, a live smoke run, the session simulation and two live replays
-as above. Gate B remains with the owner in
-game.
+as above. Gate B: the in-app update is field-verified on one machine; a live
+game session remains with the owner.

@@ -184,8 +184,8 @@ Project rules for contributors and coding agents are in `AGENTS.md`,
 ### Verification status
 
 v5 is verified by unit tests, a simulation over 55 real game logs, replays of
-real logs into the running app and smoke runs against the live API. A full
-live BedWars session and the in-app update from 4.1.0 to 5.0.0 are not yet
+real logs into the running app, smoke runs against the live API and an in-app
+update from 4.1.0. A full live BedWars session with v5 is not yet
 field-verified. The record is
 [`docs/VERIFICATION-2026-11.md`](docs/VERIFICATION-2026-11.md).
 

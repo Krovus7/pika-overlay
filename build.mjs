@@ -75,10 +75,15 @@ async function packCmd() {
 
 /** pack + vpk upload github (feed for auto-update). Needs GITHUB_TOKEN env. */
 async function releaseCmd() {
+    if (!process.env.GITHUB_TOKEN) throw new Error('[release] GITHUB_TOKEN is not set');
+    // With the previous release in release/, vpk pack also builds a delta package
+    console.log('[release] vpk download github (previous release, for the delta)…');
+    run(`vpk download github --repoUrl ${REPO_URL} -o release -c win`);
     await packCmd();
     const version = readVersion();
     console.log(`[release] vpk upload github v${version}…`);
-    run(`vpk upload github -o release -c win --repoUrl ${REPO_URL} --publish --tag v${version}`);
+    // vpk does not read the variable itself; the shell expands it, so it never appears in an error message
+    run(`vpk upload github -o release -c win --repoUrl ${REPO_URL} --publish --tag v${version} --token %GITHUB_TOKEN%`);
     console.log('[release] Done.');
 }
 

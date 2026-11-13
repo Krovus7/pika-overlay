@@ -90,8 +90,12 @@ async function main() {
     };
     await send('Runtime.enable');
 
-    await evaluate(`document.getElementById('btn-settings').click(); true`);
-    await waitFor(`document.getElementById('settings-panel').classList.contains('visible')`, 8000, 'settings visible');
+    // The click handler is attached a moment after the page loads: click until the panel opens
+    await waitFor(`(() => {
+        const panel = document.getElementById('settings-panel');
+        if (!panel.classList.contains('visible')) document.getElementById('btn-settings').click();
+        return panel.classList.contains('visible');
+    })()`, 15000, 'settings visible');
     await evaluate(`document.querySelector('.settings-tab-btn[data-tab="updates"]').click(); true`);
     await evaluate(`document.getElementById('btnUpdateCheck').click(); true`);
 

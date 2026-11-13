@@ -12,8 +12,10 @@ repo). In-app auto-update uses the same feed (ADR-0004).
   ```
   dotnet tool install -g vpk
   ```
-- A GitHub token with `repo` scope for uploads: `GITHUB_TOKEN` env var
-  (or `--token` flag on `vpk upload github`).
+- A GitHub token with `repo` scope for uploads in the `GITHUB_TOKEN` env var.
+  `vpk` 1.2.0 does not read that variable itself; `build.mjs` passes it as
+  `--token`. With the GitHub CLI logged in: `set GITHUB_TOKEN=` + the output
+  of `gh auth token`.
 
 ## Build a release (local artifacts, no upload)
 
@@ -42,11 +44,17 @@ This runs, in order:
 npm run release
 ```
 
-Same as `pack`, then:
+Start from an empty `release/` folder. The command runs:
 
 ```
-vpk upload github -o release -c win --repoUrl https://github.com/Krovus7/pika-overlay --publish --tag v<version>
+vpk download github --repoUrl https://github.com/Krovus7/pika-overlay -o release -c win
+(pack, as above — with the previous release present it also builds pika-overlay-<version>-delta.nupkg)
+vpk upload github -o release -c win --repoUrl https://github.com/Krovus7/pika-overlay --publish --tag v<version> --token <token>
 ```
+
+5.0.0 was published on 2026-11-13 by running these three steps by hand;
+`npm run release` was changed afterwards to run the same steps and has not
+been run end to end in that form.
 
 The tag is derived from `package.json` version (e.g. `v5.0.0`). Use `--pre`
 for pre-releases (test cycle) instead of stable.
@@ -69,10 +77,13 @@ for pre-releases (test cycle) instead of stable.
 installs → disk `sq.version` = 4.1.0 → smoke 11/11. The full
 check/download/apply/restart chain is now proven against the GitHub feed.
 
-That run covered 4.0.2 → 4.1.0 only. The in-app update from 4.1.0 to 5.0.0
-has **not** been run (see `docs/VERIFICATION-2026-11.md`); `update-cycle.mjs`
-takes the target version as its fifth argument (`<exe> <cwd> <installDir>
-[version]`, default `4.1.0`).
+**Verified 2026-11-13 (4.1.0 → 5.0.0, in-app, delta of 0.9 MB):** same script
+with target `5.0.0` on an installed 4.1.0: "Update available: v5.0.0" →
+apply → app exits → disk `sq.version` = 5.0.0 → app restarts; then
+`scripts/smoke.mjs` on the installed 5.0.0: 16/16, settings and API key kept.
+
+`update-cycle.mjs` takes the target version as its fifth argument
+(`<exe> <cwd> <installDir> [version]`, default `4.1.0`).
 
 Manual checklist before a major public release:
 
