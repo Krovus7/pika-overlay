@@ -58,6 +58,7 @@ function bindControls(): void {
         document.getElementById(id)?.addEventListener('click', fn);
 
     click('btn-clear', () => void api.clearPlayers().catch(logFailure('Clear')));
+    click('btn-refresh', () => void api.refreshPlayers().catch(logFailure('Refresh')));
     click('btn-minimize', () => void api.minimizeOverlay().catch(logFailure('Minimize')));
     click('btn-close', () => void api.closeOverlay().catch(logFailure('Close')));
     click('btn-toggle-view', () => {

@@ -30,7 +30,9 @@ export function buildApi(api: PikaOverlayApi): TabView {
     const health = h('div', 's-status s-status-big');
     health.setAttribute('role', 'status');
     connection.list.appendChild(block(health,
-        h('p', 's-hint', 'Pika allows 120 requests per minute. Each player costs two, so about 60 players a minute.')));
+        h('p', 's-hint', 'Pika allows 120 requests per minute. Each player costs two, so about 60 players a minute.'),
+        h('p', 's-hint', 'Stats are kept for 10 minutes. Your own row and your party are reloaded at every new lobby; '
+            + 'the refresh button in the title bar reloads everyone.')));
 
     const keyGroup = group('API key',
         'Since autumn 2026 the Pika stats API needs a personal key. It is free and takes a minute:');

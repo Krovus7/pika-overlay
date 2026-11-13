@@ -32,6 +32,7 @@ const api: PikaOverlayApi = {
     lookupBulk: (names, interval, mode) => ipcRenderer.invoke(IPC_CHANNELS.LOOKUP_BULK, names, interval, mode),
     retryPlayer: (username) => ipcRenderer.invoke(IPC_CHANNELS.LOOKUP_RETRY, username),
     clearPlayers: () => ipcRenderer.invoke(IPC_CHANNELS.PLAYERS_CLEAR),
+    refreshPlayers: () => ipcRenderer.invoke(IPC_CHANNELS.PLAYERS_REFRESH),
     openSettings: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_OPEN),
     closeOverlay: () => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_CLOSE),
     minimizeOverlay: () => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_MINIMIZE),

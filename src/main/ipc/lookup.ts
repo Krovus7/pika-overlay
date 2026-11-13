@@ -4,6 +4,10 @@
  * source. Both send player:loading, then exactly one player:stats carrying
  * the status. Race guards: a player removed while the request was in flight,
  * or a run superseded by a newer one for the same player, is discarded.
+ *
+ * `fresh` skips the cache. A fresh refresh of a row that already shows a
+ * result for the current view is quiet: no loading state, and a failed attempt
+ * leaves the row as it is (used for the party and the own row, every lobby).
  */
 
 import type { BrowserWindow } from 'electron';
@@ -11,6 +15,7 @@ import type { BrowserWindow } from 'electron';
 import { IPC_EVENTS, type StatsPayload } from '../../shared/ipc-contract';
 import { USER_TYPED_SOURCES, type PlayerResult } from '../../shared/types';
 import { getPlayerStats } from '../api/apiClient';
+import { cache } from '../api/cache';
 import { getHealth, health } from '../api/health';
 import type { ConfigStore } from '../config';
 import type { LookupQueue, PlayerRegistry } from '../state';
@@ -32,6 +37,8 @@ export function applySource(result: PlayerResult, source: string): PlayerResult 
 
 export class LookupService {
     private readonly runs = new Map<string, number>();
+    /** Players whose row currently shows a result (not loading, not a failure) */
+    private readonly settled = new Set<string>();
     readonly autoRetry: AutoRetry;
 
     constructor(private readonly deps: LookupDeps, retryDelaysMs?: number[]) {
@@ -51,12 +58,14 @@ export class LookupService {
         source: string,
         interval: string | null,
         mode: string | null,
+        fresh = false,
     ): Promise<PlayerResult | null> {
         const name = username?.trim();
         if (!name) return null;
         if (!this.deps.registry.add(name, source)) return null;
         this.autoRetry.reset(name.toLowerCase());
-        return this.run(name, source, interval, mode);
+        this.settled.delete(name.toLowerCase());
+        return this.run(name, source, interval, mode, fresh, false);
     }
 
     /** Re-fetches a registered player; null when it is no longer registered */
@@ -64,10 +73,12 @@ export class LookupService {
         username: string,
         interval: string | null = null,
         mode: string | null = null,
+        fresh = false,
     ): Promise<PlayerResult | null> {
         const entry = this.deps.registry.get(username);
         if (!entry) return null;
-        return this.run(entry.name, entry.source, interval, mode);
+        const quiet = fresh && interval === null && mode === null && this.settled.has(entry.name.toLowerCase());
+        return this.run(entry.name, entry.source, interval, mode, fresh, quiet);
     }
 
     /** User-initiated retry: the automatic-retry budget starts over */
@@ -89,13 +100,16 @@ export class LookupService {
         source: string,
         interval: string | null,
         mode: string | null,
+        fresh: boolean,
+        quiet: boolean,
     ): Promise<PlayerResult | null> {
         const { store, registry, getOverlayWin } = this.deps;
         const key = name.toLowerCase();
         const token = (this.runs.get(key) ?? 0) + 1;
         this.runs.set(key, token);
 
-        getOverlayWin()?.webContents.send(IPC_EVENTS.PLAYER_LOADING, { username: name, source });
+        if (fresh) cache.forget(name);
+        if (!quiet) getOverlayWin()?.webContents.send(IPC_EVENTS.PLAYER_LOADING, { username: name, source });
 
         const raw = await getPlayerStats(
             name,
@@ -113,8 +127,14 @@ export class LookupService {
         if (!raw) return null;
 
         const result = applySource(raw, source);
+        const failed = result.status === 'error' || result.status === 'rate_limited' || result.status === 'auth';
+        // The row still shows the previous result; the next lobby tries again.
+        if (quiet && failed) return result;
+
         const payload: StatsPayload = { ...result, source };
         getOverlayWin()?.webContents.send(IPC_EVENTS.PLAYER_STATS, payload);
+        if (failed) this.settled.delete(key);
+        else this.settled.add(key);
         this.autoRetry.onResult(key, result.status);
         return result;
     }

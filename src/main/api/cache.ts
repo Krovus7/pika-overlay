@@ -67,6 +67,15 @@ export class ApiCache {
         return promise;
     }
 
+    /** Drops everything cached about one player, so the next lookup asks the API. */
+    forget(username: string): void {
+        const key = username.toLowerCase();
+        this.profiles.delete(key);
+        for (const statsKey of [...this.stats.keys()]) {
+            if (statsKey.startsWith(`${key}:`)) this.stats.delete(statsKey);
+        }
+    }
+
     clear(): void {
         this.profiles.clear();
         this.stats.clear();

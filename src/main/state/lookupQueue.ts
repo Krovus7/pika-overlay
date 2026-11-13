@@ -14,6 +14,8 @@ export interface LookupJob {
     mode: string | null;
     /** Re-run an already registered player (keeps registry entry and source) */
     refresh?: boolean;
+    /** Ignore what is cached about this player (own row, party members) */
+    fresh?: boolean;
 }
 
 export const LOOKUP_CONCURRENCY = 6;

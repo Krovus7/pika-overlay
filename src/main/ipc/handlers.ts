@@ -10,6 +10,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { IPC_CHANNELS, IPC_EVENTS } from '../../shared/ipc-contract';
+import { cache } from '../api/cache';
 import type { ConfigStore } from '../config';
 import type { LogWatcher } from '../log/logWatcher';
 import { getRecentLogLines } from '../log/debugLines';
@@ -79,6 +80,12 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
         queue,
         send: (channel, ...args) => getOverlayWin()?.webContents.send(channel, ...args),
     }));
+
+    // "Refresh" button: nothing cached is trusted, every shown row is fetched again
+    ipcMain.handle(IPC_CHANNELS.PLAYERS_REFRESH, () => {
+        cache.clear();
+        service.refreshAll(queue, null, null);
+    });
 
     ipcMain.handle(IPC_CHANNELS.SETTINGS_OPEN, () => {
         getOverlayWin()?.webContents.send(IPC_EVENTS.SETTINGS_SHOW);

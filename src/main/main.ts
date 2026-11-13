@@ -48,8 +48,8 @@ app.whenReady().then(() => {
     const lookupDeps: LookupDeps = { store, registry: playerRegistry, getOverlayWin };
     const service = new LookupService(lookupDeps);
     const queue = new LookupQueue(async job => {
-        if (job.refresh) await service.refresh(job.username, job.interval, job.mode);
-        else await service.lookup(job.username, job.source, job.interval, job.mode);
+        if (job.refresh) await service.refresh(job.username, job.interval, job.mode, job.fresh);
+        else await service.lookup(job.username, job.source, job.interval, job.mode, job.fresh);
     });
 
     createOverlay(store, rootDir);
@@ -77,6 +77,7 @@ app.whenReady().then(() => {
 
     bindWatcherEvents({
         logWatcher, queue, registry: playerRegistry, party: partyState, game: gameState, send,
+        isSelf: name => name.toLowerCase() === watcherSettings(store).name.toLowerCase(),
     });
 
     // Dev-only screenshot drive: no log watcher, no update check (offline)
@@ -96,8 +97,9 @@ function startWatcher(store: ConfigStore): void {
         name,
         replayPath ? { fromBeginning: true, pollMs: 50 } : undefined,
     );
-    // Dev-only replay screenshot drive (offline verification)
-    if (replayPath) void driveReplay({ getOverlayWin, rootDir });
+    // Dev-only replay screenshot drive (offline verification); PIKA_REPLAY_DRIVE=0 only feeds
+    // the log, for tools that drive the window themselves (scripts/replay-live.mjs)
+    if (replayPath && process.env.PIKA_REPLAY_DRIVE !== '0') void driveReplay({ getOverlayWin, rootDir });
 }
 
 // Subscribing to window-all-closed prevents the default app quit — the overlay

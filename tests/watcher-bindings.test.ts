@@ -1,7 +1,8 @@
 /**
  * Log event → table rules (ADR-0012): the table follows the lobby, the match
  * start keeps it, a tab roster is additive for missing players, prunes absent
- * ones, keeps the party and never brings back an eliminated player.
+ * ones, keeps the party and never brings back an eliminated player. The own
+ * row and the party are fetched fresh at every new lobby.
  */
 
 import { beforeEach, describe, it } from 'node:test';
@@ -19,6 +20,7 @@ interface Rig {
     party: PartyState;
     game: GameState;
     sent: string[];
+    jobs: LookupJob[];
     settle: () => Promise<void>;
 }
 
@@ -29,12 +31,17 @@ function rig(): Rig {
     const party = new PartyState();
     const game = new GameState();
     const sent: string[] = [];
-    const queue = new LookupQueue(async (job: LookupJob) => { registry.add(job.username, job.source); });
+    const jobs: LookupJob[] = [];
+    const queue = new LookupQueue(async (job: LookupJob) => {
+        jobs.push(job);
+        if (!job.refresh) registry.add(job.username, job.source);
+    });
     bindWatcherEvents({
         logWatcher: log as unknown as LogWatcher, queue, registry, party, game,
         send: (channel, ...args) => { sent.push([channel, ...args].join(' ')); },
+        isSelf: name => name.toLowerCase() === 'me',
     });
-    return { log, registry, party, game, sent, settle: () => new Promise(resolve => setImmediate(resolve)) };
+    return { log, registry, party, game, sent, jobs, settle: () => new Promise(resolve => setImmediate(resolve)) };
 }
 
 const shown = (r: Rig): string[] => r.registry.snapshot().sort();
@@ -118,5 +125,53 @@ describe('watcher bindings — party pinned', () => {
         r.log.emit('party_left', 'Friend');
         assert.deepEqual(shown(r), []);
         assert.ok(r.sent.includes(`${IPC_EVENTS.PLAYER_REMOVE} friend`));
+    });
+});
+
+describe('watcher bindings — fresh stats for the own side', () => {
+    const fresh = (r: Rig): string[] => r.jobs.filter(j => j.fresh).map(j => `${j.username}:${j.refresh ? 'refresh' : 'lookup'}`);
+
+    it('a party member is looked up fresh, other players through the cache', async () => {
+        const r = rig();
+        r.log.emit('party_joined', 'Friend');
+        r.log.emit('player_detected', 'Alpha', 'join');
+        await r.settle();
+        assert.deepEqual(fresh(r), ['Friend:lookup']);
+        assert.equal(r.jobs.find(j => j.username === 'Alpha')?.fresh, undefined);
+    });
+
+    it('joining a lobby refreshes the party rows in place and looks the own row up fresh', async () => {
+        const r = rig();
+        r.log.emit('party_joined', 'Friend');
+        await r.settle();
+        r.jobs.length = 0;
+
+        r.log.emit('players_clear');
+        r.log.emit('player_detected', 'Me', 'join');
+        await r.settle();
+        assert.deepEqual(fresh(r), ['friend:refresh', 'Me:lookup']);
+        assert.deepEqual(shown(r), ['friend', 'me']);
+    });
+
+    it('a join line repeated right away does not refresh twice', async () => {
+        const r = rig();
+        r.log.emit('party_joined', 'Friend');
+        r.log.emit('player_detected', 'Me', 'join');
+        await r.settle();
+        r.jobs.length = 0;
+        r.log.emit('player_detected', 'Me', 'join');
+        await r.settle();
+        assert.deepEqual(fresh(r), []);
+    });
+
+    it('when the user is in the party list, one refresh covers the own row', async () => {
+        const r = rig();
+        r.log.emit('party_members', ['Me', 'Friend']);
+        await r.settle();
+        r.jobs.length = 0;
+        r.log.emit('players_clear');
+        r.log.emit('player_detected', 'Me', 'join');
+        await r.settle();
+        assert.deepEqual(fresh(r).sort(), ['friend:refresh', 'me:refresh']);
     });
 });

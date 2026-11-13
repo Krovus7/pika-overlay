@@ -14,6 +14,7 @@ export const IPC_CHANNELS = {
     STATS_SET_MODE: 'stats:setMode',
     STATS_REFETCH_ALL: 'stats:refetchAll',
     PLAYERS_CLEAR: 'players:clear',
+    PLAYERS_REFRESH: 'players:refresh',
     SETTINGS_OPEN: 'settings:open',
     SETTINGS_CLOSE: 'settings:close',
     OVERLAY_CLOSE: 'overlay:close',

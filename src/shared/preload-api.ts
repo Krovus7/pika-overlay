@@ -25,6 +25,8 @@ export interface PikaOverlayApi {
     /** Re-run the lookup of a row already shown (keeps its original source) */
     retryPlayer: (username: string) => Promise<void>;
     clearPlayers: () => Promise<void>;
+    /** Empty the stats cache and re-fetch every shown player */
+    refreshPlayers: () => Promise<void>;
     openSettings: () => Promise<void>;
     closeOverlay: () => Promise<void>;
     minimizeOverlay: () => Promise<void>;
