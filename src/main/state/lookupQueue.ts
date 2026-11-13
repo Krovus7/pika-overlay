@@ -5,6 +5,11 @@
  * builds: party members and names the user typed go ahead of the backlog
  * (FIFO within each class), and pending jobs can be dropped when the lobby
  * they belong to is gone. Worker errors are logged and never break the queue.
+ *
+ * A job with a free slot starts inside `enqueue`, not on a later tick: the
+ * worker registers the player before the next log event of the same batch is
+ * handled, so a quit or a lobby change that follows at once finds the player
+ * and removes it (a later start would add the row after the removal).
  */
 
 export interface LookupJob {
@@ -60,13 +65,20 @@ export class LookupQueue {
         while (this.active < this.concurrency && this.jobs.length > 0) {
             const job = this.jobs.shift()!;
             this.active++;
-            Promise.resolve()
-                .then(() => this.worker(job))
+            this.start(job)
                 .catch(err => console.error('[LookupQueue] Worker error:', String(err)))
                 .finally(() => {
                     this.active--;
                     this.drain();
                 });
+        }
+    }
+
+    private start(job: LookupJob): Promise<void> {
+        try {
+            return this.worker(job);
+        } catch (err) {
+            return Promise.reject(err);
         }
     }
 }

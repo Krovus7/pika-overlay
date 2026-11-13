@@ -175,3 +175,31 @@ describe('watcher bindings — fresh stats for the own side', () => {
         assert.deepEqual(fresh(r).sort(), ['friend:refresh', 'me:refresh']);
     });
 });
+
+describe('watcher bindings — events in the same batch of log lines', () => {
+    it('a player who joins and quits at once gets no row', async () => {
+        const r = rig();
+        r.log.emit('player_detected', 'Ghost', 'join');
+        r.log.emit('player_quit', 'Ghost');
+        await r.settle();
+        assert.deepEqual(shown(r), []);
+    });
+
+    it('a lobby change right after a detection does not keep the old player', async () => {
+        const r = rig();
+        r.log.emit('player_detected', 'Old', 'join');
+        r.log.emit('players_clear');
+        r.log.emit('player_detected', 'New', 'join');
+        await r.settle();
+        assert.deepEqual(shown(r), ['new']);
+    });
+
+    it('a roster that does not list a player detected just before prunes them', async () => {
+        const r = rig();
+        r.log.emit('player_detected', 'Stray', 'chat');
+        r.log.emit('players_sync', ['Alpha']);
+        r.log.emit('player_detected', 'Alpha', 'tab_list');
+        await r.settle();
+        assert.deepEqual(shown(r), ['alpha']);
+    });
+});
