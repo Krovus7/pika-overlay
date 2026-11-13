@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://github.com/Krovus7/pika-overlay/releases/latest"><img src="https://img.shields.io/github/v/release/Krovus7/pika-overlay?label=download&color=7c5cff" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-2b3150" alt="Windows 10 / 11">
-  <img src="https://img.shields.io/badge/license-ISC-2b3150" alt="ISC license">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2b3150" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -192,4 +192,6 @@ field-verified. The record is
 ## Credits
 
 Made by **AcquaPanna**. Stats from
-[stats.pika-network.net](https://stats.pika-network.net). ISC license.
+[stats.pika-network.net](https://stats.pika-network.net).
+
+Released under the [MIT License](LICENSE).
