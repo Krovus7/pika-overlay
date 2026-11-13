@@ -4,16 +4,27 @@
  *   default (dev):   node scripts/smoke.mjs node_modules/electron/dist/electron.exe .
  *   installed app:   node scripts/smoke.mjs "C:\...\pika-overlay\current\PikaOverlay.exe" "C:\...\current"
  *
- * Steps: bridge present → settings open/close → period dropdown open/close →
- * real player search (live API) → clear → compact toggle.
+ * Steps: bridge present → settings open/close → API key saved through the
+ * Settings UI (only when PIKA_API_KEY is set) → period dropdown open/close →
+ * real lookups (live API): a known player and a made-up name → period switch →
+ * clear → compact toggle. Screenshots land in artifacts/screens/v5-live-*.png.
+ *
+ * Env: PIKA_API_KEY   key to enter in Settings → API (it is saved in the app's
+ *                     own config, exactly as a user would; never printed)
+ *      SMOKE_PLAYER   a real Pika player name (default: Dream)
  * Exit code 0 = all steps passed.
  */
 
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import * as path from 'node:path';
 
 const PORT = 9234;
+const API_KEY = process.env.PIKA_API_KEY ?? '';
+const KNOWN_PLAYER = process.env.SMOKE_PLAYER ?? 'Dream';
+const UNKNOWN_NAME = 'zqNoSuchName9182'; // valid shape (3-16 chars), never registered
+const SHOTS_DIR = path.join(process.cwd(), 'artifacts', 'screens');
 const exe = process.argv[2] ?? 'node_modules/electron/dist/electron.exe';
 const cwd = process.argv[3] ?? process.cwd();
 const appArgs = process.argv.slice(4);
@@ -55,6 +66,15 @@ async function evaluate(expression) {
     }
     return res.result?.result?.value;
 }
+
+async function screenshot(name) {
+    const res = await send('Page.captureScreenshot', { format: 'png' });
+    mkdirSync(SHOTS_DIR, { recursive: true });
+    writeFileSync(path.join(SHOTS_DIR, name), Buffer.from(res.result.data, 'base64'));
+}
+
+const rowClass = name => `[...document.querySelectorAll('#stats-body tr')].find(r => r.textContent.toLowerCase().includes('${name.toLowerCase()}'))?.className ?? ''`;
+const NO_ROW_LOADING = `document.querySelectorAll('#stats-body tr').length > 0 && !document.querySelector('#stats-body tr.row-loading')`;
 
 async function waitFor(cond, timeoutMs = 15000, label = 'condition') {
     const start = Date.now();
@@ -102,6 +122,7 @@ async function main() {
         }
     };
     await send('Runtime.enable');
+    await send('Page.enable');
     await sleep(3000); // let the preload/late page settles fully
 
     // 2. bridge present
@@ -118,6 +139,24 @@ async function main() {
     const panelClosed = await waitFor(`!document.getElementById('settings-panel').classList.contains('visible')`, 5000, 'settings panel closed');
     step('settings panel closes', !!panelClosed);
 
+    // 3b. API key entered and saved through Settings → API
+    const healthBefore = (await evaluate('window.pikaOverlay.getApiHealth()'))?.kind;
+    console.log(`    health at start: ${healthBefore}`);
+    if (API_KEY) {
+        await evaluate(`document.getElementById('btn-settings').click(); document.getElementById('tabbtn-api').click()`);
+        await waitFor(`!!document.querySelector('.s-key-input')`, 5000, 'key field');
+        await evaluate(`(() => { const i = document.querySelector('.s-key-input'); i.value = ${JSON.stringify(API_KEY)}; i.dispatchEvent(new Event('input', { bubbles: true })); const b = [...document.querySelectorAll('#tab-api button')].find(x => x.textContent.trim() === 'Save key'); if (!b.disabled) b.click(); })()`);
+        const healthy = await waitFor(`window.pikaOverlay.getApiHealth().then(h => h.kind === 'ok')`, 15000, 'health ok after saving the key').catch(() => false);
+        step('API key saved in Settings → health ok', !!healthy);
+        await sleep(600);
+        await screenshot('v5-live-settings-api.png');
+        await evaluate(`document.getElementById('btn-settings-close-x').click()`);
+    } else {
+        step('API key configured', healthBefore === 'ok', `health=${healthBefore} (set PIKA_API_KEY to enter one)`);
+    }
+    const bannerHidden = await evaluate(`document.getElementById('api-banner').hidden`);
+    step('no health banner with a working key', !!bannerHidden);
+
     // 4. dropdown open/close (period)
     await evaluate(`document.getElementById('btn-period').click()`);
     const dropOpen = await waitFor(`document.getElementById('period-dropdown').classList.contains('open')`, 5000, 'period dropdown open');
@@ -126,13 +165,33 @@ async function main() {
     const dropClosed = await waitFor(`!document.getElementById('period-dropdown').classList.contains('open')`, 5000, 'period dropdown closed');
     step('period dropdown closes on outside click', !!dropClosed);
 
-    // 5. search of a real player (live API)
-    await evaluate(`const i=document.getElementById('search-input'); i.value='Dream'; document.getElementById('btn-lookup').click(); true`);
-    const loading = await waitFor(`document.querySelectorAll('#stats-body tr').length > 0`, 15000, 'loading row appears');
-    step('search starts loading a row', !!loading);
-    const settled = await waitFor(`[...document.querySelectorAll('#stats-body tr')].length > 0 && !document.querySelector('#stats-body tr.row-loading')`, 30000, 'stats row resolved');
-    const rowText = await evaluate(`document.querySelector('#stats-body tr')?.textContent?.slice(0, 120) || ''`);
-    step('search resolves with real stats', !!settled, rowText.trim());
+    // 5. real lookups (live API): a known player and a name that cannot exist
+    await evaluate(`const i=document.getElementById('search-input'); i.value='${KNOWN_PLAYER}, ${UNKNOWN_NAME}'; document.getElementById('btn-lookup').click(); true`);
+    const loading = await waitFor(`document.querySelectorAll('#stats-body tr').length >= 2`, 15000, 'rows appear');
+    step('search adds one row per name', !!loading);
+    const settled = await waitFor(NO_ROW_LOADING, 30000, 'rows resolved').catch(() => false);
+    const knownClass = await evaluate(rowClass(KNOWN_PLAYER));
+    const unknownClass = await evaluate(rowClass(UNKNOWN_NAME));
+    const rowText = await evaluate(`document.querySelector('#stats-body tr')?.textContent?.replace(/\s+/g, ' ').slice(0, 140) || ''`);
+    step('known player resolves with stats', !!settled && !knownClass.includes('row-status'), `class="${knownClass}" ${rowText.trim()}`);
+    step('typed unknown name is NOT FOUND, not NICKED', unknownClass.includes('row-not-found') && !unknownClass.includes('row-nicked'), `class="${unknownClass}"`);
+    await screenshot('v5-live-lookup.png');
+
+    // 5b. period switch re-fetches rows and keeps the classification sane
+    await evaluate(`document.getElementById('btn-period').click()`);
+    await evaluate(`[...document.querySelectorAll('#period-dropdown [data-value], #period-dropdown button, #period-dropdown li')].find(o => /week/i.test(o.textContent))?.click()`);
+    await sleep(500);
+    const weekly = await waitFor(NO_ROW_LOADING, 30000, 'weekly rows resolved').catch(() => false);
+    const weeklyKnown = await evaluate(rowClass(KNOWN_PLAYER));
+    const weeklyUnknown = await evaluate(rowClass(UNKNOWN_NAME));
+    step('weekly: known player is stats or NO DATA, never API OFF/NICKED',
+        !!weekly && !/row-api-off|row-nicked|row-error|row-auth/.test(weeklyKnown), `class="${weeklyKnown}"`);
+    step('weekly: unknown name still NOT FOUND', weeklyUnknown.includes('row-not-found'), `class="${weeklyUnknown}"`);
+    await screenshot('v5-live-weekly.png');
+    await evaluate(`document.getElementById('btn-period').click()`);
+    await evaluate(`[...document.querySelectorAll('#period-dropdown [data-value], #period-dropdown button, #period-dropdown li')].find(o => /life|total|all time/i.test(o.textContent))?.click()`);
+    await sleep(500);
+    await waitFor(NO_ROW_LOADING, 30000, 'lifetime rows resolved').catch(() => false);
 
     // 6. clear
     await evaluate(`document.getElementById('btn-clear').click()`);
@@ -161,6 +220,6 @@ async function finish() {
 }
 
 main().catch(err => {
-    console.error('[smoke] fatal:', err.message);
+    step('run completed without a fatal error', false, err.message);
     finish();
 });

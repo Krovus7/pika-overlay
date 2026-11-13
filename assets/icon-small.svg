@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Simplified mark for 16-32 px: no stat rows, heavier sword, thicker edge -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1d36"/>
+      <stop offset="1" stop-color="#080a12"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c6af7"/>
+      <stop offset="1" stop-color="#4ecdc4"/>
+    </linearGradient>
+    <linearGradient id="blade" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#8f7ffb"/>
+      <stop offset="1" stop-color="#4ecdc4"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#tile)"/>
+  <rect x="24" y="24" width="464" height="464" rx="98" fill="none" stroke="url(#edge)" stroke-width="32" stroke-opacity="0.9"/>
+
+  <g transform="rotate(45 256 256)">
+    <path d="M256 22 318 104V330H194V104Z" fill="url(#blade)"/>
+    <rect x="130" y="322" width="252" height="62" rx="24" fill="#f1f2fb"/>
+    <rect x="224" y="384" width="64" height="50" fill="#8f7ffb"/>
+    <circle cx="256" cy="452" r="42" fill="#f1f2fb"/>
+  </g>
+</svg>

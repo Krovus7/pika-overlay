@@ -11,7 +11,8 @@ import pkg from '../../package.json';
 let tray: Tray | null = null;
 
 export function createTray(rootDir: string, getOverlayWin: () => BrowserWindow | null): void {
-    const iconPath = path.join(rootDir, 'assets', 'icon.png');
+    // The .ico carries hand-simplified 16-32 px images; a scaled-down PNG turns to mush in the tray.
+    const iconPath = path.join(rootDir, 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
     const label = `Pika Overlay v${pkg.version}`;
 
     tray = new Tray(iconPath);
