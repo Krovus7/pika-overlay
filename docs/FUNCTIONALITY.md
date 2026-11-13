@@ -27,18 +27,24 @@ spaces, commas or newlines; other tokens are dropped
 
 `src/main/watcherBindings.ts`:
 
+The table follows the lobby, not the match (ADR-0012):
+
 - `pregame_start` → status pill "In queue".
-- `game_start` → in-game lock: `tab_list` detections and `players_sync` are
-  ignored; queued lookups of non-party players are dropped; every non-party
-  row is removed; status pill "In game".
-- `game_end` → lock released, status pill "Idle".
-- `players_clear` → lock released, queued non-party lookups dropped, non-party
-  rows removed.
-- `player_quit` removes a row unless the player is in the party.
-- `players_sync` (outside game) removes rows that are not in the roster.
+- `game_start` (Pika: `Goodluck with your BedWars Game`) → status pill
+  "In game". The table is **not** changed: the players of the pre-game lobby
+  are the players of the match.
+- `game_end` → status pill "Idle".
+- `players_clear` (own join of a new lobby, match recap, server change) →
+  queued non-party lookups dropped, non-party rows removed.
+- `player_quit` (pre-game quit, final kill) removes a row unless the player
+  is in the party. After the match start it also marks the player as
+  eliminated until the lobby changes.
+- A tab roster (`players_sync` + `tab_list` detections) works before and
+  during a match: rows not in the roster are removed (party members stay),
+  missing players are added, and a player eliminated in the current match is
+  not added again (eliminated players remain on the server as spectators).
 - Lookups that were still waiting for the old lobby are dropped on
-  `game_start` / `players_clear`; typed names (`manual`, `bulk`) and party
-  members are kept.
+  `players_clear`; typed names (`manual`, `bulk`) and party members are kept.
 
 ## Row statuses
 
@@ -125,6 +131,10 @@ otherwise it reads "Waiting for players".
   member is looked up.
 - Party lookups run before the backlog of other detections
   (`state/lookupQueue.ts`).
+- Party members and the user's own row are fetched fresh (cache skipped) on
+  party events and at every new lobby; everyone else comes from the cache for
+  10 minutes (`docs/API-CLIENT.md`). The title-bar refresh button empties the
+  cache and reloads every shown row.
 - Party members survive `game_start`, `players_clear` and the clear button,
   and are not removed by `player_quit`.
 

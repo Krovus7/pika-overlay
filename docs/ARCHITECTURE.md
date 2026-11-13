@@ -27,7 +27,7 @@ src/
     ├── devShots.ts, devShotsSettings.ts   PIKA_SHOTS=1 screenshot driver (dev only)
     ├── replay.ts         PIKA_REPLAY=<log> replay driver (dev only)
     ├── state/            single source of truth (ADR-0003)
-    │   ├── gameState.ts      in-game flag (tab-list lock)
+    │   ├── gameState.ts      match running + players eliminated in it
     │   ├── partyState.ts     party members (pinned)
     │   ├── playerRegistry.ts shown players: key → {name, source}
     │   ├── lookupQueue.ts    bounded queue (concurrency 6), priority, dropPending
@@ -110,8 +110,10 @@ config:updated → core/config.ts, ui/appearance.ts (theme, density, opacity, la
 - Final-kill victim = first token (`RE_FIRST_TOKEN`), never `cleanName`.
 - Lookup concurrency is 6 (`LOOKUP_CONCURRENCY` in `state/lookupQueue.ts`); the
   API budget is 120 requests/minute and is enforced by `api/rateLimiter.ts`.
-- `players_sync` and `tab_list` detections are ignored in game
-  (`watcherBindings.ts`); `game_start` drops every non-party row.
+- The table follows the lobby (ADR-0012): `players_clear` empties it,
+  `game_start` does not. A tab roster applies before and during a match and
+  never re-adds a player eliminated in it (`watcherBindings.ts`,
+  `state/gameState.ts`).
 - Party members are pinned: `player_quit` ignores them, lobby change and the
   clear button and the clear hotkey keep them (`watcherBindings.ts`,
   `ipc/clearPlayers.ts`). The overlay removes exactly the rows main tells it

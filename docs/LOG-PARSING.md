@@ -22,8 +22,13 @@ change semantics without turning that suite green.
 7. Game lifecycle — **`RE_GAME_END_RECAP` BEFORE `RE_FINAL_KILL_LINE`**:
    recap/scoreboard lines (`Top Final Kills:`, `1st Final Kills: …`,
    `[Match Recap]`) must emit `game_end` + `players_clear`, never a ghost
-   `player_quit`. Then `RE_GAME_START_1/2`, `RE_GAME_END_ELIM`,
-   `RE_SERVER_CHANGE`.
+   `player_quit`. Then `RE_GAME_START_PIKA` / `RE_GAME_START_1/2`,
+   `RE_GAME_END_ELIM`, `RE_SERVER_CHANGE`. Pika announces a match with
+   `Goodluck with your BedWars Game` (every one of the 174 matches in the local
+   corpus); its countdown `The game will start in N seconds.` is deliberately
+   not a start. `RE_GAME_START_1/2` are other servers' formats, kept from v3.
+   This is the one intended difference from the v3 reference parser
+   (`scripts/replay-logs.mjs` reports it as `pikaMatchStarts`, ADR-0012).
 8. BedWars pre-game join/quit (`RE_BW_JOIN`/`RE_BW_QUIT`). Self-join →
    `players_clear` + `pregame_start`; first foreign join also emits
    `pregame_start` (once).

@@ -82,6 +82,15 @@ response and holds requests until the window resets instead of running into
 - The cache is no longer cleared on game start / lobby change (TTL keeps it
   fresh and players seen in the pre-game lobby are detected again in-game);
   the manual clear still clears it.
+- **Own row and party are always fresh.** Their stats change with every match
+  played together, so the cache is skipped for them (`ApiCache.forget`): on
+  party events and each time the user's own pre-game join appears (a new
+  lobby, at most once per 20 s). A row that already shows a result is updated
+  in place — no loading state, and a failed attempt keeps the previous result
+  (`LookupService`, `src/main/ipc/lookup.ts`). Cost: two requests per party
+  member per lobby.
+- The **refresh button** in the title bar (`players:refresh`) empties the
+  cache and re-fetches every shown row.
 
 ## Rank display (`rankDisplay.ts`)
 

@@ -15,76 +15,33 @@
  * Exit code 0 = all steps passed.
  */
 
-import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
-const PORT = 9234;
+import { launchAndAttach } from './lib/cdp.mjs';
+
 const API_KEY = process.env.PIKA_API_KEY ?? '';
 const KNOWN_PLAYER = process.env.SMOKE_PLAYER ?? 'Dream';
 const UNKNOWN_NAME = 'zqNoSuchName9182'; // valid shape (3-16 chars), never registered
 const SHOTS_DIR = path.join(process.cwd(), 'artifacts', 'screens');
 const exe = process.argv[2] ?? 'node_modules/electron/dist/electron.exe';
 const cwd = process.argv[3] ?? process.cwd();
-const appArgs = process.argv.slice(4);
-const args = [...appArgs];
+const args = process.argv.slice(4);
 if (process.argv[2] === undefined) args.unshift('.');
-args.unshift(`--remote-debugging-port=${PORT}`);
 
 if (!existsSync(exe)) {
     console.error(`[smoke] exe not found: ${exe}`);
     process.exit(2);
 }
 
-const child = spawn(exe, args, { cwd, stdio: 'ignore' });
-
-let ws = null;
-const pending = new Map();
-let msgId = 0;
-
-function send(method, params = {}) {
-    return new Promise((resolve, reject) => {
-        const id = ++msgId;
-        const timer = setTimeout(() => {
-            pending.delete(id);
-            reject(new Error(`CDP timeout: ${method}`));
-        }, 30000);
-        pending.set(id, { resolve, reject, timer });
-        ws.send(JSON.stringify({ id, method, params }));
-    });
-}
-
-async function evaluate(expression) {
-    const res = await send('Runtime.evaluate', {
-        expression,
-        awaitPromise: true,
-        returnByValue: true,
-    });
-    if (res.result?.exceptionDetails) {
-        throw new Error(`eval exception: ${JSON.stringify(res.result.exceptionDetails).slice(0, 300)}`);
-    }
-    return res.result?.result?.value;
-}
-
-async function screenshot(name) {
-    const res = await send('Page.captureScreenshot', { format: 'png' });
-    mkdirSync(SHOTS_DIR, { recursive: true });
-    writeFileSync(path.join(SHOTS_DIR, name), Buffer.from(res.result.data, 'base64'));
-}
+let app = null;
+const evaluate = expression => app.evaluate(expression);
+const waitFor = (condition, timeoutMs, label) => app.waitFor(condition, timeoutMs, label);
+const screenshot = name => app.screenshot(SHOTS_DIR, name);
 
 const rowClass = name => `[...document.querySelectorAll('#stats-body tr')].find(r => r.textContent.toLowerCase().includes('${name.toLowerCase()}'))?.className ?? ''`;
 const NO_ROW_LOADING = `document.querySelectorAll('#stats-body tr').length > 0 && !document.querySelector('#stats-body tr.row-loading')`;
-
-async function waitFor(cond, timeoutMs = 15000, label = 'condition') {
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-        const v = await evaluate(cond);
-        if (v) return v;
-        await sleep(250);
-    }
-    throw new Error(`timeout waiting for ${label}`);
-}
 
 const results = [];
 function step(desc, ok, extra = '') {
@@ -93,37 +50,16 @@ function step(desc, ok, extra = '') {
 }
 
 async function main() {
-    // 1. wait for the CDP endpoint
-    let targets = null;
-    for (let i = 0; i < 60; i++) {
-        try {
-            const res = await fetch(`http://127.0.0.1:${PORT}/json/list`);
-            targets = await res.json();
-            if (targets.some(t => t.url.includes('overlay.html') || t.url.includes('index.html'))) break;
-        } catch { /* retry */ }
-        await sleep(500);
-    }
-    const page = targets?.find(t => t.url.includes('overlay.html'));
-    if (!page) {
-        step('app window target found', false, 'overlay.html not found in CDP targets');
+    // 1. start the app and attach to its overlay window
+    try {
+        // ELECTRON_RUN_AS_NODE would make the dev binary run as plain Node
+        app = await launchAndAttach({ exe, args, cwd, env: { ELECTRON_RUN_AS_NODE: undefined } });
+    } catch (err) {
+        step('app window target found', false, err.message);
         return finish();
     }
     step('app window target found', true);
-
-    ws = new WebSocket(page.webSocketDebuggerUrl);
-    await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
-    ws.onmessage = ev => {
-        const msg = JSON.parse(ev.data);
-        if (msg.id && pending.has(msg.id)) {
-            const entry = pending.get(msg.id);
-            clearTimeout(entry.timer);
-            entry.resolve(msg);
-            pending.delete(msg.id);
-        }
-    };
-    await send('Runtime.enable');
-    await send('Page.enable');
-    await sleep(3000); // let the preload/late page settles fully
+    await sleep(3000); // let the preload and the first config round trip settle
 
     // 2. bridge present
     const bridge = await evaluate('typeof window.pikaOverlay');
@@ -214,8 +150,7 @@ async function finish() {
     let fail = results.length - pass;
     if (results.length === 0) fail = 1; // no steps executed = failure, never a silent pass
     console.log(`\n[smoke] ${pass} passed, ${fail} failed`);
-    try { ws?.close(); } catch { /* ignore */ }
-    child.kill('SIGKILL');
+    app?.close();
     process.exit(fail > 0 ? 1 : 0);
 }
 

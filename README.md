@@ -36,6 +36,8 @@ from the `PIKA_API_KEY` environment variable. Details: `docs/API-CLIENT.md`.
 - **Party handling:** members from `Party ... joined/left/kicked/disbanded`
   lines and `/p info` are looked up first, pinned on top (diamond marker) and
   kept when the lobby changes. `/p info` when not in a party clears them.
+  Party members and your own row are reloaded at every new lobby; other
+  players come from a 10-minute cache. The refresh button reloads everyone.
 - **Dark and light themes** (title-bar toggle) and a legibility floor that
   strengthens as the background opacity drops (`docs/adr/0011-themes-and-legibility.md`).
 - **Layouts:** detailed and compact; row density, interface scale, column

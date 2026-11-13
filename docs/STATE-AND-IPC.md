@@ -10,7 +10,7 @@ calling each other.
 |---|---|---|
 | `playerRegistry.ts` | shown players, key = lowercased name → `{ name, source }`; `add/get/has/delete/entries/clearExcept/clear/snapshot` | watcher bindings, `LookupService`, `players:clear`, key-change refresh |
 | `partyState.ts` | party member keys (pinned rows) | watcher bindings, `players:clear`, queue drop filter |
-| `gameState.ts` | in-game flag (tab-list lock) | watcher bindings |
+| `gameState.ts` | match running flag + players eliminated in the current match | watcher bindings |
 | `lookupQueue.ts` | pending jobs; `LOOKUP_CONCURRENCY = 6`; `party` and `manual` jobs go ahead of the backlog (FIFO within each class); `dropPending(predicate)` | watcher bindings, `lookup:bulk`, `refreshAll` |
 
 `registry.add(name, source)` keeps an existing entry unchanged, so a row keeps
@@ -47,6 +47,7 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `stats:setMode` | `setStatsMode(mode)` | `handlers.ts` (persist + `config:updated`) |
 | `stats:refetchAll` | `refetchAll(interval, mode)` | `handlers.ts` → `LookupService.refreshAll` |
 | `players:clear` | `clearPlayers()` | `handlers.ts` → `clearPlayers.ts` (keeps party, drops queued lookups of removed players, clears cache) |
+| `players:refresh` | `refreshPlayers()` | `handlers.ts` (clears the cache, `LookupService.refreshAll`) |
 | `settings:open` / `settings:close` | `openSettings()` / `closeSettings()` | `handlers.ts` (open sends `settings:show`; close is handled in the overlay) |
 | `overlay:close` / `overlay:minimize` | `closeOverlay()` / `minimizeOverlay()` | `handlers.ts` (hide / minimize) |
 | `config:get` / `config:getAll` | `getConfig(key)` / `getAllConfig()` | `configHandlers.ts` |
@@ -84,19 +85,20 @@ Types: `PlayerResult`, `PlayerStatus`, `ApiHealth`, `ApiKeyTestResult`,
 | Log event | Effect |
 |---|---|
 | `log_line` | push to the 100-line debug ring |
-| `players_sync` | ignored in game; else remove registry rows not in the roster, one `player:remove` each |
+| `players_sync` | remove registry rows that are neither in the roster nor party members, one `player:remove` each |
 | `pregame_start` | `game:pregame` |
-| `game_start` | in-game flag on; drop pending non-party lookups; remove non-party rows; `game:start` |
+| `game_start` | match started, eliminated list emptied; `game:start` (rows untouched) |
 | `game_end` | in-game flag off; `game:end` |
-| `players_clear` | in-game flag off; drop pending non-party lookups; remove non-party rows; `players:clear` |
-| `player_detected` | ignored in game when the source is `tab_list`; else enqueue (source kept) |
-| `player_quit` | ignored for party members; else registry delete + `player:remove` |
-| `party_members` | remove rows of members no longer listed; replace party; `party:update`; enqueue each member (source `party`) |
-| `party_joined` | add to party; `party:update`; enqueue (source `party`) |
+| `players_clear` | game state reset; drop pending non-party lookups; remove non-party rows; `players:clear` |
+| `player_detected` | a `tab_list` detection of a player eliminated in this match is ignored; the user's own pre-game join enqueues a fresh refresh of the party rows and of the own row (once per 20 s); else enqueue (source kept) |
+| `player_quit` | marks the player eliminated (once a match started); party members keep their row; else drop their queued lookup, registry delete + `player:remove` |
+| `party_members` | remove rows of members no longer listed; replace party; `party:update`; enqueue each member fresh (source `party`) |
+| `party_joined` | add to party; `party:update`; enqueue fresh (source `party`) |
 | `party_left` | delete from party, remove row; `party:update` |
 | `party_clear` | remove all party rows; clear party; `party:update` with `[]` |
 
-The stats cache is not cleared on `game_start` / `players_clear`.
+The stats cache is not cleared on `game_start` / `players_clear`. The
+overlay reacts to `game:start` with the status pill only.
 "Drop pending" removes queued jobs that are not refreshes, not typed
 (`manual`, `bulk`) and not for a party member.
 
