@@ -20,7 +20,7 @@
 import {
     RE_BED_BREAK, RE_BED_BREAK_MODERN, RE_BW_JOIN, RE_BW_QUIT, RE_CHAT,
     RE_COLOR_CODE, RE_FINAL_KILL_LINE, RE_FIRST_TOKEN, RE_GAME_END_ELIM,
-    RE_GAME_END_RECAP, RE_GAME_START_1, RE_GAME_START_2, RE_KILL_KILLER,
+    RE_GAME_END_RECAP, RE_GAME_START_1, RE_GAME_START_2, RE_GAME_START_PIKA, RE_KILL_KILLER,
     RE_KILL_VICTIM, RE_MC_NAME, RE_NOT_IN_PARTY, RE_PARTY_PREFIX,
     RE_SERVER_CHANGE, RE_SKIP, RE_TEAM_TAG,
 } from './patterns';
@@ -74,7 +74,7 @@ export class LineParser {
         }
 
         // ── Game lifecycle ────────────────────────────────────────────────────
-        if (RE_GAME_START_1.test(msg) || RE_GAME_START_2.test(msg)) {
+        if (RE_GAME_START_PIKA.test(msg) || RE_GAME_START_1.test(msg) || RE_GAME_START_2.test(msg)) {
             this.inPregame = false;
             this.emit('game_start');
             return;

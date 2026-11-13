@@ -69,9 +69,18 @@ function materialize(file) {
     return { path: out, text: readFileSync(out, 'utf8') };
 }
 
+// v5 recognises Pika's real match start, which the v3 parser never did
+// (ADR-0012). Those game_start events are the one intended difference.
+const RE_PIKA_START = /\[CHAT\]\s+Goodluck with your BedWars Game\s*$/;
+
 function replay(text) {
     const events = [];
-    const emit = (ev, ...more) => events.push({ ev, args: more });
+    let pikaStarts = 0;
+    let current = '';
+    const emit = (ev, ...more) => {
+        if (ev === 'game_start' && RE_PIKA_START.test(current)) { pikaStarts++; return; }
+        events.push({ ev, args: more });
+    };
     const p4 = new v4LineParser(emit);
     p4.setMyUsername(myUsername);
 
@@ -88,12 +97,13 @@ function replay(text) {
     for (const raw of lines) {
         const line = raw.trim();
         if (!line) continue;
+        current = line;
         p4.parseLine(line);
         v3._parseLine(line);
     }
     console.log = origLog;
     v3.emit = origEmit;
-    return { events, v3Events, lines: lines.filter(l => l.trim() && l.includes('[CHAT]')).length };
+    return { events, v3Events, pikaStarts, lines: lines.filter(l => l.trim() && l.includes('[CHAT]')).length };
 }
 
 function analyze(events) {
@@ -139,7 +149,7 @@ let totalViolations = 0;
 
 for (const file of files) {
     const { text, path: realPath } = materialize(file);
-    const { events, v3Events, lines } = replay(text);
+    const { events, v3Events, pikaStarts, lines } = replay(text);
     const a = analyze(events);
     const diffs = diffStream(events, v3Events);
     totalDiffs += diffs.length;
@@ -148,6 +158,7 @@ for (const file of files) {
     const rec = {
         file: path.basename(file),
         chatLines: lines,
+        pikaMatchStarts: pikaStarts,
         byEvent: a.byEvent,
         bySource: a.bySource,
         names: a.names,

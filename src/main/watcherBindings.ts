@@ -1,8 +1,11 @@
 /**
  * Log watcher event bindings. Called ONCE from main.ts (HANDOVER v2.1 rule:
- * never rebind on config saves). The stats cache is deliberately NOT cleared
- * on game_start / players_clear: TTL keeps data fresh and pre-game lobby
- * players are re-detected in-game, so clearing would double the requests.
+ * never rebind on config saves).
+ *
+ * The table follows the lobby (ADR-0012): it is emptied when the lobby changes
+ * (players_clear), NOT when the match starts — the players of the pre-game
+ * lobby are the players of the match. Party members are pinned throughout.
+ * The stats cache is never cleared here: TTL keeps it fresh.
  */
 
 import { IPC_EVENTS } from '../shared/ipc-contract';
@@ -42,42 +45,39 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
     logWatcher.on('log_line', (line: string) => pushLogLine(line));
 
     logWatcher.on('players_sync', (detectedNames: string[]) => {
-        // Block tab updates mid-game
-        if (game.isInGame()) return;
-        removeShownExcept(new Set(detectedNames.map(n => n.toLowerCase())));
+        // A tab roster is the truth about who is on the server; party members stay pinned.
+        removeShownExcept(new Set([...detectedNames.map(n => n.toLowerCase()), ...party.snapshot()]));
     });
 
     logWatcher.on('pregame_start', () => send(IPC_EVENTS.GAME_PREGAME));
 
     logWatcher.on('game_start', () => {
-        game.setInGame(true);
-        // Pin party members, clear other players from tracking
-        dropStaleLookups();
-        removeShownExcept(new Set(party.snapshot()));
+        game.startGame();
         send(IPC_EVENTS.GAME_START);
     });
 
     logWatcher.on('game_end', () => {
-        game.setInGame(false);
+        game.endGame();
         send(IPC_EVENTS.GAME_END);
     });
 
     logWatcher.on('players_clear', () => {
-        game.setInGame(false);
+        game.reset();
         dropStaleLookups();
         removeShownExcept(new Set(party.snapshot()));
         send(IPC_EVENTS.PLAYERS_CLEAR);
     });
 
     logWatcher.on('player_detected', (username: string, source: string) => {
-        // Block tab detections mid-game
-        if (game.isInGame() && source === 'tab_list') return;
+        // A roster lists spectators too: do not bring back someone eliminated in this match
+        if (source === 'tab_list' && game.isEliminated(username)) return;
         enqueue(username, source);
     });
 
     logWatcher.on('player_quit', (username: string) => {
         const key = username.toLowerCase();
         // Pin party members — never remove them via kill feed
+        game.markEliminated(key);
         if (party.has(key)) return;
         queue.dropPending(job => !job.refresh && job.username.toLowerCase() === key);
         removeShown(key);

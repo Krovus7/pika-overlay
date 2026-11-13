@@ -10,6 +10,10 @@ export const RE_CHAT = /\[CHAT\]\s+(.+)$/;
 // ─── Game lifecycle ───────────────────────────────────────────────────────────
 export const RE_GAME_START_1  = /the game starts in \d+ second/i;
 export const RE_GAME_START_2  = /bed ?wars.*starting|game is starting/i;
+// What Pika actually prints when a BedWars match begins (174 of 174 matches in
+// the local log corpus). Its countdown reads "The game will start in N seconds."
+// and is deliberately NOT a start: players still join and quit during it.
+export const RE_GAME_START_PIKA = /^\s*Goodluck with your BedWars Game\s*$/i;
 // Match Recap, scoreboard lines, and ranked kill summaries all signal end-of-game
 export const RE_GAME_END_RECAP = /\[Match Recap\]|1st Killer|1st Place|Top Final Kills|(?:1st|2nd|3rd|\d+th)\s+Final\s+Kills/i;
 export const RE_GAME_END_ELIM  = /you (?:were|are) (?:eliminated|dead)|game over|team has been eliminated/i;

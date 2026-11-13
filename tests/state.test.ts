@@ -96,10 +96,26 @@ describe('GameState', () => {
     it('tracks in-game flag', () => {
         const gs = new GameState();
         assert.equal(gs.isInGame(), false);
-        gs.setInGame(true);
+        gs.startGame();
         assert.equal(gs.isInGame(), true);
-        gs.setInGame(false);
+        gs.endGame();
         assert.equal(gs.isInGame(), false);
+    });
+
+    it('remembers eliminations from match start until the lobby changes', () => {
+        const gs = new GameState();
+        gs.markEliminated('QuitInLobby');
+        assert.equal(gs.isEliminated('quitinlobby'), false, 'a pre-game quit is not an elimination');
+        gs.startGame();
+        gs.markEliminated('Victim');
+        gs.endGame();
+        assert.equal(gs.isEliminated('VICTIM'), true, 'game_end alone does not forget the match');
+        gs.reset();
+        assert.equal(gs.isEliminated('victim'), false);
+        gs.startGame();
+        gs.markEliminated('A');
+        gs.startGame();
+        assert.equal(gs.isEliminated('a'), false, 'a new match starts clean');
     });
 });
 

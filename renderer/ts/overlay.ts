@@ -75,7 +75,8 @@ function bindIpc(): void {
     api.onPlayerRemove(removeRow);
     api.onPlayersClear(() => clearTable(true));
     api.onGamePregame(() => setGameStatus('queue', 'In queue'));
-    api.onGameStart(() => { clearTable(true); setGameStatus('game', 'In game'); });
+    // The pre-game lobby's players are the match's players: the table stays (ADR-0012)
+    api.onGameStart(() => setGameStatus('game', 'In game'));
     api.onGameEnd(() => setGameStatus('idle', 'Idle'));
     api.onPartyUpdate(setParty);
     api.onConfigUpdate(applyConfig);

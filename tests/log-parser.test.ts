@@ -233,6 +233,17 @@ describe('8. Game lifecycle events', () => {
         assert.ok(parseLineEvents('the game starts in 5 seconds').some(e => e.event === 'game_start'));
     });
 
+    it('Pika match start ("Goodluck with your BedWars Game") triggers game_start', () => {
+        const evts = parseLineEvents('                  Goodluck with your BedWars Game');
+        assert.deepEqual(evts.map(e => e.event), ['game_start']);
+    });
+
+    it('Pika countdown ("The game will start in N seconds.") is not a game start', () => {
+        for (const line of ['BedWars ▸ The game will start in 60 seconds.', 'BedWars ▸ The game will start in 1 second.']) {
+            assert.ok(!parseLineEvents(line).some(e => e.event === 'game_start'), line);
+        }
+    });
+
     it('"BedWars starting" triggers game_start', () => {
         assert.ok(parseLineEvents('BedWars starting!').some(e => e.event === 'game_start'));
     });
