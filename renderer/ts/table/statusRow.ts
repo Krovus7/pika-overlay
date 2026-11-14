@@ -1,7 +1,7 @@
 /**
  * Status rows: every non-ok outcome gets a pill + a short dim note.
- * The pill spans the stat columns; rank/level and guild stay in their own
- * columns when the profile is known (api_off, never_played, no_data).
+ * The pill spans the stat columns; rank/level and guild always keep their own
+ * cells (empty when the profile is unknown) so all pills share one left edge.
  */
 
 import type { ColumnDef } from '../../../src/shared/columns';
@@ -72,8 +72,9 @@ export function buildStatusCells(view: RowView, cols: ColumnDef[], ctx: RenderCo
 
     const tail = cols.slice(playerIdx + 1);
     const source = tail.length && tail[tail.length - 1]!.id === 'source' ? tail.pop() : undefined;
-    if (info && tail[0]?.id === 'guild') {
-        cells.push(guildCell(info.guild));
+    // Always keep the Guild cell (a dash when unknown) so every pill starts at the same x
+    if (tail[0]?.id === 'guild') {
+        cells.push(guildCell(info?.guild));
         tail.shift();
     }
 
