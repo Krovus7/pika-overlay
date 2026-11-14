@@ -34,6 +34,7 @@ const api: PikaOverlayApi = {
     clearPlayers: () => ipcRenderer.invoke(IPC_CHANNELS.PLAYERS_CLEAR),
     refreshPlayers: () => ipcRenderer.invoke(IPC_CHANNELS.PLAYERS_REFRESH),
     openSettings: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_OPEN),
+    copyText: (text) => ipcRenderer.invoke(IPC_CHANNELS.CLIPBOARD_COPY, text),
     closeOverlay: () => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_CLOSE),
     minimizeOverlay: () => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_MINIMIZE),
 

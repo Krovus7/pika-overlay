@@ -28,6 +28,8 @@ export interface PikaOverlayApi {
     /** Empty the stats cache and re-fetch every shown player */
     refreshPlayers: () => Promise<void>;
     openSettings: () => Promise<void>;
+    /** Copies a short text (1-32 characters) to the system clipboard */
+    copyText: (text: string) => Promise<void>;
     closeOverlay: () => Promise<void>;
     minimizeOverlay: () => Promise<void>;
 

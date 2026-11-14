@@ -85,6 +85,8 @@ body.density-dense #stats-body td { font-size: 12.5px; }
 .guild-cell { color: var(--text-dim); font-size: 12px; }
 
 .player-name { font-weight: 600; color: var(--text); }
+.player-copy { cursor: pointer; }
+.player-copy:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
 .player-name .ic { vertical-align: -2px; margin-right: 5px; }
 
 /* ─── Rank, level, source, tags ───────────────────────────────────────────── */

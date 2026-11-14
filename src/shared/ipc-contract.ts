@@ -17,6 +17,7 @@ export const IPC_CHANNELS = {
     PLAYERS_REFRESH: 'players:refresh',
     SETTINGS_OPEN: 'settings:open',
     SETTINGS_CLOSE: 'settings:close',
+    CLIPBOARD_COPY: 'clipboard:copy',
     OVERLAY_CLOSE: 'overlay:close',
     OVERLAY_MINIMIZE: 'overlay:minimize',
     CONFIG_GET: 'config:get',

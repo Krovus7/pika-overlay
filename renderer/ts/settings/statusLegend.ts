@@ -13,7 +13,7 @@ const ENTRIES: LegendEntry[] = [
     { status: 'api_off', certainty: 'Certain',
       meaning: 'The player set their stats to private. Pika\'s API says so directly.' },
     { status: 'never_played', certainty: 'Likely',
-      meaning: 'Public profile that never played BedWars. Usually a new account or an alt.' },
+      meaning: 'Public profile without BedWars stats. At a low level it is a new account or an alt; at a higher level the player never played BedWars or Pika does not publish their stats.' },
     { status: 'no_data', certainty: 'Certain',
       meaning: 'Has BedWars stats, but none in the period or mode selected at the top. Try All Time.' },
     { status: 'error', certainty: 'Temporary',

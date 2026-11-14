@@ -1,0 +1,26 @@
+/* Fixed message above the footer. Backing stays solid enough at any opacity setting;
+   the border and halo-free text keep it readable over a bright or dark scene. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  z-index: 60;
+  max-width: calc(100% - 24px);
+  padding: 5px 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-shadow: none;
+  background: rgba(var(--surface-rgb), max(0.92, var(--bg-alpha)));
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 10px rgba(var(--shadow-rgb), calc(0.25 + var(--lo) * 0.3));
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-med), transform var(--t-med);
+}
+.toast.is-visible { opacity: 1; transform: translateX(-50%); }

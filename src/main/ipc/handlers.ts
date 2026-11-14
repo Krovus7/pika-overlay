@@ -4,7 +4,7 @@
  * live in configHandlers.ts / apiHandlers.ts.
  */
 
-import { dialog, ipcMain, type BrowserWindow } from 'electron';
+import { clipboard, dialog, ipcMain, type BrowserWindow } from 'electron';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -92,6 +92,9 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
     });
     ipcMain.handle(IPC_CHANNELS.SETTINGS_CLOSE, () => {
         // handled inline in the overlay window
+    });
+    ipcMain.handle(IPC_CHANNELS.CLIPBOARD_COPY, (_e, text: unknown) => {
+        if (typeof text === 'string' && text.length >= 1 && text.length <= 32) clipboard.writeText(text);
     });
     ipcMain.handle(IPC_CHANNELS.OVERLAY_CLOSE, () => getOverlayWin()?.hide());
     ipcMain.handle(IPC_CHANNELS.OVERLAY_MINIMIZE, () => getOverlayWin()?.minimize());

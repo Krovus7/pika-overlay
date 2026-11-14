@@ -16,7 +16,7 @@ export function updateFooter(): void {
     const parts = [`<span>${players} player${players === 1 ? '' : 's'}</span>`];
     if (nicked) parts.push(`<span class="sum-nicked">${nicked} nicked</span>`);
     if (apiOff) parts.push(`<span>${apiOff} API off</span>`);
-    if (fresh) parts.push(`<span class="sum-new">${fresh} new</span>`);
+    if (fresh) parts.push(`<span class="sum-new">${fresh} no stats</span>`);
 
     const html = parts.join('');
     if (html === lastHtml) return;

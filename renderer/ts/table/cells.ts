@@ -21,7 +21,7 @@ export function playerCell(view: RowView, leadingIcon = ''): string {
     const you = view.isSelf ? '<span class="tag tag-you" title="You">YOU</span>' : '';
     const bot = view.isSuspect
         ? '<span class="tag tag-bot" title="Level 1 with no stats: possible bot or fresh alt">BOT?</span>' : '';
-    return `<td class="player-name" title="${esc(view.name)}">${leadingIcon}${badge}${esc(view.name)}${you}${bot}</td>`;
+    return `<td class="player-name" title="${esc(view.name)}">${leadingIcon}${badge}<span class="player-copy" data-action="copy" data-name="${esc(view.name)}" title="Click to copy">${esc(view.name)}</span>${you}${bot}</td>`;
 }
 
 export function guildCell(guild: string | null | undefined): string {

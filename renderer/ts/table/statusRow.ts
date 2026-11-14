@@ -15,14 +15,24 @@ interface StatusStyle {
     tone: string;
     icon: IconName;
     label: string;
-    note: (ctx: RenderContext) => string;
+    note: (ctx: RenderContext, view: RowView) => string;
+}
+
+/** Up to this profile level a stat-less public profile is most likely a brand-new account. */
+const NEW_ACCOUNT_MAX_LEVEL = 5;
+
+function noStatsNote(view: RowView): string {
+    const level = profileOf(view)?.level;
+    return level != null && level <= NEW_ACCOUNT_MAX_LEVEL
+        ? 'new account, no BedWars games'
+        : 'no public BedWars stats';
 }
 
 export const STATUS_STYLES: Record<string, StatusStyle> = {
     nicked:       { tone: 'nicked',  icon: 'alert', label: 'NICKED', note: () => 'name not on Pika' },
     not_found:    { tone: 'neutral', icon: 'help',  label: 'NOT FOUND', note: () => 'typo or nicked' },
     api_off:      { tone: 'muted',   icon: 'lock',  label: 'API OFF', note: () => 'stats set to private' },
-    never_played: { tone: 'new',     icon: 'spark', label: 'NO STATS', note: () => 'never played BedWars' },
+    never_played: { tone: 'new',     icon: 'spark', label: 'NO STATS', note: (_ctx, view) => noStatsNote(view) },
     no_data:      { tone: 'muted',   icon: 'clock', label: 'NO GAMES', note: ctx => ctx.periodNote },
     error:        { tone: 'warn',    icon: 'circle-alert', label: 'ERROR', note: () => 'lookup failed' },
     rate_limited: { tone: 'warn',    icon: 'clock', label: 'RATE LIMITED', note: () => 'retrying automatically' },
@@ -40,7 +50,7 @@ function statusInner(view: RowView, style: StatusStyle, ctx: RenderContext): str
         ? `<button class="retry-btn" data-action="retry" data-user="${esc(view.data.username)}" title="Retry lookup">${icon('retry')}<span>Retry</span></button>`
         : '';
     return `<div class="status-wrap"><span class="pill pill-${style.tone}${style.label.length > 8 ? ' pill-long' : ''}" title="${esc(style.label)}">${icon(style.icon)}<span class="pill-label">${style.label}</span></span>`
-        + `<span class="status-note">${esc(style.note(ctx))}</span>${retry}</div>`;
+        + `<span class="status-note">${esc(style.note(ctx, view))}</span>${retry}</div>`;
 }
 
 function leadCell(col: ColumnDef, view: RowView, info: PlayerProfileInfo | null): string {
