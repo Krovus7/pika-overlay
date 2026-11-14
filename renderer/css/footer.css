@@ -25,6 +25,7 @@
 }
 .sum-nicked { color: var(--bad-ink); font-weight: 600; }
 .sum-new { color: var(--teal-text); }
+.sum-dim { color: var(--text-muted); }
 
 .footer-meta { display: flex; gap: 10px; color: var(--text-muted); }
 .footer-meta span + span::before { content: '·'; margin-right: 10px; }

@@ -1,7 +1,8 @@
 .table-wrapper {
   flex: 1;
   position: relative;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   contain: strict;
 }
 

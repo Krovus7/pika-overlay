@@ -1,6 +1,7 @@
 /** Footer: live summary of what is on screen (only non-zero parts). */
 
 import { state } from '../core/state';
+import { getHiddenColumnCount } from '../table/header';
 
 const footerCount = document.getElementById('footer-count') as HTMLElement;
 let lastHtml = '';
@@ -17,6 +18,11 @@ export function updateFooter(): void {
     if (nicked) parts.push(`<span class="sum-nicked">${nicked} nicked</span>`);
     if (apiOff) parts.push(`<span>${apiOff} API off</span>`);
     if (fresh) parts.push(`<span class="sum-new">${fresh} no stats</span>`);
+
+    const hidden = getHiddenColumnCount();
+    if (hidden) {
+        parts.push(`<span class="sum-dim" title="Widen the window, or choose columns in Settings → Columns">${hidden} column${hidden === 1 ? '' : 's'} hidden</span>`);
+    }
 
     const html = parts.join('');
     if (html === lastHtml) return;
