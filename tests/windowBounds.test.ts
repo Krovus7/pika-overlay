@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { overlayMinSize, scaleBounds } from '../src/main/windowBounds';
+import { isInsideAny, overlayMinSize, placeBeside, scaleBounds } from '../src/main/windowBounds';
 
 const WORK = { x: 0, y: 0, width: 1920, height: 1040 };
 
@@ -49,5 +49,47 @@ describe('overlayMinSize', () => {
     it('scales the base minimum', () => {
         assert.deepEqual(overlayMinSize(1), { width: 360, height: 200 });
         assert.deepEqual(overlayMinSize(1.5), { width: 540, height: 300 });
+    });
+});
+
+describe('placeBeside', () => {
+    const size = { width: 760, height: 680 };
+
+    it('goes to the right of the overlay when it fits', () => {
+        const next = placeBeside({ x: 20, y: 60, width: 960, height: 600 }, size, WORK);
+        assert.deepEqual(next, { x: 988, y: 60, width: 760, height: 680 });
+    });
+
+    it('goes to the left when the right side is too narrow', () => {
+        const next = placeBeside({ x: 1000, y: 60, width: 900, height: 600 }, size, WORK);
+        assert.deepEqual(next, { x: 232, y: 60, width: 760, height: 680 });
+    });
+
+    it('is centered in the work area when neither side fits', () => {
+        const next = placeBeside({ x: 20, y: 60, width: 1880, height: 600 }, size, WORK);
+        assert.deepEqual(next, { x: 580, y: 180, width: 760, height: 680 });
+    });
+
+    it('keeps the window inside the work area vertically', () => {
+        const next = placeBeside({ x: 20, y: 800, width: 400, height: 200 }, size, WORK);
+        assert.equal(next.y, 360);
+    });
+
+    it('shrinks to a small work area', () => {
+        const next = placeBeside({ x: 0, y: 0, width: 300, height: 300 }, size, { x: 0, y: 0, width: 640, height: 400 });
+        assert.deepEqual(next, { x: 0, y: 0, width: 640, height: 400 });
+    });
+});
+
+describe('isInsideAny', () => {
+    const areas = [WORK, { x: 1920, y: 0, width: 1280, height: 1000 }];
+
+    it('accepts a rectangle inside one display', () => {
+        assert.equal(isInsideAny({ x: 2000, y: 50, width: 700, height: 600 }, areas), true);
+    });
+
+    it('rejects a rectangle that sticks out or sits on a removed display', () => {
+        assert.equal(isInsideAny({ x: 1700, y: 50, width: 700, height: 600 }, areas), false);
+        assert.equal(isInsideAny({ x: 4000, y: 50, width: 700, height: 600 }, areas), false);
     });
 });

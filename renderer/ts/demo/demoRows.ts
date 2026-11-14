@@ -50,6 +50,7 @@ export function demoRows(): RowData[] {
         profile('PrivateAndy', 'join', 'api_off', 87, rank('VIP', '#55ff55'), 'NightOwls'),
         profile('Ghostwriter', 'kill_feed', 'api_off', 23, NONE, null),
         profile('FreshAlt_77', 'tab_list', 'never_played', 1, NONE, null),
+        profile('QuietVeteran', 'join', 'never_played', 33, rank('VIP', '#55ff55'), 'Umbra'),
         profile('WeekendWarrior', 'bulk', 'no_data', 64, rank('MVP', '#55ffff'), 'Umbra'),
         bare('LagVictim', 'join', 'error'),
         bare('Overflow42', 'bulk', 'rate_limited'),

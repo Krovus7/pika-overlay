@@ -62,4 +62,6 @@ export function setHealth(h: ApiHealth): void {
     refreshEmptyState();
 }
 
-settingsBtn.addEventListener('click', () => document.getElementById('btn-settings')?.click());
+settingsBtn.addEventListener('click', () => {
+    window.pikaOverlay.openSettings('api').catch(err => console.error('[Overlay] Opening settings failed:', String(err)));
+});

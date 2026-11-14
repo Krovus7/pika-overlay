@@ -14,14 +14,17 @@ src/
 ├── preload.ts            contextBridge → window.pikaOverlay (contract: shared/preload-api.ts)
 ├── shared/               contract shared by main, preload and renderer
 │   ├── types.ts          PlayerResult/PlayerStatus, ApiHealth, UpdateState, LookupSource
-│   ├── ipc-contract.ts   IPC_CHANNELS, IPC_EVENTS, StatsPayload
+│   ├── ipc-contract.ts   IPC_CHANNELS, IPC_EVENTS, SETTINGS_TAB_IDS, StatsPayload
 │   ├── preload-api.ts    PikaOverlayApi (typed window.pikaOverlay)
 │   └── columns.ts        COLUMN_DEFS (ids, labels, sort keys)
 └── main/                 Electron main process
     ├── main.ts           bootstrap, wiring; creates LookupService + LookupQueue
     ├── watcherBindings.ts  log-watcher event → state/queue/overlay (bound once)
     ├── config.ts         typed config store, defaults, validation, v3 migration, .bak (ADR-0007)
-    ├── windowManager.ts  overlay BrowserWindow, always-on-top, zoom (uiScale)
+    ├── windowManager.ts  overlay BrowserWindow, always-on-top, zoom + resize on uiScale change
+    ├── settingsWindow.ts settings BrowserWindow (ADR-0013): one instance, placement, level
+    ├── windowBounds.ts   pure geometry: scaleBounds, placeBeside, isInsideAny
+    ├── broadcast.ts      send config/health/update events to overlay + settings window
     ├── tray.ts           system tray
     ├── hotkeyManager.ts  global hotkeys, accelerator normalization
     ├── devShots.ts, devShotsSettings.ts   PIKA_SHOTS=1 screenshot driver (dev only)
@@ -57,18 +60,20 @@ src/
     └── update/velopackUpdate.ts  Velopack check/download/apply state machine
 
 renderer/
-├── overlay.html          markup + SVG icon sprite
+├── overlay.html          overlay markup + SVG icon sprite
+├── settings.html         settings window markup (own copy of the sprite)
 ├── css/                  tokens.css (theme contract), base, titlebar, search, banner,
 │                         table, row-states, compact, footer, settings-*.css
 ├── fonts/                bundled Inter variable font + OFL license
-├── bundle/overlay.js     esbuild output (gitignored)
-└── ts/                   entry: overlay.ts (IPC wiring), settingsPanel.ts
+├── bundle/               overlay.js, settings.js: esbuild output (gitignored)
+└── ts/                   entries: overlay.ts (IPC wiring), settingsWindow.ts (settings window)
     ├── core/             state.ts (single mutable state), config.ts, players.ts
     ├── table/            header, sorting, rowBuilder, statusRow, cells, render,
-    │                     reconcile (keyed DOM), dropdown, format, sourceBadge, actions, types
+    │                     reconcile (keyed DOM), dropdown, format, sourceBadge, actions, types,
+    │                     fit (columns that fit the window width)
     ├── ui/               appearance, banner, emptyState, footer, gameStatus, icons,
-    │                     lowOpacity, search, theme
-    ├── settings/         index (shell), saveQueue, store, controls, hotkeyField,
+    │                     lowOpacity, search, theme, toast
+    ├── settings/         index (shell: tabs, save indicator), saveQueue, store, controls, hotkeyField,
     │                     tabGeneral/Api/Appearance/Columns/Colors/Updates/Debug,
     │                     apiHealthView, statusLegend
     └── demo/             window.__pikaDemo* helpers (demo rows, backdrops)
@@ -94,7 +99,8 @@ latest.log
   → renderer core/players.ts → table/render.ts (sorted, keyed reconcile)
 
 api:health (key, rate pause, reachability) → ui/banner.ts, empty state, Settings → API
-config:updated → core/config.ts, ui/appearance.ts (theme, density, opacity, layout)
+config:updated (broadcast to both windows) → overlay: core/config.ts, ui/appearance.ts
+                                              (theme, density, opacity, layout); settings: store.ts → tabs
 ```
 
 ## Build / release

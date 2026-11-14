@@ -1,5 +1,14 @@
-/* Settings panel shell: opaque surface, fixed header and tabs, scrolling body.
+/* Settings window shell: opaque surface, fixed header and tabs, scrolling body.
  * Colours come only from the theme contract tokens (tokens.css). */
+
+/* The window is opaque: none of the overlay's transparent-window treatment applies */
+body.settings-window {
+  background: rgb(var(--surface-rgb));
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+}
+
 .settings-panel {
   /* Settings-local tokens derived from the contract */
   --s-line: rgba(var(--ink-rgb), 0.10);
@@ -7,22 +16,18 @@
   --s-fill-strong: rgba(var(--ink-rgb), 0.07);
   --s-tint: color-mix(in srgb, var(--accent) 16%, transparent);
 
-  position: absolute;
-  inset: 0;
-  z-index: 1000;
-  display: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
   flex-direction: column;
   box-sizing: border-box;
   overflow: hidden;
-  border-radius: var(--radius);
   background: rgb(var(--surface-rgb));
   color: var(--text);
   font-size: 13px;
 }
-.settings-panel.visible { display: flex; animation: settingsIn 0.18s var(--ease) both; }
-@keyframes settingsIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-/* Header doubles as the window drag area while the panel covers the title bar */
+/* The header is the window's title bar and drag area */
 .settings-header {
   display: flex;
   align-items: center;

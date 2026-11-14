@@ -1,7 +1,7 @@
 import type { RatioColors, RatioKey, RatioThresholds, TierKey } from '../../../src/shared/types';
 import { DEFAULT_COLORS, DEFAULT_THRESHOLDS } from '../core/state';
 import { block, button, group, h, svgIcon } from './controls';
-import { flushSaves, saveNow, saveSoon } from './saveQueue';
+import { flushSaves, saveNow, saveSoon, saveThrottled } from './saveQueue';
 import { cfgObj, type Cfg } from './store';
 import type { TabView } from './types';
 
@@ -51,7 +51,7 @@ export function buildColors(): TabView {
         pick.addEventListener('input', () => {
             colors = { ...colors, [tier.key]: pick.value };
             paintColors();
-            saveSoon({ ratioColors: colors });
+            saveThrottled({ ratioColors: colors });
         });
         pick.addEventListener('change', () => void saveNow({ ratioColors: colors }));
         item.append(pick, chip, h('span', 's-swatch-name', tier.label), hex);

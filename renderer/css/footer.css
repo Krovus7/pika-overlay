@@ -13,7 +13,7 @@
   white-space: nowrap;
 }
 
-#footer-count { display: flex; align-items: center; min-width: 0; overflow: hidden; }
+#footer-count { display: flex; align-items: center; min-width: 0; overflow: hidden; flex: 0 1 auto; }
 #footer-count span + span::before {
   content: '';
   display: inline-block;
@@ -30,7 +30,8 @@
 .footer-meta { display: flex; gap: 10px; color: var(--text-muted); }
 .footer-meta span + span::before { content: '·'; margin-right: 10px; }
 
-@media (max-width: 560px) { .footer-api { display: none; } }
+/* The summary matters more than the credits once the window is narrow */
+@media (max-width: 640px) { .footer-meta { display: none; } }
 
 /* ─── Empty state ──────────────────────────────────────────────────────────── */
 .empty-state {

@@ -118,7 +118,7 @@ export async function driveShots(deps: ShotsDeps): Promise<void> {
         }
         await js(`window.__pikaDemoBackdrop('none'); window.__pikaDemoTheme('dark'); window.__pikaDemoOpacity(0.92)`);
 
-        await captureSettingsShots({ js, shot, win });
+        await captureSettingsShots({ shotsDir });
 
         await js('window.__pikaDemoClear()');
         await captureBothThemes(js, shot, [['30', 'empty', async () => undefined]]);

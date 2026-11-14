@@ -4,8 +4,8 @@
  *   default (dev):   node scripts/smoke.mjs node_modules/electron/dist/electron.exe .
  *   installed app:   node scripts/smoke.mjs "C:\...\pika-overlay\current\PikaOverlay.exe" "C:\...\current"
  *
- * Steps: bridge present → settings open/close → API key saved through the
- * Settings UI (only when PIKA_API_KEY is set) → period dropdown open/close →
+ * Steps: bridge present → settings open/close (its own window) → API key saved
+ * through Settings → API in that window (only when PIKA_API_KEY is set) → period dropdown open/close →
  * real lookups (live API): a known player and a made-up name → period switch →
  * clear → compact toggle. Screenshots land in artifacts/screens/v5-live-*.png.
  *
@@ -49,6 +49,14 @@ function step(desc, ok, extra = '') {
     console.log(`${ok ? '  ✔' : '  ✖'} ${desc}${extra ? ' — ' + extra : ''}`);
 }
 
+async function waitUntilGone(urlPart) {
+    for (let i = 0; i < 20; i++) {
+        if (!(await app.pageExists(urlPart))) return true;
+        await sleep(250);
+    }
+    return false;
+}
+
 async function main() {
     // 1. start the app and attach to its overlay window
     try {
@@ -66,27 +74,32 @@ async function main() {
     step('window.pikaOverlay bridge present', bridge === 'object', `typeof=${bridge}`);
     if (bridge !== 'object') return finish();
 
-    // 3. settings open/close
+    // 3. settings open/close: a separate window, the overlay stays where it is
     await evaluate(`document.getElementById('btn-settings').click()`);
-    const panelOpen = await waitFor(`document.getElementById('settings-panel').classList.contains('visible')`, 5000, 'settings panel visible');
-    step('settings panel opens (⚙)', !!panelOpen);
-    await waitFor(`document.getElementById('settings-panel').classList.contains('visible')`);
-    await evaluate(`document.getElementById('btn-settings-close-x').click()`);
-    const panelClosed = await waitFor(`!document.getElementById('settings-panel').classList.contains('visible')`, 5000, 'settings panel closed');
-    step('settings panel closes', !!panelClosed);
+    const settings = await app.page('settings.html').catch(() => null);
+    step('settings opens as its own window (⚙)', !!settings);
+    if (!settings) return finish();
+    const panelReady = await settings.waitFor(`!!document.querySelector('#settings-panel .settings-tab-btn.active')`, 5000, 'settings panel').catch(() => false);
+    const overlayKept = await evaluate(`!!document.getElementById('stats-table')`);
+    step('settings window renders, overlay page untouched', !!panelReady && !!overlayKept);
+    await settings.evaluate(`document.getElementById('btn-settings-close-x').click()`);
+    const gone = await waitUntilGone('settings.html');
+    step('settings window closes', gone);
 
     // 3b. API key entered and saved through Settings → API
     const healthBefore = (await evaluate('window.pikaOverlay.getApiHealth()'))?.kind;
     console.log(`    health at start: ${healthBefore}`);
     if (API_KEY) {
-        await evaluate(`document.getElementById('btn-settings').click(); document.getElementById('tabbtn-api').click()`);
-        await waitFor(`!!document.querySelector('.s-key-input')`, 5000, 'key field');
-        await evaluate(`(() => { const i = document.querySelector('.s-key-input'); i.value = ${JSON.stringify(API_KEY)}; i.dispatchEvent(new Event('input', { bubbles: true })); const b = [...document.querySelectorAll('#tab-api button')].find(x => x.textContent.trim() === 'Save key'); if (!b.disabled) b.click(); })()`);
+        await evaluate(`window.pikaOverlay.openSettings('api')`);
+        const keyWin = await app.page('settings.html');
+        await keyWin.waitFor(`!!document.querySelector('.s-key-input')`, 5000, 'key field');
+        await keyWin.evaluate(`(() => { const i = document.querySelector('.s-key-input'); i.value = ${JSON.stringify(API_KEY)}; i.dispatchEvent(new Event('input', { bubbles: true })); const b = [...document.querySelectorAll('#tab-api button')].find(x => x.textContent.trim() === 'Save key'); if (!b.disabled) b.click(); })()`);
         const healthy = await waitFor(`window.pikaOverlay.getApiHealth().then(h => h.kind === 'ok')`, 15000, 'health ok after saving the key').catch(() => false);
         step('API key saved in Settings → health ok', !!healthy);
         await sleep(600);
-        await screenshot('v5-live-settings-api.png');
-        await evaluate(`document.getElementById('btn-settings-close-x').click()`);
+        await keyWin.screenshot(SHOTS_DIR, 'v5-live-settings-api.png');
+        await keyWin.evaluate(`document.getElementById('btn-settings-close-x').click()`);
+        await waitUntilGone('settings.html');
     } else {
         step('API key configured', healthBefore === 'ok', `health=${healthBefore} (set PIKA_API_KEY to enter one)`);
     }

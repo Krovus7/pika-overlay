@@ -1,25 +1,26 @@
+import type { PikaOverlayApi } from '../../../src/shared/preload-api';
 import { block, button, group, h, row, segmented, slider, toggle } from './controls';
-import { saveNow, saveSoon } from './saveQueue';
+import { saveNow, saveThrottled } from './saveQueue';
 import { cfgBool, cfgNum, cfgStr } from './store';
 import type { TabView } from './types';
 
 const pct = (v: number): string => `${Math.round(v)}%`;
 
-function buildPreviewButton(): HTMLElement {
+function buildPreviewButton(api: PikaOverlayApi): HTMLElement {
     const btn = button('Preview with sample players', { icon: 'list' });
     let on = false;
     btn.addEventListener('click', () => {
         on = !on;
-        if (on) window.__pikaDemo(); else window.__pikaDemoClear();
+        void api.setDemo(on);
         const label = btn.querySelector('.s-btn-label');
         if (label) label.textContent = on ? 'Remove sample players' : 'Preview with sample players';
         btn.setAttribute('aria-pressed', String(on));
     });
     return block(btn,
-        h('p', 's-hint', 'Fills the table with demo rows so you can tune colors, density and theme without being in a game.'));
+        h('p', 's-hint', 'Fills the overlay table with demo rows so you can tune colors, density and theme without being in a game.'));
 }
 
-export function buildAppearance(): TabView {
+export function buildAppearance(api: PikaOverlayApi): TabView {
     const root = h('div', 's-tab-content');
 
     const look = group('Look');
@@ -29,7 +30,7 @@ export function buildAppearance(): TabView {
     ], v => void saveNow({ theme: v }));
     look.list.appendChild(row('Theme', 'Dark suits dark game scenes and texture packs, light suits bright ones.', theme.root));
 
-    const opacity = slider(5, 100, 5, pct, v => saveSoon({ opacity: v / 100 }));
+    const opacity = slider(5, 100, 5, pct, v => saveThrottled({ opacity: v / 100 }));
     opacity.input.addEventListener('change', () => void saveNow({ opacity: Number(opacity.input.value) / 100 }));
     look.list.appendChild(row('Background opacity', 'Only the background fades. Text always stays fully opaque.',
         opacity.root, opacity.input.id));
@@ -65,7 +66,7 @@ export function buildAppearance(): TabView {
         'Marks players at level 1 or below who have no stats.', suspects.root, suspects.input.id));
 
     const preview = group('Preview');
-    preview.list.appendChild(buildPreviewButton());
+    preview.list.appendChild(buildPreviewButton(api));
 
     root.append(look.root, layout.root, preview.root);
 

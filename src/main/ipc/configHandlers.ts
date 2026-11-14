@@ -8,12 +8,13 @@ import { ipcMain } from 'electron';
 
 import { IPC_CHANNELS, IPC_EVENTS } from '../../shared/ipc-contract';
 import { setApiKey } from '../api/apiSession';
+import { broadcast } from '../broadcast';
 import type { AppConfig, ConfigStore } from '../config';
 import type { LogWatcher } from '../log/logWatcher';
 import type { HandlerDeps } from './handlers';
 
-export function broadcastConfig(deps: Pick<HandlerDeps, 'store' | 'getOverlayWin'>): void {
-    deps.getOverlayWin()?.webContents.send(IPC_EVENTS.CONFIG_UPDATED, deps.store.getAll());
+export function broadcastConfig(deps: Pick<HandlerDeps, 'store'>): void {
+    broadcast(IPC_EVENTS.CONFIG_UPDATED, deps.store.getAll());
 }
 
 /** When nicked, the watcher looks for the nick name (that is what chat shows) */

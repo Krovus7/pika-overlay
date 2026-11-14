@@ -48,7 +48,10 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `stats:refetchAll` | `refetchAll(interval, mode)` | `handlers.ts` → `LookupService.refreshAll` |
 | `players:clear` | `clearPlayers()` | `handlers.ts` → `clearPlayers.ts` (keeps party, drops queued lookups of removed players, clears cache) |
 | `players:refresh` | `refreshPlayers()` | `handlers.ts` (clears the cache, `LookupService.refreshAll`) |
-| `settings:open` / `settings:close` | `openSettings()` / `closeSettings()` | `handlers.ts` (open sends `settings:show`; close is handled in the overlay) |
+| `settings:open` | `openSettings(tab?)` | `handlers.ts` → `settingsWindow.openSettings` (tab validated against `SETTINGS_TAB_IDS`) |
+| `settings:close` / `settings:minimize` | `closeSettings()` / `minimizeSettings()` | `handlers.ts` (settings window) |
+| `overlay:demo` | `setDemo(on)` | `handlers.ts` relays to the overlay as the `overlay:demo` event (Appearance preview) |
+| `clipboard:copy` | `copyText(text)` | `handlers.ts` (`clipboard.writeText`; a string of 1–32 characters only) |
 | `overlay:close` / `overlay:minimize` | `closeOverlay()` / `minimizeOverlay()` | `handlers.ts` (hide / minimize) |
 | `config:get` / `config:getAll` | `getConfig(key)` / `getAllConfig()` | `configHandlers.ts` |
 | `config:set` | `setConfig(key, value)` | `configHandlers.ts` |
@@ -69,13 +72,17 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `players:clear` | `onPlayersClear` | — |
 | `game:pregame` / `game:start` / `game:end` | `onGamePregame` / `onGameStart` / `onGameEnd` | — |
 | `party:update` | `onPartyUpdate` | `string[]` (lowercased members) |
-| `settings:show` | `onSettingsShow` | — |
-| `config:updated` | `onConfigUpdate` | full config object |
-| `update:state` | `onUpdateState` | `UpdateState` |
-| `api:health` | `onApiHealth` | `ApiHealth` |
+| `settings:tab` | `onSettingsTab` | tab id (settings window only) |
+| `overlay:demo` | `onDemo` | `boolean` (overlay only) |
+| `config:updated` | `onConfigUpdate` | full config object (overlay + settings window) |
+| `update:state` | `onUpdateState` | `UpdateState` (overlay + settings window) |
+| `api:health` | `onApiHealth` | `ApiHealth` (overlay + settings window) |
 
 `player:error` no longer exists (removed in v5, ADR-0010). The preload keeps
-one listener per event (`removeAllListeners` before `on`).
+one listener per event (`removeAllListeners` before `on`). `config:updated`,
+`api:health` and `update:state` are sent with `broadcast()` (`src/main/broadcast.ts`)
+to the overlay and, when open, the settings window; every other event goes to the
+overlay only.
 
 Types: `PlayerResult`, `PlayerStatus`, `ApiHealth`, `ApiKeyTestResult`,
 `UpdateState` are in `src/shared/types.ts`.
@@ -122,9 +129,11 @@ every registered player (`refresh: true`, sources preserved).
 
 `config:save` and `config:set` share one path: apply the change; when `apiKey`
 changed, `setApiKey` (resets health, cache, budget) and refresh every row;
-re-apply always-on-top and zoom; broadcast `config:updated`. `config:save`
+re-apply always-on-top and zoom (of both windows); when `uiScale` changed, resize the
+overlay by new/old first (`windowManager.resizeForScale`, saves `overlayBounds`);
+broadcast `config:updated`. `config:save`
 additionally restarts the log watcher only when the log path or the watched
 name changed (the nick when "I am nicked" is on, else the username) and
-re-registers the hotkeys. The Settings panel writes through `config:save`
+re-registers the hotkeys. The settings window writes through `config:save`
 (`settings/saveQueue.ts`); the overlay itself uses `config:set` for `theme` and
 `overlayMode`.

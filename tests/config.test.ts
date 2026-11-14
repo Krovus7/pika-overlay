@@ -219,3 +219,16 @@ describe('ConfigStore — file behavior', () => {
         fs.rmSync(dir, { recursive: true, force: true });
     });
 });
+
+describe('normalizeConfig — settingsBounds', () => {
+    it('defaults to null', () => {
+        assert.equal(normalizeConfig(null).settingsBounds, null);
+    });
+
+    it('keeps valid bounds and drops malformed ones', () => {
+        const good = { x: 10, y: 20, width: 760, height: 680 };
+        assert.deepEqual(normalizeConfig({ settingsBounds: good }).settingsBounds, good);
+        assert.equal(normalizeConfig({ settingsBounds: { x: 1, y: 2, width: 'wide', height: 4 } }).settingsBounds, null);
+        assert.equal(normalizeConfig({ settingsBounds: 'nope' }).settingsBounds, null);
+    });
+});

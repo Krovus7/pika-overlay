@@ -23,6 +23,8 @@ import { createTray } from './tray';
 import { checkForUpdates, onUpdateStateChange, runStartupHooks } from './update/velopackUpdate';
 import { bindWatcherEvents } from './watcherBindings';
 import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale } from './windowManager';
+import { broadcast } from './broadcast';
+import { applySettingsWindowConfig, initSettingsWindow, openSettings } from './settingsWindow';
 import { watcherSettings } from './ipc/configHandlers';
 
 // dist/src/main → project root (main.js is compiled, unlike v3's root main.js)
@@ -53,7 +55,8 @@ app.whenReady().then(() => {
     });
 
     createOverlay(store, rootDir);
-    createTray(rootDir, getOverlayWin);
+    initSettingsWindow({ store, rootDir, getOverlayWin });
+    createTray(rootDir, getOverlayWin, openSettings);
 
     const registerHotkeysFn = () => registerHotkeys({
         store,
@@ -65,7 +68,7 @@ app.whenReady().then(() => {
         ...lookupDeps,
         service,
         queue,
-        applyWindowConfig,
+        applyWindowConfig: s => { applyWindowConfig(s); applySettingsWindowConfig(s); },
         resizeForScale: (oldScale, newScale) => resizeForScale(store, oldScale, newScale),
         registerHotkeys: registerHotkeysFn,
         logWatcher,
@@ -73,8 +76,7 @@ app.whenReady().then(() => {
     };
     registerIpcHandlers(handlerDeps);
 
-    // Broadcast update state changes to the overlay (settings panel)
-    onUpdateStateChange(s => send(IPC_EVENTS.UPDATE_STATE, s));
+    onUpdateStateChange(s => broadcast(IPC_EVENTS.UPDATE_STATE, s));
 
     bindWatcherEvents({
         logWatcher, queue, registry: playerRegistry, party: partyState, game: gameState, send,

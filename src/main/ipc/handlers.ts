@@ -15,6 +15,7 @@ import type { ConfigStore } from '../config';
 import type { LogWatcher } from '../log/logWatcher';
 import { getRecentLogLines } from '../log/debugLines';
 import type { LookupQueue, PartyState } from '../state';
+import { getSettingsWin, isSettingsTab, openSettings } from '../settingsWindow';
 import { checkForUpdates, downloadAndApply, getUpdateState } from '../update/velopackUpdate';
 import { registerApiHandlers } from './apiHandlers';
 import { clearPlayers } from './clearPlayers';
@@ -89,11 +90,11 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
         service.refreshAll(queue, null, null);
     });
 
-    ipcMain.handle(IPC_CHANNELS.SETTINGS_OPEN, () => {
-        getOverlayWin()?.webContents.send(IPC_EVENTS.SETTINGS_SHOW);
-    });
-    ipcMain.handle(IPC_CHANNELS.SETTINGS_CLOSE, () => {
-        // handled inline in the overlay window
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_OPEN, (_e, tab: unknown) => openSettings(isSettingsTab(tab) ? tab : undefined));
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_CLOSE, () => getSettingsWin()?.close());
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_MINIMIZE, () => getSettingsWin()?.minimize());
+    ipcMain.handle(IPC_CHANNELS.OVERLAY_DEMO, (_e, on: unknown) => {
+        if (typeof on === 'boolean') getOverlayWin()?.webContents.send(IPC_EVENTS.OVERLAY_DEMO, on);
     });
     ipcMain.handle(IPC_CHANNELS.CLIPBOARD_COPY, (_e, text: unknown) => {
         if (typeof text === 'string' && text.length >= 1 && text.length <= 32) clipboard.writeText(text);

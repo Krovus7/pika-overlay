@@ -12,18 +12,21 @@ function readVersion() {
     return JSON.parse(readFileSync(ROOT + '/package.json', 'utf8')).version;
 }
 
+// One bundle per window: the overlay and the settings window (ADR-0013)
+const RENDERER_ENTRIES = { overlay: 'overlay.ts', settings: 'settingsWindow.ts' };
+
 async function bundleRenderer() {
-    const entry = ROOT + '/renderer/ts/overlay.ts';
-    if (!existsSync(entry)) {
-        console.log('[build] renderer/ts/overlay.ts missing — skipping renderer bundle');
+    const entries = Object.entries(RENDERER_ENTRIES).filter(([, file]) => existsSync(`${ROOT}/renderer/ts/${file}`));
+    if (!entries.length) {
+        console.log('[build] no renderer entry points — skipping renderer bundle');
         return;
     }
     console.log('[build] Bundling renderer (esbuild)...');
     await build({
-        entryPoints: [entry],
+        entryPoints: Object.fromEntries(entries.map(([name, file]) => [name, `${ROOT}/renderer/ts/${file}`])),
         bundle: true,
         format: 'iife',
-        outfile: ROOT + '/renderer/bundle/overlay.js',
+        outdir: ROOT + '/renderer/bundle',
         target: ['chrome120'],
         // Single source of truth for the version shown in the UI: package.json
         define: { __APP_VERSION__: JSON.stringify(readVersion()) },

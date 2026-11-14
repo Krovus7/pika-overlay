@@ -23,6 +23,7 @@
     "files": [
       "dist/**/*",
       "renderer/overlay.html",
+      "renderer/settings.html",
       "renderer/css/*.css",
       "renderer/fonts/*",
       "renderer/bundle/*.js",

@@ -1,13 +1,12 @@
 /**
  * Overlay entry point: wires the IPC events and UI controls to the modules
- * in core/, table/, ui/ and demo/. The settings panel initialises itself.
+ * in core/, table/, ui/ and demo/. Settings live in their own window (settingsWindow.ts).
  */
 
 import { applyConfigToState } from './core/config';
 import { addLoadingRow, applyResult, clearTable, removeRow, setParty } from './core/players';
 import { state } from './core/state';
 import { registerDemo } from './demo/demo';
-import { initSettingsPanel, notifySettingsConfig } from './settingsPanel';
 import { initRowActions } from './table/actions';
 import { createDropdowns } from './table/dropdown';
 import { buildHeaders, initHeader } from './table/header';
@@ -25,7 +24,6 @@ function logFailure(what: string): (err: unknown) => void {
 }
 
 function applyConfig(cfg: Record<string, unknown>): void {
-    notifySettingsConfig(cfg);
     applyConfigToState(cfg);
     applyAppearance(cfg, api);
     dropdowns.applyConfig(cfg);
@@ -57,6 +55,7 @@ function bindControls(): void {
     const click = (id: string, fn: () => void): void =>
         document.getElementById(id)?.addEventListener('click', fn);
 
+    click('btn-settings', () => void api.openSettings().catch(logFailure('Opening settings')));
     click('btn-clear', () => void api.clearPlayers().catch(logFailure('Clear')));
     click('btn-refresh', () => void api.refreshPlayers().catch(logFailure('Refresh')));
     click('btn-minimize', () => void api.minimizeOverlay().catch(logFailure('Minimize')));
@@ -82,6 +81,7 @@ function bindIpc(): void {
     api.onPartyUpdate(setParty);
     api.onConfigUpdate(applyConfig);
     api.onApiHealth(setHealth);
+    api.onDemo(on => (on ? window.__pikaDemo() : window.__pikaDemoClear()));
 }
 
 function start(): void {
@@ -91,7 +91,8 @@ function start(): void {
     bindControls();
     initThemeToggle(api);
     bindIpc();
-    initSettingsPanel(api);
+    const version = document.querySelector('.logo-version');
+    if (version) version.textContent = `v${__APP_VERSION__}`;
     registerDemo();
 
     api.getAllConfig().then(applyConfig).catch(err => {

@@ -38,4 +38,6 @@ export function refreshEmptyState(): void {
     setUseIcon(iconUse, c.blocked ? 'key' : 'radar');
 }
 
-action.addEventListener('click', () => document.getElementById('btn-settings')?.click());
+action.addEventListener('click', () => {
+    window.pikaOverlay.openSettings('api').catch(err => console.error('[Overlay] Opening settings failed:', String(err)));
+});

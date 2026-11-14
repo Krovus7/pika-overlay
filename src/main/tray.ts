@@ -5,12 +5,11 @@
 import { app, Menu, Tray, type BrowserWindow } from 'electron';
 import * as path from 'node:path';
 
-import { IPC_EVENTS } from '../shared/ipc-contract';
 import pkg from '../../package.json';
 
 let tray: Tray | null = null;
 
-export function createTray(rootDir: string, getOverlayWin: () => BrowserWindow | null): void {
+export function createTray(rootDir: string, getOverlayWin: () => BrowserWindow | null, openSettings: () => void): void {
     // The .ico carries hand-simplified 16-32 px images; a scaled-down PNG turns to mush in the tray.
     const iconPath = path.join(rootDir, 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
     const label = `Pika Overlay v${pkg.version}`;
@@ -20,13 +19,7 @@ export function createTray(rootDir: string, getOverlayWin: () => BrowserWindow |
         { label, enabled: false },
         { type: 'separator' },
         { label: 'Show Overlay', click: () => getOverlayWin()?.show() },
-        { label: 'Settings', click: () => {
-            const win = getOverlayWin();
-            if (win) {
-                win.show();
-                win.webContents.send(IPC_EVENTS.SETTINGS_SHOW);
-            }
-        } },
+        { label: 'Settings', click: () => openSettings() },
         { type: 'separator' },
         { label: 'Quit', click: () => app.quit() },
     ]));

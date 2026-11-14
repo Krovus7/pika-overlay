@@ -16,7 +16,10 @@ export interface PikaOverlayApi {
     onGameStart: (cb: () => void) => void;
     onGameEnd: (cb: () => void) => void;
     onPartyUpdate: (cb: (members: string[]) => void) => void;
-    onSettingsShow: (cb: () => void) => void;
+    /** Settings window only: switch to this tab (sent when it is opened again with a tab) */
+    onSettingsTab: (cb: (tab: string) => void) => void;
+    /** Overlay only: show (true) or remove (false) the sample players */
+    onDemo: (cb: (on: boolean) => void) => void;
     onConfigUpdate: (cb: (cfg: Record<string, unknown>) => void) => void;
 
     // === Actions from renderer ===
@@ -27,7 +30,10 @@ export interface PikaOverlayApi {
     clearPlayers: () => Promise<void>;
     /** Empty the stats cache and re-fetch every shown player */
     refreshPlayers: () => Promise<void>;
-    openSettings: () => Promise<void>;
+    /** Opens the settings window, or focuses it; optionally on a tab */
+    openSettings: (tab?: string) => Promise<void>;
+    /** Asks the overlay to show or remove its sample players (Appearance preview) */
+    setDemo: (on: boolean) => Promise<void>;
     /** Copies a short text (1-32 characters) to the system clipboard */
     copyText: (text: string) => Promise<void>;
     closeOverlay: () => Promise<void>;
@@ -49,6 +55,7 @@ export interface PikaOverlayApi {
     browseLogFile: () => Promise<string | null>;
     testLogPath: (logPath: string) => Promise<boolean>;
     closeSettings: () => Promise<void>;
+    minimizeSettings: () => Promise<void>;
     getLogLines: () => Promise<string[]>;
 
     // === Auto-update (Velopack) ===

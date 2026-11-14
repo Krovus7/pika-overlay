@@ -17,6 +17,8 @@ export const IPC_CHANNELS = {
     PLAYERS_REFRESH: 'players:refresh',
     SETTINGS_OPEN: 'settings:open',
     SETTINGS_CLOSE: 'settings:close',
+    SETTINGS_MINIMIZE: 'settings:minimize',
+    OVERLAY_DEMO: 'overlay:demo',
     CLIPBOARD_COPY: 'clipboard:copy',
     OVERLAY_CLOSE: 'overlay:close',
     OVERLAY_MINIMIZE: 'overlay:minimize',
@@ -43,11 +45,15 @@ export const IPC_EVENTS = {
     GAME_START: 'game:start',
     GAME_END: 'game:end',
     PARTY_UPDATE: 'party:update',
-    SETTINGS_SHOW: 'settings:show',
+    SETTINGS_TAB: 'settings:tab',
+    OVERLAY_DEMO: 'overlay:demo',
     CONFIG_UPDATED: 'config:updated',
     UPDATE_STATE: 'update:state',
     API_HEALTH: 'api:health',
 } as const;
+
+/** Tab ids of the settings window, in display order. */
+export const SETTINGS_TAB_IDS = ['general', 'api', 'appearance', 'columns', 'stats', 'updates', 'debug'] as const;
 
 export type StatsPayload = PlayerResult & { source: string };
 

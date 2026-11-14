@@ -1,33 +1,53 @@
 /**
- * Settings-panel part of the dev screenshot driver (PIKA_SHOTS=1). Opens the
- * inline settings panel and captures every tab. DOM only: it never clicks a
+ * Settings-window part of the dev screenshot driver (PIKA_SHOTS=1). Opens the
+ * settings window and captures every tab. DOM only: it never clicks a
  * control that persists, so the owner's config is left untouched.
  */
 
+import { writeFileSync } from 'node:fs';
+import * as path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 import type { BrowserWindow } from 'electron';
 
+import { getSettingsWin, openSettings } from './settingsWindow';
+
 export interface SettingsShotTools {
-    js: (expr: string) => Promise<unknown>;
-    shot: (name: string) => Promise<void>;
-    win: BrowserWindow;
+    shotsDir: string;
 }
 
-const NARROW_WIDTH = 520;
+const MIN_WIDTH = 560;
 const TABS = [
     ['general', 'general'], ['api', 'api'], ['appearance', 'appearance'],
     ['columns', 'columns'], ['stats', 'colors'], ['updates', 'updates'], ['debug', 'debug'],
 ] as const;
 
-const pause = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+async function waitForWindow(): Promise<BrowserWindow> {
+    openSettings();
+    for (let i = 0; i < 40; i++) {
+        const win = getSettingsWin();
+        if (win && !win.webContents.isLoading()) return win;
+        await sleep(250);
+    }
+    throw new Error('settings window did not open');
+}
 
-export async function captureSettingsShots({ js, shot, win }: SettingsShotTools): Promise<void> {
+export async function captureSettingsShots({ shotsDir }: SettingsShotTools): Promise<void> {
+    const win = await waitForWindow();
+    await sleep(1200); // config round trip, fonts
+    const js = (expr: string) => win.webContents.executeJavaScript(`${expr}; true`, true);
+    const shot = async (name: string): Promise<void> => {
+        await sleep(400);
+        const img = await win.webContents.capturePage();
+        writeFileSync(path.join(shotsDir, name), img.toPNG());
+        console.log(`[shots] ${name}`);
+    };
     const openTab = async (tab: string): Promise<void> => {
         await js(`document.querySelector('.settings-tab-btn[data-tab="${tab}"]').click()`);
-        await pause(400);
+        await sleep(400);
     };
+    const setTheme = (theme: 'dark' | 'light') => js(`document.documentElement.dataset.theme = '${theme}'`);
 
-    await js(`document.getElementById('btn-settings').click()`);
-    await pause(500);
+    await setTheme('dark');
     await js(`document.activeElement?.blur()`);
     for (const [tab, name] of TABS) {
         await openTab(tab);
@@ -35,25 +55,20 @@ export async function captureSettingsShots({ js, shot, win }: SettingsShotTools)
     }
 
     const original = win.getBounds();
-    win.setBounds({ ...original, width: NARROW_WIDTH });
-    await pause(300);
-    await openTab('api');
-    await shot('v5-20-settings-api-narrow.png');
-    await openTab('general');
-    await shot('v5-20-settings-general-narrow.png');
+    win.setBounds({ ...original, width: MIN_WIDTH });
+    await sleep(300);
+    for (const tab of ['api', 'general'] as const) {
+        await openTab(tab);
+        await shot(`v5-20-settings-${tab}-narrow.png`);
+    }
     win.setBounds(original);
-    await pause(300);
+    await sleep(300);
 
-    const previousTheme = await js(`document.documentElement.dataset.theme ?? ''`);
-    await js(`document.documentElement.dataset.theme = 'light'`);
+    await setTheme('light');
     for (const tab of ['general', 'api', 'appearance', 'stats'] as const) {
         await openTab(tab);
         await shot(`v5-20-settings-${tab === 'stats' ? 'colors' : tab}-light.png`);
     }
-    await js(previousTheme
-        ? `document.documentElement.dataset.theme = ${JSON.stringify(previousTheme)}`
-        : `delete document.documentElement.dataset.theme`);
-
+    await setTheme('dark');
     await openTab('general');
-    await js(`document.getElementById('btn-settings-close-x').click()`);
 }

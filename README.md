@@ -94,13 +94,17 @@ names into the search box (several at once, separated by spaces or commas).
 - **Sorting:** click a column header. Your own row, your party and nicked
   players can be kept on top.
 - **Title bar:** theme, layout (detailed or compact), refresh (reload every
-  row, ignoring the cache), clear, settings.
+  row, ignoring the cache), clear, settings. Click a player name to copy it.
 - **Hotkeys:** `F4` show or hide, `F5` clear. Both can be changed in
   Settings → General.
 - **Playing nicked yourself:** tick "I am nicked" and enter your nick, so the
   overlay still recognises your own row.
 
 ### Settings
+
+Settings open in their own window next to the overlay, so you see every
+change on the overlay as you make it. Interface scale resizes the overlay
+window too. A narrow overlay hides the rightmost columns instead of scrolling.
 
 | Tab | What is there |
 |---|---|

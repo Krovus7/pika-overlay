@@ -1,6 +1,6 @@
 /**
  * Overlay window management — ported from pika-overlay-v3/src/windowManager.js.
- * The separate settings window is gone (D9): the settings panel is inline.
+ * The settings window lives in settingsWindow.ts (ADR-0013).
  */
 
 import { BrowserWindow, screen } from 'electron';

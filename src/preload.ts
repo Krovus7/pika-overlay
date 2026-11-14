@@ -24,7 +24,8 @@ const api: PikaOverlayApi = {
     onGameStart: (cb) => on<void>(IPC_EVENTS.GAME_START, cb),
     onGameEnd: (cb) => on<void>(IPC_EVENTS.GAME_END, cb),
     onPartyUpdate: (cb) => on<string[]>(IPC_EVENTS.PARTY_UPDATE, cb),
-    onSettingsShow: (cb) => on<void>(IPC_EVENTS.SETTINGS_SHOW, cb),
+    onSettingsTab: (cb) => on<string>(IPC_EVENTS.SETTINGS_TAB, cb),
+    onDemo: (cb) => on<boolean>(IPC_EVENTS.OVERLAY_DEMO, cb),
     onConfigUpdate: (cb) => on<Record<string, unknown>>(IPC_EVENTS.CONFIG_UPDATED, cb),
 
     // === Actions from renderer ===
@@ -33,7 +34,8 @@ const api: PikaOverlayApi = {
     retryPlayer: (username) => ipcRenderer.invoke(IPC_CHANNELS.LOOKUP_RETRY, username),
     clearPlayers: () => ipcRenderer.invoke(IPC_CHANNELS.PLAYERS_CLEAR),
     refreshPlayers: () => ipcRenderer.invoke(IPC_CHANNELS.PLAYERS_REFRESH),
-    openSettings: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_OPEN),
+    openSettings: (tab) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_OPEN, tab),
+    setDemo: (on) => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_DEMO, on),
     copyText: (text) => ipcRenderer.invoke(IPC_CHANNELS.CLIPBOARD_COPY, text),
     closeOverlay: () => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_CLOSE),
     minimizeOverlay: () => ipcRenderer.invoke(IPC_CHANNELS.OVERLAY_MINIMIZE),
@@ -53,6 +55,7 @@ const api: PikaOverlayApi = {
     browseLogFile: () => ipcRenderer.invoke(IPC_CHANNELS.BROWSE_LOG_FILE),
     testLogPath: (logPath) => ipcRenderer.invoke(IPC_CHANNELS.TEST_LOG_PATH, logPath),
     closeSettings: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CLOSE),
+    minimizeSettings: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_MINIMIZE),
     getLogLines: () => ipcRenderer.invoke(IPC_CHANNELS.DEBUG_LOG_LINES),
 
     // === Auto-update (Velopack) ===

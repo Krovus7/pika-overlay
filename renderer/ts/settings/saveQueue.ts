@@ -8,11 +8,13 @@ import type { PikaOverlayApi } from '../../../src/shared/preload-api';
 export type SaveStatus = { kind: 'saved' } | { kind: 'error'; message: string };
 
 const DEBOUNCE_MS = 400;
+const THROTTLE_MS = 120;
 
 let api: PikaOverlayApi;
 let listener: (s: SaveStatus) => void = () => undefined;
 let pending: Record<string, unknown> = {};
 let timer: number | null = null;
+let throttleTimer: number | null = null;
 let chain: Promise<unknown> = Promise.resolve();
 
 export function initSaveQueue(pikaApi: PikaOverlayApi, onStatus: (s: SaveStatus) => void): void {
@@ -49,6 +51,19 @@ export function flushSaves(): Promise<boolean> {
 export function saveNow(patch: Record<string, unknown>): Promise<boolean> {
     Object.assign(pending, patch);
     return flushSaves();
+}
+
+/**
+ * Live preview while dragging a slider or color picker: writes at most once
+ * per THROTTLE_MS (and once more at the end), so the overlay follows along.
+ */
+export function saveThrottled(patch: Record<string, unknown>): void {
+    Object.assign(pending, patch);
+    if (throttleTimer !== null) return;
+    throttleTimer = window.setTimeout(() => {
+        throttleTimer = null;
+        void flushSaves();
+    }, THROTTLE_MS);
 }
 
 /** For text inputs and sliders: waits for a pause in typing, flushed on blur/Enter/close. */

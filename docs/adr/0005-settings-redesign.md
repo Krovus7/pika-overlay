@@ -1,6 +1,6 @@
 # ADR-0005 — Redesign del pannello Impostazioni, overlay graficamente invariato
 
-**Status:** Accepted
+**Status:** Accepted. The inline-panel part is superseded by ADR-0013 (settings window).
 
 ## Context
 Il piano v4 (D2/D3): la grafica dell'overlay (tabella, titlebar, search bar,
@@ -24,7 +24,7 @@ chiavi nuove `update*` (ADR-0007).
 - Overlay ridisegnato: fuori scope (D2).
 
 ## Implementation notes
-- Il pannello resta inline in `overlay.html` (nessuna finestra separata).
+- Il pannello resta inline in `overlay.html` (nessuna finestra separata). _Superseded by ADR-0013: le impostazioni sono ora una finestra separata._
 - Gli stili del pannello restano in `overlay.css` (dove sono già in v3) o in un
   `settings-panel.css` importato; la scelta segue la struttura finale.
 - I bundle renderer (esbuild) sostituiscono i tre `<script>` di v3 con uno solo.

@@ -58,7 +58,7 @@ Every lookup ends in one status (`src/shared/types.ts`, classification table in
 | NICKED | `nicked` | Name unknown to Pika, and it came from the game (not typed) | name not on Pika | no |
 | NOT FOUND | `not_found` | Name unknown to Pika, typed by the user (typo or nick) | typo or nicked | no |
 | API OFF | `api_off` | Stats are private (leaderboard answered 204) | stats set to private | no |
-| NO STATS | `never_played` | Public profile, no BedWars data at all | never played BedWars | no |
+| NO STATS | `never_played` | Public profile, every BedWars entry empty (a brand-new account, but also an old one whose stats Pika does not publish) | level 5 or lower: new account, no BedWars games; higher or unknown level: no public BedWars stats | no |
 | NO GAMES | `no_data` | BedWars data exists, none in the selected period/mode | `no games this week in Solo` style | no |
 | ERROR | `error` | Timeout, network, 5xx, invalid body | lookup failed | yes |
 | RATE LIMITED | `rate_limited` | 429/503 after retries | retrying automatically | no |
@@ -153,8 +153,17 @@ otherwise it reads "Waiting for players".
   Toggle: title-bar layout button or Settings → Appearance.
 - **Row density:** comfortable (row height 34 px), dense (28 px); compact
   layout rows are 26 px (`renderer/css/tokens.css`).
-- **Interface scale:** 80–150 %, applied as the window zoom factor
-  (`windowManager.ts`).
+- **Interface scale:** 80–150 %, applied as the window zoom factor and the
+  overlay window is resized by the same ratio (top-left fixed, clamped to the
+  screen's work area; minimum size 360 × 200 at 100 %, scaled too). Saved when
+  the slider is released (`windowManager.ts`, `windowBounds.ts`).
+- **Narrow window:** the table never scrolls sideways. Columns that do not
+  fit are hidden, rightmost first, never Player; the footer says "N columns
+  hidden" (`renderer/ts/table/fit.ts`).
+- **Copy a name:** click a player name; it is copied and a short "Copied …"
+  message shows.
+- **Pills line up:** every status row keeps its Level and Guild cells (a dash
+  when unknown), so all status pills start at the same left edge.
 
 ## Themes and low opacity
 
@@ -167,13 +176,18 @@ maximum at 5 %. Mechanism and thresholds: ADR-0011.
 A legacy v4 `localStorage` light-mode choice (`loMode`) is migrated once into
 the `theme` setting (`renderer/ts/ui/theme.ts`).
 
-## Settings panel
+## Settings window
 
 Opened by the title-bar button, the tray "Settings" item, or the banner /
-empty-state button. Every control saves itself (text and sliders after a
-400 ms pause, or on blur / Enter / panel close); a "Saved" indicator confirms.
+empty-state button (these two open the API tab). It is a separate window next
+to the overlay (ADR-0013), so every change is visible on the overlay at once;
+opening it again focuses it. When the overlay is always on top, so is this
+window. Every control saves itself (text after a 400 ms pause, or on blur /
+Enter / close; the background-opacity slider and the color pickers about every
+120 ms while dragging; other sliders on release); a "Saved" indicator confirms.
 The one explicit button is **Save key** in the API tab
-(`renderer/ts/settings/saveQueue.ts`). Escape closes the panel.
+(`renderer/ts/settings/saveQueue.ts`). Escape or the X closes the window; its
+position and size are remembered (`settingsBounds`).
 
 | Tab | Settings |
 |---|---|

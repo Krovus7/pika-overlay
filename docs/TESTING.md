@@ -8,7 +8,7 @@ npm test          # build + node --test "dist/tests/*.test.js"
 npm run typecheck # tsc main + tsc renderer + tsc preload (noEmit)
 ```
 
-Last run (2026-11-13): `npm test` → 242 tests, 50 suites, 242 pass, 0 fail.
+Last run (2026-11-14): `npm test` → 263 tests, 56 suites, 263 pass, 0 fail.
 
 ## Automated suites (`tests/`)
 
@@ -20,10 +20,12 @@ Last run (2026-11-13): `npm test` → 242 tests, 50 suites, 242 pass, 0 fail.
 | `rate-limiter.test.ts` | 17 | `RateLimiter` with an injected clock (budget, reset, 429 pause, `reset()`, header parsing), `HealthTracker` precedence, cache TTLs, `testApiKey` mapping |
 | `lookup.test.ts` | 20 | `applySource` (nicked vs not_found by source), `LookupService` (events, dedupe, refresh keeps source, race guards, `refreshAll`, retry flows), `AutoRetry` (delays, cap, rate-limit wait, eligibility) |
 | `state.test.ts` | 16 | `PlayerRegistry` (case keys, sources, `setSource`, `clearExcept`), `PartyState`, `GameState` (match start/end, eliminations), `LookupQueue` (concurrency bound, priority, `dropPending`, worker errors) |
-| `config.test.ts` | 23 | defaults, clamps, enums, v5 keys (`apiKey`, `uiScale`, `rowDensity`, `theme`, …), column merge, v3 legacy migration, file store, `.bak`, corrupt file |
+| `config.test.ts` | 25 | defaults, clamps, enums, v5 keys (`apiKey`, `uiScale`, `rowDensity`, `theme`, …), column merge, v3 legacy migration, file store, `.bak`, corrupt file |
 | `log-watcher.test.ts` | 4 | partial-line handling: split lines, split multi-byte characters, trailing fragment, rotated file |
 | `watcher-bindings.test.ts` | 15 | log event → table rules (ADR-0012) on the real bindings, queue, registry, party and game state: match start keeps the roster, a roster in a match adds missing players but not eliminated ones, lobby change, party pinned and relabelled, fresh own row and party at every lobby, events in the same batch of lines (join + quit, detection + lobby change, detection + roster) |
 | `fresh-lookups.test.ts` | 5 | `ApiCache.forget`; `LookupService` fresh lookups: cache skipped, quiet in-place refresh, a failed quiet refresh leaves the row |
+| `fit.test.ts` | 5 | `fitColumns` (`renderer/ts/table/fit.ts`): everything fits, rightmost dropped first, Player never dropped, exact fit |
+| `windowBounds.test.ts` | 14 | `scaleBounds` (ratio, clamping, no drift), `overlayMinSize`, `placeBeside` (right / left / centered / vertical clamp), `isInsideAny` |
 | `review-fixes.test.ts` | 8 | regressions from the v5 review: late 401 of a replaced key, re-arming a key after a passing test, timeout covering the response body, manual clear (party kept, backlog dropped), API-key redaction in debug log lines, config written through a temp file |
 
 `tests/apiMock.ts` is the shared helper (fetch mock that records calls,
@@ -35,14 +37,14 @@ covered by the scripts below.
 
 | Script | Needs | Purpose |
 |---|---|---|
-| `node scripts/smoke.mjs [exe] [cwd]` | built app (`npm run build`), `PIKA_API_KEY` for live steps, optional `SMOKE_PLAYER` (default Dream) | CDP smoke test of the dev app (or an installed one): bridge, settings, key entry through Settings → API, dropdown, live lookups of a known and a made-up name, period switch, clear, compact toggle. Screenshots in `artifacts/screens/v5-live-*.png`. Exit 0 = all steps passed. |
+| `node scripts/smoke.mjs [exe] [cwd]` | built app (`npm run build`), `PIKA_API_KEY` for live steps, optional `SMOKE_PLAYER` (default Dream) | CDP smoke test of the dev app (or an installed one): bridge, settings window (a second page target), key entry through Settings → API in that window, dropdown, live lookups of a known and a made-up name, period switch, clear, compact toggle. Screenshots in `artifacts/screens/v5-live-*.png`. Exit 0 = all steps passed. |
 | `node scripts/live-api-check.mjs` | `PIKA_API_KEY`, network, `dist/` built | real client against the real API; asserts the classification of unknown names, never-played, ok and empty-period lookups; ~20 requests |
 | `node scripts/replay-logs.mjs [file…] [--username NAME]` | local log corpus (`artifacts/corpus-v3/`, Badlion logs, not in git) | runs real logs through `LineParser` and the frozen v3 parser `scripts/reference/v3-logWatcher.js`; reports violations and divergences; exit 1 on divergence |
-| `PIKA_SHOTS=1 npm start` | built app | screenshot driver (`src/main/devShots.ts`, `devShotsSettings.ts`): demo rows through `window.__pikaDemo*` (`renderer/ts/demo/`), no network, no log watcher, config never written; PNGs in `artifacts/screens/` |
+| `PIKA_SHOTS=1 npm start` | built app | screenshot driver (`src/main/devShots.ts`, `devShotsSettings.ts`; the settings shots capture the settings window): demo rows through `window.__pikaDemo*` (`renderer/ts/demo/`), no network, no log watcher, config never written; PNGs in `artifacts/screens/` |
 | `PIKA_REPLAY=<log> npm start` | built app | replay driver (`src/main/replay.ts`): feeds the overlay from a real log |
 | `node scripts/simulate-session.mjs [file…] [--actions] [--seed N] [--self-test] [--verbose]` | `dist/` built, local log corpus (`artifacts/corpus-v3/`, `artifacts/logs/`, not in git) | headless session simulator (`scripts/sim/`): replays real logs with their real timing in virtual time through the real `LogWatcher`, bindings, queue, `LookupService`, API client and the renderer's table store (`renderer/ts/core/playerStore.ts`) against a seeded fake API with injected faults; an independent oracle says who should be in the table. Checks: registry vs table, membership, immediate removal, match start keeps the table, no spectators back, party pinned, stuck loading, classification, never refused by the rate limit, unexpected errors, source stability. `--actions` adds seeded user actions (period/mode switch, clear, manual lookup, retry, refresh button). `--self-test` breaks the wiring in three ways and requires the checks to notice. Report in `artifacts/sim/report.md`; exit 1 on any violation |
 | `node scripts/replay-live.mjs <log> [--speed N] [--max-gap S] [--from LINE] [--to LINE] [--tag NAME]` | built app, a saved API key, network | feeds a real log, line by line with scaled timing, to the real Electron app through its real log watcher and the live API; samples the DOM over CDP (`scripts/lib/cdp.mjs`) and fails on a stuck loading row, an `auth` row or a page error; screenshots at match start/end in `artifacts/screens/` |
-| `node scripts/update-check.mjs <exe> <cwd>` / `update-cycle.mjs <exe> <cwd> <installDir> [version]` | installed app | Updates tab and full update cycle against the live feed |
+| `node scripts/update-check.mjs <exe> <cwd>` / `update-cycle.mjs <exe> <cwd> <installDir> [version]` | installed app | Updates tab and full update cycle against the live feed; handles v4, the 5.0.x inline panel and the 5.1 settings window |
 | `npm run icon` | Electron | regenerates `assets/icon.png` and `assets/icon.ico` from the SVGs |
 
 The scripts read the key only from `PIKA_API_KEY`; never commit a key.

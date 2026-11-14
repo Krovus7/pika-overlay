@@ -1,6 +1,7 @@
 /**
- * Settings panel shell: open/close, tab switching, the "Saved" indicator and
+ * Settings shell: tab switching, the "Saved" indicator, the version label and
  * wiring of the per-tab modules. Every control saves itself (see saveQueue).
+ * The window around it lives in ../settingsWindow.ts.
  */
 
 import type { PikaOverlayApi } from '../../../src/shared/preload-api';
@@ -11,18 +12,10 @@ import { buildColumns } from './tabColumns';
 import { buildDebug } from './tabDebug';
 import { buildGeneral } from './tabGeneral';
 import { buildUpdates } from './tabUpdates';
-import { initSaveQueue, flushSaves, type SaveStatus } from './saveQueue';
-import { notifySettingsConfig, subscribeConfig } from './store';
+import { initSaveQueue, type SaveStatus } from './saveQueue';
+import { subscribeConfig } from './store';
 import { svgIcon } from './controls';
 import type { TabView } from './types';
-
-function showVersion(): void {
-    const label = `v${__APP_VERSION__}`;
-    const titleBar = document.querySelector('.logo-version');
-    if (titleBar) titleBar.textContent = label;
-    const header = document.getElementById('settings-version');
-    if (header) header.textContent = label;
-}
 
 function createSaveIndicator(el: HTMLElement): (s: SaveStatus) => void {
     let timer: number | null = null;
@@ -35,31 +28,33 @@ function createSaveIndicator(el: HTMLElement): (s: SaveStatus) => void {
     };
 }
 
-export function initSettingsPanel(api: PikaOverlayApi): void {
-    const panel = document.getElementById('settings-panel');
-    if (!panel) return;
-    const openBtn = document.getElementById('btn-settings') as HTMLElement;
-    const closeBtn = document.getElementById('btn-settings-close-x') as HTMLElement;
+export interface SettingsShell {
+    /** Switches to a tab by id; unknown ids are ignored. */
+    select(id: string): void;
+}
+
+export function initSettingsShell(api: PikaOverlayApi, initialTab: string): SettingsShell {
+    const panel = document.getElementById('settings-panel') as HTMLElement;
     const tabButtons = [...panel.querySelectorAll<HTMLElement>('.settings-tab-btn')];
 
-    showVersion();
+    const version = document.getElementById('settings-version');
+    if (version) version.textContent = `v${__APP_VERSION__}`;
     initSaveQueue(api, createSaveIndicator(document.getElementById('settings-save-status') as HTMLElement));
 
     const updates = buildUpdates(api);
     const tabs: TabView[] = [
-        buildGeneral(api), buildApi(api), buildAppearance(), buildColumns(), buildColors(), updates, buildDebug(api),
+        buildGeneral(api), buildApi(api), buildAppearance(api), buildColumns(), buildColors(), updates, buildDebug(api),
     ];
     for (const tab of tabs) document.getElementById(`tab-${tab.id}`)?.appendChild(tab.root);
     subscribeConfig(cfg => tabs.forEach(t => t.sync(cfg)));
     api.onUpdateState(s => updates.render(s));
 
-    let isOpen = false;
-    let current = tabs[0]!;
+    let current: TabView | null = null;
 
     function select(id: string): void {
         const next = tabs.find(t => t.id === id);
-        if (!next) return;
-        current.hide?.();
+        if (!next || next === current) return;
+        current?.hide?.();
         current = next;
         for (const btn of tabButtons) {
             const on = btn.dataset.tab === id;
@@ -67,9 +62,9 @@ export function initSettingsPanel(api: PikaOverlayApi): void {
             btn.setAttribute('aria-selected', String(on));
             btn.tabIndex = on ? 0 : -1;
         }
-        panel!.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${id}`));
+        panel.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${id}`));
         (document.getElementById('settings-body') as HTMLElement).scrollTop = 0;
-        if (isOpen) current.show?.();
+        next.show?.();
     }
 
     tabButtons.forEach((btn, i) => {
@@ -84,31 +79,6 @@ export function initSettingsPanel(api: PikaOverlayApi): void {
         });
     });
 
-    async function open(): Promise<void> {
-        if (isOpen) return;
-        isOpen = true;
-        try {
-            notifySettingsConfig(await api.getAllConfig());
-        } catch (err) {
-            console.error('[Settings] Loading config failed:', String(err));
-        }
-        panel!.classList.add('visible');
-        current.show?.();
-        panel!.querySelector<HTMLElement>('.settings-tab-btn.active')?.focus();
-    }
-
-    function close(): void {
-        if (!isOpen) return;
-        isOpen = false;
-        panel!.classList.remove('visible');
-        current.hide?.();
-        void flushSaves();
-        openBtn.focus();
-    }
-
-    openBtn.addEventListener('click', () => void open());
-    closeBtn.addEventListener('click', close);
-    api.onSettingsShow(() => void open());
-    document.addEventListener('keydown', e => { if (isOpen && e.key === 'Escape') close(); });
-    select('general');
+    select(tabs.some(t => t.id === initialTab) ? initialTab : 'general');
+    return { select };
 }

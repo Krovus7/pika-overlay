@@ -16,10 +16,6 @@
   <link rel="stylesheet" href="css/footer.css" />
   <link rel="stylesheet" href="css/toast.css" />
   <link rel="stylesheet" href="css/compact.css" />
-  <link rel="stylesheet" href="css/settings-shell.css" />
-  <link rel="stylesheet" href="css/settings-controls.css" />
-  <link rel="stylesheet" href="css/settings-tabs.css" />
-  <link rel="stylesheet" href="css/settings-panels.css" />
 </head>
 <body>
   <!-- Icon sprite: stroke icons, currentColor, referenced with <use href="#i-name"> -->
@@ -155,39 +151,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <!-- Inline settings panel: every control saves itself, tab content is built by renderer/ts/settings/ -->
-  <div id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-label="Settings">
-    <header class="settings-header">
-      <div class="settings-title">
-        <svg class="ic"><use href="#i-sliders"/></svg>
-        <h1>Settings</h1>
-        <span id="settings-version" class="settings-version"></span>
-      </div>
-      <span id="settings-save-status" class="settings-save-status" role="status" aria-live="polite"></span>
-      <button id="btn-settings-close-x" class="icon-btn btn-close-x" title="Close (Esc)" aria-label="Close settings"><svg class="ic"><use href="#i-x"/></svg></button>
-    </header>
-
-    <nav class="settings-tab-nav" role="tablist" aria-label="Settings sections">
-      <button class="settings-tab-btn active" data-tab="general" role="tab" id="tabbtn-general" aria-controls="tab-general" aria-selected="true" title="General"><svg class="ic"><use href="#i-sliders"/></svg><span class="tab-label">General</span></button>
-      <button class="settings-tab-btn" data-tab="api" role="tab" id="tabbtn-api" aria-controls="tab-api" aria-selected="false" title="API"><svg class="ic"><use href="#i-key"/></svg><span class="tab-label">API</span></button>
-      <button class="settings-tab-btn" data-tab="appearance" role="tab" id="tabbtn-appearance" aria-controls="tab-appearance" aria-selected="false" title="Appearance"><svg class="ic"><use href="#i-palette"/></svg><span class="tab-label">Appearance</span></button>
-      <button class="settings-tab-btn" data-tab="columns" role="tab" id="tabbtn-columns" aria-controls="tab-columns" aria-selected="false" title="Columns"><svg class="ic"><use href="#i-columns"/></svg><span class="tab-label">Columns</span></button>
-      <button class="settings-tab-btn" data-tab="stats" role="tab" id="tabbtn-stats" aria-controls="tab-stats" aria-selected="false" title="Colors"><svg class="ic"><use href="#i-droplet"/></svg><span class="tab-label">Colors</span></button>
-      <button class="settings-tab-btn" data-tab="updates" role="tab" id="tabbtn-updates" aria-controls="tab-updates" aria-selected="false" title="Updates"><svg class="ic"><use href="#i-download"/></svg><span class="tab-label">Updates</span></button>
-      <button class="settings-tab-btn" data-tab="debug" role="tab" id="tabbtn-debug" aria-controls="tab-debug" aria-selected="false" title="Debug"><svg class="ic"><use href="#i-terminal"/></svg><span class="tab-label">Debug</span></button>
-    </nav>
-
-    <div id="settings-body" class="settings-body">
-      <div id="tab-general" class="settings-tab-panel active" role="tabpanel" aria-labelledby="tabbtn-general"></div>
-      <div id="tab-api" class="settings-tab-panel" role="tabpanel" aria-labelledby="tabbtn-api"></div>
-      <div id="tab-appearance" class="settings-tab-panel" role="tabpanel" aria-labelledby="tabbtn-appearance"></div>
-      <div id="tab-columns" class="settings-tab-panel" role="tabpanel" aria-labelledby="tabbtn-columns"></div>
-      <div id="tab-stats" class="settings-tab-panel" role="tabpanel" aria-labelledby="tabbtn-stats"></div>
-      <div id="tab-updates" class="settings-tab-panel" role="tabpanel" aria-labelledby="tabbtn-updates"></div>
-      <div id="tab-debug" class="settings-tab-panel" role="tabpanel" aria-labelledby="tabbtn-debug"></div>
-    </div>
-  </div>
 
   <script src="bundle/overlay.js"></script>
 </body>

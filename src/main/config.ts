@@ -22,6 +22,8 @@ export interface AppConfig {
     isNicked: boolean;
     myNickName: string;
     overlayBounds: { x: number; y: number; width: number; height: number };
+    /** Last position of the settings window; null until it has been moved or resized */
+    settingsBounds: { x: number; y: number; width: number; height: number } | null;
     alwaysOnTop: boolean;
     toggleHotkey: string;
     clearHotkey: string;
@@ -73,6 +75,7 @@ export function defaultConfig(): AppConfig {
         isNicked: false,
         myNickName: '',
         overlayBounds: { x: 20, y: 60, width: 960, height: 600 },
+        settingsBounds: null,
         alwaysOnTop: true,
         toggleHotkey: 'F4',
         clearHotkey: 'F5',
@@ -186,6 +189,7 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
             width: num(bounds.width, defaults.overlayBounds.width),
             height: num(bounds.height, defaults.overlayBounds.height),
         },
+        settingsBounds: normalizeBounds(merged.settingsBounds),
         alwaysOnTop: bool(merged.alwaysOnTop, defaults.alwaysOnTop),
         toggleHotkey: str(merged.toggleHotkey, defaults.toggleHotkey),
         clearHotkey: str(merged.clearHotkey, defaults.clearHotkey),
@@ -216,6 +220,14 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
         nickedOnTop: bool(merged.nickedOnTop, defaults.nickedOnTop),
         highlightSuspects: bool(merged.highlightSuspects, defaults.highlightSuspects),
     };
+}
+
+function normalizeBounds(v: unknown): AppConfig['settingsBounds'] {
+    if (!v || typeof v !== 'object') return null;
+    const b = v as RawConfig;
+    const [x, y, width, height] = [b.x, b.y, b.width, b.height];
+    if (![x, y, width, height].every(n => typeof n === 'number' && Number.isFinite(n))) return null;
+    return { x: x as number, y: y as number, width: width as number, height: height as number };
 }
 
 function mergeColumnOrder(v: unknown): string[] {
