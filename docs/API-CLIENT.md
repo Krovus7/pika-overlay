@@ -19,6 +19,7 @@ Every statement below was observed against the real API with a real key.
 | Profile, known player | `GET /profile/{name}` → `200` (`username`, `rank.level`, `rank.rankDisplay`, `ranks[]`, `clan`, `lastSeen`, …) |
 | Profile, unknown name | `404`, empty body |
 | Leaderboard, public player | `GET /profile/{name}/leaderboard?type=bedwars&interval=…&mode=…` → `200`, one key per stat: `{"Kills":{"metadata":{"total":N},"entries":[{"place":P,"value":"19","id":"name"}]}, …}` |
+| Leaderboard, all-null at a high level | Observed 2026-11-14: an account at level 33 with a rank, a clan and Practice games answered all-null BedWars entries for every mode and every interval. The API does not say whether such a player never played BedWars or is simply not published, so the row note is "no public BedWars stats" above level 5 and "new account, no BedWars games" up to level 5 (`renderer/ts/table/statusRow.ts`). |
 | Leaderboard, no data | `200` with `"entries": null` on **every** key — identical for "never played BedWars" and "did not play in this interval/mode" |
 | **Leaderboard, private stats** | `204`, empty body (profile is still `200`) |
 | Leaderboard, unknown name | `400`, empty body |
@@ -42,7 +43,7 @@ of truth (`src/shared/types.ts`).
 | timeout, network error, 403, 5xx, other non-ok, invalid JSON (either) | — | `error` — never `api_off`, never a key problem |
 | 200 | 204 | `api_off` — stats are private (certain) |
 | 200 | 200 with data | `ok` |
-| 200 | 200 all-null, selection `total` + `ALL_MODES` | `never_played` |
+| 200 | 200 all-null, selection `total` + `ALL_MODES` | `never_played` (shown as NO STATS; see the note below) |
 | 200 | 200 all-null, any other selection | look at `total`/`ALL_MODES` (cached): data → `no_data`, all-null → `never_played`, 204 → `api_off` |
 
 Why this matters:

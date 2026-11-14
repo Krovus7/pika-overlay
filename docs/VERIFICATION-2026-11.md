@@ -175,6 +175,34 @@ icon.
 Not checked by eye: the taskbar button and the tray icon themselves, and
 whether the overlay still stays above the game now that it is a normal window.
 
+## 5g. 5.1.0: owner feedback from a live lobby — 2026-11-14 (Code-Verified)
+
+The owner used 5.0.1 in the Pika hub and reported: many NO STATS rows, a
+horizontal scrollbar with a white square, status pills at different
+positions; and asked for settings in their own window, better scaling and
+click-to-copy on player names.
+
+- **NO STATS rows.** The 28 names of the tab roster in the owner's log were
+  looked up with the real client: 12 ok, 2 API off, 1 unknown, 13 with all-null
+  BedWars entries, almost all at level 1 (the hub, not a BedWars lobby). The
+  account the owner named (level 33) was queried for every mode and interval:
+  all-null everywhere. The classification follows the API; the wording was
+  over-claiming and was changed (`docs/API-CLIENT.md`).
+- **Changes** (ADR-0013 for the settings window): `docs/FUNCTIONALITY.md`.
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` / `npm test` | clean / 263 tests, 56 suites, all passing |
+| `scripts/smoke.mjs`, dev build, live API, key saved through the settings window | 17/17 |
+| `npm run pack` + smoke on the packaged 5.1.0 | 17/17 (the settings page ships) |
+| screenshots reviewed by eye | narrow overlay: no horizontal scrollbar, 5 columns hidden with a footer note, every status pill on one left edge; settings window, Appearance tab |
+| by script over CDP (implementer) | settings open as a second window with the overlay visible; the opacity slider changed the overlay within 0.3 s while dragging; a click on a name put it on the clipboard; a scale change resized the window by the same ratio (a round trip drifted by about 3 px) |
+
+Not checked: the settings window above the real game, placement on a second
+monitor, `scripts/update-cycle.mjs` against the new window (it needs an
+installed 5.1.0). The implementation was written by a mid-tier agent from the
+lead's plan and reviewed by the lead; no separate second reviewer.
+
 ## 6. Not verified — Gate B open
 
 None of the following has been done; no claim about it is made anywhere in

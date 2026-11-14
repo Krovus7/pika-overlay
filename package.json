@@ -1,6 +1,6 @@
 {
   "name": "pika-overlay",
-  "version": "5.0.1",
+  "version": "5.1.0",
   "description": "Pika-Network BedWars Stats Overlay v5",
   "main": "dist/src/main/main.js",
   "author": "AcquaPanna",
