@@ -3,10 +3,11 @@
  * The separate settings window is gone (D9): the settings panel is inline.
  */
 
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 import * as path from 'node:path';
 
 import type { ConfigStore } from './config';
+import { overlayMinSize, scaleBounds } from './windowBounds';
 
 const BOUNDS_SAVE_DEBOUNCE_MS = 400;
 
@@ -20,12 +21,15 @@ export function createOverlay(store: ConfigStore, rootDir: string): BrowserWindo
     if (overlayWin) return overlayWin;
 
     const bounds = store.get('overlayBounds') || { x: 20, y: 60, width: 960, height: 600 };
+    const minSize = overlayMinSize(store.get('uiScale'));
     const iconPath = path.join(rootDir, 'assets', 'icon.png');
     const preloadPath = path.join(rootDir, 'dist', 'src', 'preload.bundle.js');
     const htmlPath = path.join(rootDir, 'renderer', 'overlay.html');
 
     overlayWin = new BrowserWindow({
         ...bounds,
+        minWidth: minSize.width,
+        minHeight: minSize.height,
         transparent: true,
         frame: false,
         icon: iconPath,
@@ -80,6 +84,18 @@ export function updateAlwaysOnTop(store: ConfigStore): void {
         overlayWin.setAlwaysOnTop(false);
         overlayWin.setVisibleOnAllWorkspaces(false);
     }
+}
+
+/** A new interface scale resizes the window by the same ratio and saves the result. */
+export function resizeForScale(store: ConfigStore, oldScale: number, newScale: number): void {
+    if (!overlayWin || overlayWin.isDestroyed()) return;
+    const current = overlayWin.getBounds();
+    const workArea = screen.getDisplayMatching(current).workArea;
+    const min = overlayMinSize(newScale);
+    overlayWin.setMinimumSize(min.width, min.height);
+    const next = scaleBounds(current, oldScale, newScale, workArea);
+    overlayWin.setBounds(next);
+    store.set('overlayBounds', next);
 }
 
 /** Zoom is applied once the page has loaded and again on every config change */

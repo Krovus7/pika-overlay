@@ -22,7 +22,7 @@ import { LookupQueue } from './state/lookupQueue';
 import { createTray } from './tray';
 import { checkForUpdates, onUpdateStateChange, runStartupHooks } from './update/velopackUpdate';
 import { bindWatcherEvents } from './watcherBindings';
-import { applyWindowConfig, createOverlay, getOverlayWin } from './windowManager';
+import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale } from './windowManager';
 import { watcherSettings } from './ipc/configHandlers';
 
 // dist/src/main → project root (main.js is compiled, unlike v3's root main.js)
@@ -66,6 +66,7 @@ app.whenReady().then(() => {
         service,
         queue,
         applyWindowConfig,
+        resizeForScale: (oldScale, newScale) => resizeForScale(store, oldScale, newScale),
         registerHotkeys: registerHotkeysFn,
         logWatcher,
         party: partyState,

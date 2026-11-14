@@ -42,7 +42,10 @@ export function registerConfigHandlers(deps: HandlerDeps): void {
     /** Applies a store mutation and the API-key side effect shared by set/save */
     const mutate = (change: () => void): void => {
         const keyBefore = store.get('apiKey');
+        const scaleBefore = store.get('uiScale');
         change();
+        const scale = store.get('uiScale');
+        if (scale !== scaleBefore) deps.resizeForScale(scaleBefore, scale);
         const key = store.get('apiKey');
         if (key !== keyBefore) {
             setApiKey(key);

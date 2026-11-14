@@ -27,6 +27,8 @@ export interface HandlerDeps extends LookupDeps {
     queue: LookupQueue;
     /** Applies always-on-top and zoom from the config to the overlay window */
     applyWindowConfig: (store: ConfigStore) => void;
+    /** Resizes the overlay window when the interface scale changes */
+    resizeForScale: (oldScale: number, newScale: number) => void;
     registerHotkeys: () => void;
     logWatcher: LogWatcher;
     party: PartyState;
