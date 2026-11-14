@@ -198,9 +198,13 @@ click-to-copy on player names.
 | screenshots reviewed by eye | narrow overlay: no horizontal scrollbar, 5 columns hidden with a footer note, every status pill on one left edge; settings window, Appearance tab |
 | by script over CDP (implementer) | settings open as a second window with the overlay visible; the opacity slider changed the overlay within 0.3 s while dragging; a click on a name put it on the clipboard; a scale change resized the window by the same ratio (a round trip drifted by about 3 px) |
 
+5.1.0 was published with `npm run release`; the installed 5.0.1 was updated
+in-app (`scripts/update-cycle.mjs`, passed) and `scripts/smoke.mjs` on the
+installed 5.1.0 gave 17/17.
+
 Not checked: the settings window above the real game, placement on a second
-monitor, `scripts/update-cycle.mjs` against the new window (it needs an
-installed 5.1.0). The implementation was written by a mid-tier agent from the
+monitor, `scripts/update-cycle.mjs` driving the new settings window (it needs
+a release newer than 5.1.0 to update to). The implementation was written by a mid-tier agent from the
 lead's plan and reviewed by the lead; no separate second reviewer.
 
 ## 6. Not verified — Gate B open

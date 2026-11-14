@@ -87,6 +87,10 @@ apply → app exits → disk `sq.version` = 5.0.0 → app restarts; then
 **Verified 2026-11-13 (5.0.0 → 5.0.1, in-app, delta):** same script, which
 now also drives the v5 Updates tab (controls found by text).
 
+**Verified 2026-11-14 (5.0.1 → 5.1.0, in-app, delta).** The script's path
+through the settings window of 5.1.0 has not run yet: it needs a newer
+release to update to.
+
 `update-cycle.mjs` takes the target version as its fifth argument
 (`<exe> <cwd> <installDir> [version]`, default `4.1.0`).
 
