@@ -1,7 +1,7 @@
 /**
  * Status rows: every non-ok outcome gets a pill + a short dim note.
  * The pill spans the stat columns; rank/level and guild always keep their own
- * cells (empty when the profile is unknown) so all pills share one left edge.
+ * cells (empty when the profile is unknown), as does tags, so all pills share one left edge.
  */
 
 import type { ColumnDef } from '../../../src/shared/columns';
@@ -9,6 +9,7 @@ import type { PlayerProfileInfo } from '../../../src/shared/types';
 import { icon, type IconName } from '../ui/icons';
 import { guildCell, playerCell, rankCell, sourceCell } from './cells';
 import { esc } from './format';
+import { tagsCell, viewChips } from './tagsCell';
 import type { RenderContext, RowView } from './types';
 
 interface StatusStyle {
@@ -57,6 +58,7 @@ function leadCell(col: ColumnDef, view: RowView, info: PlayerProfileInfo | null)
     switch (col.id) {
         case 'rank': return rankCell(info);
         case 'player': return playerCell(view, view.data.status === 'nicked' ? icon('alert') : '');
+        case 'tags': return tagsCell(viewChips(view));
         case 'guild': return guildCell(info?.guild);
         case 'source': return sourceCell(view.data.source);
         default: return '<td></td>';
@@ -72,6 +74,11 @@ export function buildStatusCells(view: RowView, cols: ColumnDef[], ctx: RenderCo
 
     const tail = cols.slice(playerIdx + 1);
     const source = tail.length && tail[tail.length - 1]!.id === 'source' ? tail.pop() : undefined;
+    // Tags keeps its own cell too: a nicked player can carry chips
+    if (tail[0]?.id === 'tags') {
+        cells.push(tagsCell(viewChips(view)));
+        tail.shift();
+    }
     // Always keep the Guild cell (a dash when unknown) so every pill starts at the same x
     if (tail[0]?.id === 'guild') {
         cells.push(guildCell(info?.guild));

@@ -130,6 +130,8 @@ body.density-dense #stats-body td { font-size: 12.5px; }
   border-radius: 3px;
   vertical-align: middle;
 }
+.tags-cell { white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.tags-cell .tag { margin-left: 0; margin-right: 4px; }
 .tag-you { background: var(--teal-tint); color: var(--teal-text); }
 .tag-bot { background: var(--medium-tint); color: var(--medium-text); }
 .party-ic { color: var(--party-text); }

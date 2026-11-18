@@ -11,6 +11,7 @@ import * as path from 'node:path';
 import type {
     RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey,
 } from '../shared/types';
+import { mergeColumnOrder } from '../shared/columns';
 
 export type { RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey };
 
@@ -49,7 +50,7 @@ export interface AppConfig {
 export type RawConfig = Record<string, unknown>;
 
 const KNOWN_COLUMNS = [
-    'rank', 'player', 'guild', 'fkdr', 'finals', 'kdr', 'wlr', 'wins',
+    'rank', 'player', 'tags', 'guild', 'fkdr', 'finals', 'kdr', 'wlr', 'wins',
     'beds', 'winstreak', 'kills', 'deaths', 'bowkills', 'source',
 ];
 const VALID_INTERVALS: StatsInterval[] = ['total', 'weekly', 'monthly', 'yearly'];
@@ -91,11 +92,11 @@ export function defaultConfig(): AppConfig {
         ratioColors: { ...DEFAULT_COLORS },
         columnOrder: [...KNOWN_COLUMNS],
         columnEnabled: {
-            rank: true, player: true, fkdr: true, finals: true, kdr: true,
+            rank: true, player: true, tags: true, fkdr: true, finals: true, kdr: true,
             wlr: true, wins: true, beds: true, winstreak: true, kills: false,
             deaths: false, bowkills: false, guild: false, source: true,
         },
-        compactColumns: ['rank', 'player', 'fkdr', 'winstreak', 'source'],
+        compactColumns: ['rank', 'player', 'tags', 'fkdr', 'winstreak', 'source'],
         fkdrThresholds: { good: 3.0, medium: 1.0 },
         updateAutoCheck: true,
         apiKey: '',
@@ -205,7 +206,7 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
             medium: str((merged.ratioColors as RawConfig)?.medium, defaults.ratioColors.medium),
             bad: str((merged.ratioColors as RawConfig)?.bad, defaults.ratioColors.bad),
         },
-        columnOrder: mergeColumnOrder(merged.columnOrder),
+        columnOrder: normalizeColumnOrder(merged.columnOrder),
         columnEnabled: normalizeColumnEnabled(merged.columnEnabled),
         compactColumns: mergeCompactColumns(merged.compactColumns),
         fkdrThresholds: {
@@ -230,18 +231,14 @@ function normalizeBounds(v: unknown): AppConfig['settingsBounds'] {
     return { x: x as number, y: y as number, width: width as number, height: height as number };
 }
 
-function mergeColumnOrder(v: unknown): string[] {
+function normalizeColumnOrder(v: unknown): string[] {
     const saved = Array.isArray(v) ? v.filter((id): id is string => typeof id === 'string') : [];
-    const merged = saved.filter(id => KNOWN_COLUMNS.includes(id));
-    for (const id of KNOWN_COLUMNS) {
-        if (!merged.includes(id)) merged.push(id);
-    }
-    return merged;
+    return mergeColumnOrder(saved, KNOWN_COLUMNS);
 }
 
 function normalizeColumnEnabled(v: unknown): Record<string, boolean> {
     const out: Record<string, boolean> = {};
-    for (const id of KNOWN_COLUMNS) out[id] = id === 'player';
+    for (const id of KNOWN_COLUMNS) out[id] = id === 'player' || id === 'tags';
     if (v && typeof v === 'object') {
         for (const id of KNOWN_COLUMNS) {
             const val = (v as RawConfig)[id];

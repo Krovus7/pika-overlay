@@ -49,7 +49,7 @@ export const state: OverlayState = {
     mode: 'ALL_MODES',
     party: new Set(),
     layout: 'detailed',
-    compactColumns: new Set(['rank', 'player', 'fkdr', 'winstreak', 'source']),
+    compactColumns: new Set(['rank', 'player', 'tags', 'fkdr', 'winstreak', 'source']),
     columnOrder: COLUMN_DEFS.map(c => c.id),
     columnEnabled: Object.fromEntries(COLUMN_DEFS.map(c => [c.id, true])),
     pinSelf: false,

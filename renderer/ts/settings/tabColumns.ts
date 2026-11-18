@@ -1,15 +1,15 @@
-import { COLUMN_DEFS } from '../../../src/shared/columns';
+import { COLUMN_DEFS, mergeColumnOrder } from '../../../src/shared/columns';
 import { button, group, h, svgIcon, toggle } from './controls';
 import { saveNow } from './saveQueue';
 import type { Cfg } from './store';
 import type { TabView } from './types';
 
 const KNOWN = COLUMN_DEFS.map(c => c.id);
-const DEFAULT_COMPACT = ['rank', 'player', 'fkdr', 'winstreak', 'source'];
+const DEFAULT_COMPACT = ['rank', 'player', 'tags', 'fkdr', 'winstreak', 'source'];
 
 function mergedOrder(raw: unknown): string[] {
-    const saved = Array.isArray(raw) ? raw.filter((id): id is string => KNOWN.includes(id)) : [];
-    return [...saved, ...KNOWN.filter(id => !saved.includes(id))];
+    const saved = Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : [];
+    return mergeColumnOrder(saved, KNOWN);
 }
 
 export function buildColumns(): TabView {
@@ -128,7 +128,7 @@ export function buildColumns(): TabView {
             if (dragId) return;
             order = mergedOrder(cfg.columnOrder);
             const saved = (cfg.columnEnabled ?? {}) as Record<string, boolean>;
-            enabled = { ...Object.fromEntries(KNOWN.map(id => [id, id === 'player'])), ...saved, player: true };
+            enabled = { ...Object.fromEntries(KNOWN.map(id => [id, id === 'player' || id === 'tags'])), ...saved, player: true };
             compact = new Set(Array.isArray(cfg.compactColumns) ? cfg.compactColumns as string[] : DEFAULT_COMPACT);
             compact.add('player');
             const active = document.activeElement;

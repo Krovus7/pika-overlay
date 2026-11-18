@@ -35,8 +35,22 @@ describe('normalizeConfig — defaults', () => {
     });
 
     it('columnOrder merges known ids and appends missing ones', () => {
-        const cfg = normalizeConfig({ columnOrder: ['player', 'fkdr'] });
-        assert.deepEqual(cfg.columnOrder, ['player', 'fkdr', ...defaultConfig().columnOrder.filter(id => !['player', 'fkdr'].includes(id))]);
+        const cfg = normalizeConfig({ columnOrder: ['fkdr', 'player'] });
+        assert.deepEqual(cfg.columnOrder, ['fkdr', 'player', 'tags', ...defaultConfig().columnOrder.filter(id => !['fkdr', 'player', 'tags'].includes(id))]);
+    });
+
+    it('an old columnOrder without tags gets it right after player', () => {
+        const old = ['rank', 'player', 'guild', 'fkdr', 'finals', 'kdr', 'wlr', 'wins', 'beds', 'winstreak', 'kills', 'deaths', 'bowkills', 'source'];
+        const cfg = normalizeConfig({ columnOrder: old });
+        assert.deepEqual(cfg.columnOrder.slice(0, 4), ['rank', 'player', 'tags', 'guild']);
+        assert.equal(cfg.columnOrder.length, old.length + 1);
+    });
+
+    it('tags is enabled by default, also for configs saved before it existed', () => {
+        assert.equal(defaultConfig().columnEnabled.tags, true);
+        assert.equal(normalizeConfig({ columnEnabled: { rank: true, player: true } }).columnEnabled.tags, true);
+        assert.equal(normalizeConfig({ columnEnabled: { tags: false } }).columnEnabled.tags, false);
+        assert.ok(defaultConfig().compactColumns.includes('tags'));
     });
 
     it('columnEnabled keeps player locked on', () => {

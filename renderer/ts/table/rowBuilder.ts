@@ -3,6 +3,7 @@
 import type { ColumnDef } from '../../../src/shared/columns';
 import { guildCell, playerCell, rankCell, sourceCell, statCell } from './cells';
 import { buildStatusCells } from './statusRow';
+import { chipsSignature, tagsCell, viewChips } from './tagsCell';
 import type { RenderContext, RowData, RowView } from './types';
 
 /** Level 0/1 with zero stats: likely a bot or a fresh alt. */
@@ -38,7 +39,7 @@ export function viewOf(d: RowData, ctx: RenderContext): RowView {
 
 /** Fingerprint of everything besides the data object that changes a row's markup. */
 export function viewSignature(v: RowView): string {
-    return `${v.name}|${+v.isParty}${+v.isSelf}${+v.isSuspect}`;
+    return `${v.name}|${+v.isParty}${+v.isSelf}${+v.isSuspect}|${chipsSignature(viewChips(v))}`;
 }
 
 function rowClasses(v: RowView): string {
@@ -56,6 +57,7 @@ function rowClasses(v: RowView): string {
 function loadingCell(col: ColumnDef, v: RowView): string {
     switch (col.id) {
         case 'player': return playerCell(v);
+        case 'tags': return tagsCell(viewChips(v));
         case 'source': return sourceCell(v.data.source);
         case 'rank': return '<td class="col-rank"><span class="skel"></span></td>';
         case 'guild': return '<td><span class="skel skel-wide"></span></td>';
@@ -69,6 +71,7 @@ function okCell(col: ColumnDef, v: RowView, ctx: RenderContext): string {
     switch (col.id) {
         case 'rank': return rankCell(d);
         case 'player': return playerCell(v);
+        case 'tags': return tagsCell(viewChips(v));
         case 'guild': return guildCell(d.guild);
         case 'source': return sourceCell(d.source);
         default: return statCell(col.id, d, ctx);
