@@ -118,7 +118,12 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
       source: 'me' | string; // 'me' or the id of an imported list
   }
   interface ImportedList { id: string; label: string; importedAt: number; count: number }
-  interface WatchlistFile { version: 1; entries: WatchEntry[]; lists: ImportedList[] }
+  interface NickLink {
+      nick: string;          // the nick as seen in the log, key = nick.toLowerCase()
+      friend: string;        // the real name of the teammate, '' when not given
+      addedAt: number;
+  }
+  interface WatchlistFile { version: 1; entries: WatchEntry[]; lists: ImportedList[]; nickLinks: NickLink[] }
   ```
 - **Store** (`store.ts`): `%APPDATA%\pika-overlay\watchlist.json`; load once at
   startup; atomic write (temp file + rename, as `config.ts`); a corrupt file is
@@ -156,6 +161,9 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
     `{ token, label, count, conflicts, invalid }` without saving;
     `watchlist:importText(text, defaultKind)` → same preview;
     `watchlist:confirmImport(token)` → saves; previews expire after 5 minutes;
+  - `watchlist:linkNick(nick, friend | null)` → add or replace a nick link
+    (friend name validated like any name, or empty); `watchlist:unlinkNick(nick)`;
+    `watchlist:get` also returns `nickLinks`;
   - `watchlist:menu(name)` → native context menu (see Task 4);
   - event `watchlist:updated` broadcast to overlay and settings window.
 
@@ -168,6 +176,14 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
   "From list: <label>" (disabled, informative). For a NICKED row add a first
   disabled line "This is a nick: the tag follows the nick, not the player".
   Left click keeps copying the name.
+- **Nick links (owner request 2026-11-18)**: a teammate playing nicked shows up
+  as a NICKED row. On a NICKED row the menu also offers "This is my teammate"
+  with a submenu of the current party members plus "Someone else" (link with
+  empty friend). A linked nick is removed from the table and never shown again
+  (later detections of that nick are ignored), so it no longer looks like an
+  unknown nicked player. Linked nicks are not exported or imported (they are
+  personal). Managed in the Watchlist tab (Task 4b): list nick → friend, date,
+  remove.
 - **Chips** in the Tags column: SNIPER (amber), CHEATER (red), OTHER (neutral),
   built from existing tokens, readable at low opacity like the other chips
   (`--lo`, `--scrim-a`). An imported entry uses an outlined variant and its
@@ -191,6 +207,35 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
   in Settings" opens this tab.
 - Copy everywhere in English, short; imported lists are described as "someone
   else's notes".
+
+## Task 6 — Your team on top (owner request 2026-11-18)
+
+The owner asked for players split by team when the game starts, as an in-game
+mod does. Checked on 2026-11-18 against all 25 Badlion logs and the live
+`latest.log`: Pika never prints the team of other players, and colour codes
+survive only next to the owner's own name. So only the owner's team can be
+known; opponents stay one group.
+
+- Log lines (exact, from the logs; `?` is a decorative glyph, match `\S+`):
+  - `BedWars ? You and your party are now in team Yellow.` → my team colour;
+  - `BedWars ? You are placed in team Pink with meow269.` → my team colour and
+    the named mates (split on `,` and ` and `, names validated);
+  - `Team Upgrade ? meow269 purchased Sharpened Swords I.` → only my team sees
+    these, so the buyer is a teammate (today these lines are skipped by
+    `patterns.ts`; keep them out of player detection).
+  - Colours seen: Red, Blue, Green, Yellow, Aqua, White, Pink, Gray, Orange
+    (unknown colour → neutral rail).
+- Parser emits `my_team(color, mates[])` / `teammate(name)`; main state holds
+  `myTeam: { color, mates }` (ADR-0003: state owned by main, broadcast to the
+  renderer). Reset on the same events that clear the lobby (`players_clear`,
+  server change, game end).
+- Table: setting `teamOnTop` (default on): me, party members and teammates are
+  grouped first (before watchlist and nicked in the sort), with a rail in the
+  team colour and a small header line "YOUR TEAM · YELLOW". Team colours are
+  new tokens tuned for both themes. No grouping before the team is known.
+- Settings: the toggle in the General tab next to `nickedOnTop`.
+- Tests: parser lines above (including names with `_`, two mates, unknown
+  colour), state reset, sort order.
 
 ## Task 5 — Docs, ADR, verification
 
@@ -256,4 +301,4 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
 
 Task 0 (owner) can run any time. Task 1 first. Task 3 is independent of
 Tasks 1–2 and can run in parallel. Task 2 needs Task 1; Task 4 needs Tasks 1
-and 3. Task 5 last.
+and 3. Task 6 needs Task 1. Task 5 last.
