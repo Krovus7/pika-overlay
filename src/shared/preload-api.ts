@@ -5,6 +5,7 @@
 
 import type { ApiHealth, ApiKeyTestResult, PlayerLoading, UpdateState } from './types';
 import type { StatsPayload } from './ipc-contract';
+import type { ImportAttempt, WatchKind, WatchlistSnapshot } from './watchlist';
 
 export interface PikaOverlayApi {
     // === Overlay events ===
@@ -69,4 +70,21 @@ export interface PikaOverlayApi {
     onApiHealth: (cb: (h: ApiHealth) => void) => void;
     /** Validates a key against the live API without saving it */
     testApiKey: (key: string) => Promise<ApiKeyTestResult>;
+    // === Watchlist and nick links (Task 3) ===
+    getWatchlist: () => Promise<WatchlistSnapshot>;
+    /** Adds or changes the own entry; null removes it. False when refused (invalid name, limit) */
+    setWatchEntry: (name: string, change: { kind: WatchKind; note: string } | null) => Promise<boolean>;
+    removeWatchList: (id: string) => Promise<boolean>;
+    /** Save dialog; resolves to the written path or null (cancelled or failed) */
+    exportWatchlist: (opts: { includeImported: boolean }) => Promise<string | null>;
+    /** Puts the own entries on the clipboard, one per line */
+    copyWatchlistText: () => Promise<void>;
+    /** Open dialog + parse; nothing is saved until confirmWatchImport */
+    importWatchlistFile: () => Promise<ImportAttempt>;
+    importWatchlistText: (text: string, defaultKind: WatchKind) => Promise<ImportAttempt>;
+    confirmWatchImport: (token: string) => Promise<boolean>;
+    /** Friend null or '' = teammate not named. False when a name is invalid */
+    linkNick: (nick: string, friend: string | null) => Promise<boolean>;
+    unlinkNick: (nick: string) => Promise<boolean>;
+    onWatchlistUpdate: (cb: (data: WatchlistSnapshot) => void) => void;
 }

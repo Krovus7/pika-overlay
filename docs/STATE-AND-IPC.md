@@ -61,6 +61,10 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `update:getState` / `update:check` / `update:downloadApply` | `getUpdateState()` / `checkForUpdates()` / `downloadAndApply()` | `handlers.ts` → `velopackUpdate.ts` |
 | `api:getHealth` | `getApiHealth()` | `apiHandlers.ts` |
 | `api:testKey` | `testApiKey(key)` | `apiHandlers.ts` → `keyTest.ts` (no save, no health change) |
+| `watchlist:get` / `set` / `removeList` | `getWatchlist()` / `setWatchEntry(name, change \| null)` / `removeWatchList(id)` | `watchlistHandlers.ts` → `watchlist/store.ts` (`watchlist.json`; set/remove broadcast `watchlist:updated`) |
+| `watchlist:export` / `copyText` | `exportWatchlist({ includeImported })` / `copyWatchlistText()` | `watchlistHandlers.ts` (save dialog, clipboard; own entries unless imported ones are ticked) |
+| `watchlist:importFile` / `importText` / `confirmImport` | `importWatchlistFile()` / `importWatchlistText(text, kind)` / `confirmWatchImport(token)` | `watchlistHandlers.ts` → `importPreview.ts` (preview in memory for 5 minutes, saved on confirm) |
+| `watchlist:linkNick` / `unlinkNick` | `linkNick(nick, friend \| null)` / `unlinkNick(nick)` | `watchlistHandlers.ts` (nick links: personal, never exported or imported) |
 
 ### Push events (`IPC_EVENTS`, main → renderer)
 
@@ -77,6 +81,7 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `config:updated` | `onConfigUpdate` | full config object (overlay + settings window) |
 | `update:state` | `onUpdateState` | `UpdateState` (overlay + settings window) |
 | `api:health` | `onApiHealth` | `ApiHealth` (overlay + settings window) |
+| `watchlist:updated` | `onWatchlistUpdate` | `WatchlistSnapshot` `{ entries, lists, nickLinks }` (overlay + settings window) |
 
 `player:error` no longer exists (removed in v5, ADR-0010). The preload keeps
 one listener per event (`removeAllListeners` before `on`). `config:updated`,

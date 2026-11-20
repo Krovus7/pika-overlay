@@ -34,6 +34,16 @@ export const IPC_CHANNELS = {
     UPDATE_DOWNLOAD_APPLY: 'update:downloadApply',
     API_GET_HEALTH: 'api:getHealth',
     API_TEST_KEY: 'api:testKey',
+    WATCHLIST_GET: 'watchlist:get',
+    WATCHLIST_SET: 'watchlist:set',
+    WATCHLIST_REMOVE_LIST: 'watchlist:removeList',
+    WATCHLIST_EXPORT: 'watchlist:export',
+    WATCHLIST_COPY_TEXT: 'watchlist:copyText',
+    WATCHLIST_IMPORT_FILE: 'watchlist:importFile',
+    WATCHLIST_IMPORT_TEXT: 'watchlist:importText',
+    WATCHLIST_CONFIRM_IMPORT: 'watchlist:confirmImport',
+    WATCHLIST_LINK_NICK: 'watchlist:linkNick',
+    WATCHLIST_UNLINK_NICK: 'watchlist:unlinkNick',
 } as const;
 
 export const IPC_EVENTS = {
@@ -50,6 +60,7 @@ export const IPC_EVENTS = {
     CONFIG_UPDATED: 'config:updated',
     UPDATE_STATE: 'update:state',
     API_HEALTH: 'api:health',
+    WATCHLIST_UPDATED: 'watchlist:updated',
 } as const;
 
 /** Tab ids of the settings window, in display order. */

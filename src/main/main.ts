@@ -14,6 +14,8 @@ import { registerHotkeys, unregisterAll } from './hotkeyManager';
 import { IPC_EVENTS } from '../shared/ipc-contract';
 import { clearPlayers } from './ipc/clearPlayers';
 import { registerIpcHandlers, type HandlerDeps } from './ipc/handlers';
+import { registerWatchlistHandlers } from './ipc/watchlistHandlers';
+import { WatchlistStore } from './watchlist/store';
 import { LookupService, type LookupDeps } from './ipc/lookup';
 import { LogWatcher } from './log/logWatcher';
 import { driveReplay, replayFilePath } from './replay';
@@ -75,6 +77,7 @@ app.whenReady().then(() => {
         party: partyState,
     };
     registerIpcHandlers(handlerDeps);
+    registerWatchlistHandlers(new WatchlistStore(WatchlistStore.userDataPath(app.getPath('userData'))));
 
     onUpdateStateChange(s => broadcast(IPC_EVENTS.UPDATE_STATE, s));
 
