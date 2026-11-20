@@ -17,6 +17,7 @@ export interface MenuInput {
     partyMembers: readonly string[];
     mark: (kind: WatchKind, note: string) => void;
     unmark: () => void;
+    editNote: () => void;
     link: (friend: string | null) => void;
 }
 
@@ -40,8 +41,8 @@ export function buildMenuSpec(input: MenuInput): MenuSpec[] {
     for (const kind of WATCH_KINDS) {
         items.push({ label: KIND_ITEM[kind], click: () => input.mark(kind, keptNote) });
     }
+    items.push(SEPARATOR, { label: 'Edit note in Settings', click: input.editNote });
     if (resolved) {
-        items.push(SEPARATOR);
         if (!resolved.imported) items.push({ label: 'Remove from watchlist', click: input.unmark });
         else items.push({ label: menuText(`From list: ${resolved.sourceLabel}`), enabled: false });
     }

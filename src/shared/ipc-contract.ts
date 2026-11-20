@@ -66,7 +66,7 @@ export const IPC_EVENTS = {
 } as const;
 
 /** Tab ids of the settings window, in display order. */
-export const SETTINGS_TAB_IDS = ['general', 'api', 'appearance', 'columns', 'stats', 'updates', 'debug'] as const;
+export const SETTINGS_TAB_IDS = ['general', 'api', 'appearance', 'columns', 'stats', 'updates', 'debug', 'watchlist'] as const;
 
 export type StatsPayload = PlayerResult & { source: string };
 

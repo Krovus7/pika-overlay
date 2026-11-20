@@ -21,22 +21,24 @@ describe('row menu content', () => {
     const calls: string[] = [];
     const input = (over: Partial<MenuInput>): MenuInput => ({
         name: 'Nick', nicked: false, resolved: undefined, partyMembers: [],
-        mark: (k, n) => calls.push(`mark:${k}:${n}`), unmark: () => calls.push('unmark'), link: f => calls.push(`link:${f}`),
+        mark: (k, n) => calls.push(`mark:${k}:${n}`), unmark: () => calls.push('unmark'), editNote: () => calls.push('editNote'), link: f => calls.push(`link:${f}`),
         ...over,
     });
     const labels = (items: ReturnType<typeof buildMenuSpec>) => items.map(i => i.label ?? '---');
 
     beforeEach(() => { calls.length = 0; });
 
-    it('plain row: three marks only', () => {
-        assert.deepEqual(labels(buildMenuSpec(input({}))), ['Mark as sniper', 'Mark as cheater', 'Mark as other']);
+    it('plain row: three marks and Edit note in Settings', () => {
+        assert.deepEqual(labels(buildMenuSpec(input({}))), ['Mark as sniper', 'Mark as cheater', 'Mark as other', '---', 'Edit note in Settings']);
+        buildMenuSpec(input({}))[4]!.click!();
+        assert.deepEqual(calls, ['editNote']);
     });
 
     it('own entry: remove item, and changing the kind keeps the note', () => {
         const items = buildMenuSpec(input({ resolved: own }));
-        assert.deepEqual(labels(items).slice(3), ['---', 'Remove from watchlist']);
+        assert.deepEqual(labels(items).slice(3), ['---', 'Edit note in Settings', 'Remove from watchlist']);
         items[1]!.click!();
-        items[4]!.click!();
+        items[5]!.click!();
         assert.deepEqual(calls, ['mark:cheater:camps beds', 'unmark']);
     });
 
@@ -48,8 +50,8 @@ describe('row menu content', () => {
 
     it('imported entry: informative disabled line, no remove, note not copied', () => {
         const items = buildMenuSpec(input({ resolved: { ...imported, sourceLabel: 'Friends' } }));
-        assert.deepEqual(labels(items).slice(3), ['---', 'From list: Friends']);
-        assert.equal(items[4]!.enabled, false);
+        assert.deepEqual(labels(items).slice(3), ['---', 'Edit note in Settings', 'From list: Friends']);
+        assert.equal(items[5]!.enabled, false);
         items[0]!.click!();
         assert.deepEqual(calls, ['mark:sniper:']);
     });

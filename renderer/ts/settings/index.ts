@@ -12,6 +12,7 @@ import { buildColumns } from './tabColumns';
 import { buildDebug } from './tabDebug';
 import { buildGeneral } from './tabGeneral';
 import { buildUpdates } from './tabUpdates';
+import { buildWatchlist } from './tabWatchlist';
 import { initSaveQueue, type SaveStatus } from './saveQueue';
 import { subscribeConfig } from './store';
 import { svgIcon } from './controls';
@@ -43,7 +44,8 @@ export function initSettingsShell(api: PikaOverlayApi, initialTab: string): Sett
 
     const updates = buildUpdates(api);
     const tabs: TabView[] = [
-        buildGeneral(api), buildApi(api), buildAppearance(api), buildColumns(), buildColors(), updates, buildDebug(api),
+        buildGeneral(api), buildApi(api), buildAppearance(api), buildColumns(), buildColors(), buildWatchlist(api),
+        updates, buildDebug(api),
     ];
     for (const tab of tabs) document.getElementById(`tab-${tab.id}`)?.appendChild(tab.root);
     subscribeConfig(cfg => tabs.forEach(t => t.sync(cfg)));

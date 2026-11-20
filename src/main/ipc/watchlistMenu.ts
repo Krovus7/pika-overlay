@@ -5,6 +5,7 @@ import { BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions } from 'e
 import { IPC_CHANNELS } from '../../shared/ipc-contract';
 import type { PartyState } from '../state';
 import { buildMenuSpec } from '../watchlist/menuSpec';
+import { openSettings } from '../settingsWindow';
 import { notifyWatchlist } from '../watchlist/notify';
 import type { WatchlistStore } from '../watchlist/store';
 
@@ -27,6 +28,7 @@ export function registerWatchlistMenu({ store, party, linkNick }: WatchlistMenuD
             partyMembers: party.snapshot(),
             mark: (kind, note) => change({ kind, note }),
             unmark: () => change(null),
+            editNote: () => openSettings('watchlist'),
             link: friend => { if (linkNick(name, friend)) notifyWatchlist(store); },
         });
         const window = BrowserWindow.fromWebContents(e.sender) ?? undefined;
