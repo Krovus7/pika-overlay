@@ -22,7 +22,7 @@ import { driveReplay, replayFilePath } from './replay';
 import { gameState, partyState, playerRegistry } from './state';
 import { LookupQueue } from './state/lookupQueue';
 import { createTray } from './tray';
-import { checkForUpdates, onUpdateStateChange, runStartupHooks } from './update/velopackUpdate';
+import { checkForUpdates, onUpdateStateChange, runStartupHooks, startPeriodicChecks } from './update/velopackUpdate';
 import { bindWatcherEvents } from './watcherBindings';
 import { clearAlertFlash, deliverAlert } from './watchlist/alertDelivery';
 import { WatchAlerts } from './watchlist/alerts';
@@ -125,7 +125,10 @@ app.whenReady().then(() => {
     if (shotsRequested()) void driveShots({ getOverlayWin, rootDir });
     else startWatcher(store);
 
-    if (!shotsRequested() && store.get('updateAutoCheck')) void checkForUpdates();
+    if (!shotsRequested()) {
+        if (store.get('updateAutoCheck')) void checkForUpdates();
+        startPeriodicChecks(() => store.get('updateAutoCheck'));
+    }
 
     registerHotkeysFn();
 });
