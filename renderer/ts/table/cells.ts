@@ -2,7 +2,7 @@
 
 import type { PlayerProfileInfo, PlayerStats } from '../../../src/shared/types';
 import { icon } from '../ui/icons';
-import { esc, fmt, fmtInt, ratioColor, safeHex } from './format';
+import { esc, fmtInt, fmtRatio, ratioColor, ratioTitle, safeHex } from './format';
 import { srcBadge } from './sourceBadge';
 import type { RenderContext, RowView } from './types';
 
@@ -34,7 +34,9 @@ function dimNum(v: number | undefined): string {
 }
 
 function ratioCell(v: number | undefined, key: 'fkdr' | 'kdr' | 'wlr', ctx: RenderContext): string {
-    return `<td class="num tiered" style="--tier:${safeHex(ratioColor(v, key, ctx))};font-weight:600">${fmt(v)}</td>`;
+    const exact = ratioTitle(v);
+    const title = exact ? ` title="${exact}"` : '';
+    return `<td class="num tiered"${title} style="--tier:${safeHex(ratioColor(v, key, ctx))};font-weight:600">${fmtRatio(v)}</td>`;
 }
 
 export function statCell(colId: string, p: PlayerStats, ctx: RenderContext): string {

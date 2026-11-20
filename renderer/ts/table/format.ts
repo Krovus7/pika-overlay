@@ -10,8 +10,18 @@ export function esc(str: string | null | undefined): string {
     return String(str ?? '').replace(/[&<>"']/g, c => ESC_MAP[c]!);
 }
 
-export function fmt(v: number | undefined): string {
-    return v == null ? '—' : Number(v).toFixed(2);
+/** Ratio text sized for a 58 px column: 2 decimals below 100, then fewer digits, then the k form. */
+export function fmtRatio(v: number | undefined): string {
+    if (v == null) return '—';
+    if (v < 100) return v.toFixed(2);
+    if (v < 1000) return v.toFixed(1);
+    if (v < 10_000) return String(Math.round(v));
+    return fmtInt(Math.round(v));
+}
+
+/** Exact value for the cell tooltip, only when the shown text was shortened. */
+export function ratioTitle(v: number | undefined): string | null {
+    return v != null && v >= 100 ? v.toFixed(2) : null;
 }
 
 /** Whole numbers; 10k and above are shortened (21.4k) to fit narrow columns. */
