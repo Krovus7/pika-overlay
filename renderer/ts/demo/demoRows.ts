@@ -37,8 +37,8 @@ export const DEMO_PARTY = ['Nova_Kai', 'Mira__'];
 const MINUTE = 60_000;
 
 /** Login ages for the demo: one fresh, two older; every other row stays null. */
-function demoLastSeen(now: number): Record<string, number> {
-    return { sweatlord99: now - 90_000, tenebris: now - 130 * MINUTE, xn1ghtmare: now - 3 * 24 * 60 * MINUTE };
+function demoLastSeen(now: number): Map<string, number> {
+    return new Map([['sweatlord99', now - 90_000], ['tenebris', now - 130 * MINUTE], ['xn1ghtmare', now - 3 * 24 * 60 * MINUTE]]);
 }
 
 /** Watchlist entries for the demo: own sniper, own cheater, imported other. */
@@ -53,7 +53,7 @@ export function demoWatch(): Map<string, WatchResolved> {
 export function demoRows(now: number = Date.now()): RowData[] {
     const seen = demoLastSeen(now);
     return rawDemoRows().map(row => {
-        const lastSeen = seen[row.username.toLowerCase()];
+        const lastSeen = seen.get(row.username.toLowerCase());
         return row.status === 'ok' && lastSeen !== undefined ? { ...row, lastSeen } : row;
     });
 }

@@ -10,7 +10,7 @@ import * as path from 'node:path';
 
 import { IPC_CHANNELS } from '../../shared/ipc-contract';
 import type { ImportAttempt } from '../../shared/watchlist';
-import { FormatError, defaultFileName, exportJson, exportText, parseAny, type ParseResult } from '../watchlist/format';
+import { FormatError, defaultFileName, exportJson, exportText, parseAny, pastedLabel, type ParseResult } from '../watchlist/format';
 import { ImportPreviews } from '../watchlist/importPreview';
 import { notifyWatchlist } from '../watchlist/notify';
 import type { WatchlistStore } from '../watchlist/store';
@@ -95,13 +95,14 @@ export function registerWatchlistHandlers(store: WatchlistStore, linkNick: (nick
     ipcMain.handle(IPC_CHANNELS.WATCHLIST_IMPORT_TEXT, (_e, text: unknown, defaultKind: unknown): ImportAttempt => {
         if (typeof text !== 'string') return { error: 'Nothing to import.' };
         const kind = normalizeKind(defaultKind);
-        return preview(`Pasted list ${new Date().toISOString().slice(0, 10)}`, () => parseAny(text, kind, Date.now()));
+        return preview(pastedLabel(new Date()), () => parseAny(text, kind, Date.now()));
     });
 
-    ipcMain.handle(IPC_CHANNELS.WATCHLIST_CONFIRM_IMPORT, (_e, token: unknown) => {
+    ipcMain.handle(IPC_CHANNELS.WATCHLIST_CONFIRM_IMPORT, (_e, token: unknown, opts: unknown) => {
+        const keepBoth = !!opts && typeof opts === 'object' && (opts as { keepBoth?: unknown }).keepBoth === true;
         const pending = typeof token === 'string' ? previews.take(token) : null;
         if (!pending) return false;
-        if (!store.applyImport(pending.label, pending.entries)) return false;
+        if (!store.applyImport(pending.label, pending.entries, keepBoth)) return false;
         notify();
         return true;
     });

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { esc } from '../renderer/ts/table/format';
-import { FormatError, defaultFileName, exportJson, exportText, parseAny, parseJson, parseText } from '../src/main/watchlist/format';
+import { FormatError, defaultFileName, exportJson, pastedLabel, exportText, parseAny, parseJson, parseText } from '../src/main/watchlist/format';
 import { ImportPreviews, PREVIEW_TTL_MS } from '../src/main/watchlist/importPreview';
 import { cleanNote, dedupeByName, isValidName, normalizeEntry } from '../src/main/watchlist/validate';
 
@@ -102,5 +102,11 @@ describe('import previews', () => {
         t += PREVIEW_TTL_MS;
         assert.equal(previews.take(q.token), null);
         assert.equal(previews.take('unknown'), null);
+    });
+});
+
+describe('pasted label', () => {
+    it('has the local date and time, zero padded', () => {
+        assert.equal(pastedLabel(new Date(2026, 10, 3, 9, 5)), 'Pasted list 2026-11-03 09:05');
     });
 });

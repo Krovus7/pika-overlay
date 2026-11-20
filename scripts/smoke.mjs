@@ -43,7 +43,6 @@ if (!existsSync(exe)) {
 }
 
 const USER_DATA = path.join(process.env.APPDATA ?? '', 'pika-overlay');
-const WATCHLIST_FILE = path.join(USER_DATA, 'watchlist.json');
 const isWatchlistFile = name => name === 'watchlist.json' || name.startsWith('watchlist.json.');
 const listWatchlistFiles = () => (existsSync(USER_DATA) ? readdirSync(USER_DATA).filter(isWatchlistFile) : []);
 const watchlistBackup = new Map(listWatchlistFiles().map(name => [name, readFileSync(path.join(USER_DATA, name))]));
@@ -54,6 +53,21 @@ function restoreWatchlist() {
     for (const [name, content] of watchlistBackup) writeFileSync(path.join(USER_DATA, name), content);
 }
 process.on('exit', restoreWatchlist);
+
+/** Stops the app and waits (at most 5 s) for the process to end, so no quit-time write can follow the restore. */
+async function stopApp() {
+    if (!app) return;
+    app.close();
+    await Promise.race([app.exited, sleep(5000)]);
+}
+for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => {
+        stopApp().finally(() => {
+            restoreWatchlist();
+            process.exit(130);
+        });
+    });
+}
 
 let app = null;
 const evaluate = expression => app.evaluate(expression);
@@ -225,7 +239,7 @@ async function finish() {
     let fail = results.length - pass;
     if (results.length === 0) fail = 1; // no steps executed = failure, never a silent pass
     console.log(`\n[smoke] ${pass} passed, ${fail} failed`);
-    app?.close();
+    await stopApp();
     restoreWatchlist();
     process.exit(fail > 0 ? 1 : 0);
 }

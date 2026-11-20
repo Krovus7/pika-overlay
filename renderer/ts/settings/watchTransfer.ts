@@ -43,9 +43,12 @@ export function buildTransfer(api: PikaOverlayApi): HTMLElement {
     confirmBox.hidden = true;
     const summary = h('div', 's-watch-preview-lines');
     const confirm = button('Confirm', { icon: 'check', variant: 'primary' });
+    const confirmLabel = confirm.querySelector('.s-btn-label') as HTMLElement;
+    const keepBoth = button('Keep both');
+    keepBoth.hidden = true;
     const cancel = button('Cancel', { variant: 'ghost' });
     const confirmLine = h('div', 's-inline');
-    confirmLine.append(confirm, cancel);
+    confirmLine.append(confirm, keepBoth, cancel);
     confirmBox.append(summary, confirmLine);
     let pending: ImportPreview | null = null;
 
@@ -66,6 +69,8 @@ export function buildTransfer(api: PikaOverlayApi): HTMLElement {
         status.className = 's-status';
         status.replaceChildren();
         summary.replaceChildren(...previewLines(attempt).map(line => h('p', 's-watch-preview-line', line)));
+        confirmLabel.textContent = attempt.replacesExisting ? 'Replace' : 'Confirm';
+        keepBoth.hidden = !attempt.replacesExisting;
         confirmBox.hidden = false;
     }
 
@@ -87,17 +92,19 @@ export function buildTransfer(api: PikaOverlayApi): HTMLElement {
         }
         handle(await api.importWatchlistText(area.value, defaultKind));
     }, 'Could not read this list.'));
-    confirm.addEventListener('click', () => void run(async () => {
+    const confirmWith = (both: boolean) => () => void run(async () => {
         const token = pending?.token;
         if (!token) return;
-        const ok = await api.confirmWatchImport(token);
+        const ok = await api.confirmWatchImport(token, { keepBoth: both });
         closePreview();
         if (ok) {
             area.value = '';
             paste.hidden = true;
             setStatus(status, 'ok', 'circle-check', 'List imported.');
         } else setStatus(status, 'bad', 'circle-alert', 'The preview expired or the list could not be saved. Try again.');
-    }, 'Could not import this list.'));
+    }, 'Could not import this list.');
+    confirm.addEventListener('click', confirmWith(false));
+    keepBoth.addEventListener('click', confirmWith(true));
     cancel.addEventListener('click', closePreview);
     exportFile.addEventListener('click', () => void run(async () => {
         const saved = await api.exportWatchlist({ includeImported: withImported.input.checked });

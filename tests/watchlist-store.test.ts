@@ -172,3 +172,74 @@ describe('nick links', () => {
         assert.equal(s.snapshot().nickLinks.length, 0);
     });
 });
+
+describe('export precedence', () => {
+    it('writes one entry per name: the own one beats an imported copy, even when it comes later', () => {
+        const s = open();
+        s.setOwn('Alpha', { kind: 'sniper', note: 'mine' });
+        s.applyImport('friend.json', [{ ...parsed('alpha', 'other'), note: 'theirs' }, parsed('Bravo')]);
+        s.setOwn('Alpha', { kind: 'sniper', note: 'mine edited' });
+        const out = s.entriesForExport(true);
+        assert.deepEqual(out.map(e => [e.name.toLowerCase(), e.source === 'me', e.note]).sort(), [['alpha', true, 'mine edited'], ['bravo', false, '']]);
+        assert.deepEqual(s.entriesForExport(false).map(e => e.name), ['Alpha']);
+    });
+});
+
+describe('keep-both labels', () => {
+    it('uses the first free numbered label and keeps the old list', () => {
+        const s = open();
+        s.applyImport('Pasted list', [parsed('Alex')]);
+        assert.equal(s.applyImport('Pasted list', [parsed('Bobby')], true)?.label, 'Pasted list (2)');
+        assert.equal(s.applyImport('Pasted list', [parsed('Carl')], true)?.label, 'Pasted list (3)');
+        assert.deepEqual(s.snapshot().lists.map(l => l.label), ['Pasted list', 'Pasted list (2)', 'Pasted list (3)']);
+        assert.equal(s.snapshot().entries.length, 3);
+    });
+
+    it('keeps the plain label when it is free, and replaces without keepBoth', () => {
+        const s = open();
+        assert.equal(s.applyImport('a', [parsed('Alex')], true)?.label, 'a');
+        s.applyImport('a', [parsed('Bobby')]);
+        assert.deepEqual(s.snapshot().lists.map(l => l.label), ['a']);
+    });
+});
+
+describe('prototype-like names', () => {
+    it('are not found unless they are really listed', () => {
+        const s = open();
+        assert.equal(s.lookup('constructor'), undefined);
+        assert.equal(s.lookup('__proto__'), undefined);
+        s.setOwn('constructor', { kind: 'other', note: 'n' });
+        assert.equal(s.lookup('Constructor')?.note, 'n');
+        assert.equal(Object.hasOwn(s.view().resolved, '__proto__'), false);
+    });
+});
+
+describe('an existing file that cannot be handled', () => {
+    const quiet = <T>(run: () => T): T => {
+        const e = console.error, w = console.warn;
+        console.error = () => {}; console.warn = () => {};
+        try { return run(); } finally { console.error = e; console.warn = w; }
+    };
+
+    it('refuses writes and leaves the file untouched when it cannot be read', () => {
+        fs.writeFileSync(file, '{"version":1,"entries":[],"lists":[],"nickLinks":[]}');
+        const before = fs.readFileSync(file, 'utf8');
+        const s = quiet(() => new WatchlistStore(file, () => ++clock, { readFile: () => { throw new Error('EBUSY'); }, rename: fs.renameSync }));
+        quiet(() => assert.equal(s.setOwn('Steve', { kind: 'other', note: '' }), false));
+        assert.equal(fs.readFileSync(file, 'utf8'), before);
+    });
+
+    it('refuses writes when a damaged file cannot be moved aside', () => {
+        fs.writeFileSync(file, 'not json');
+        const s = quiet(() => new WatchlistStore(file, () => ++clock, { readFile: p => fs.readFileSync(p, 'utf8'), rename: () => { throw new Error('EPERM'); } }));
+        quiet(() => assert.equal(s.setOwn('Steve', { kind: 'other', note: '' }), false));
+        assert.equal(fs.readFileSync(file, 'utf8'), 'not json');
+    });
+
+    it('still writes after a damaged file was moved aside', () => {
+        fs.writeFileSync(file, 'not json');
+        const s = quiet(() => open());
+        assert.equal(s.setOwn('Steve', { kind: 'other', note: '' }), true);
+        assert.ok(fs.readdirSync(dir).some(n => n.startsWith('watchlist.json.bad-')));
+    });
+});

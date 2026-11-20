@@ -82,7 +82,8 @@ export interface PikaOverlayApi {
     /** Open dialog + parse; nothing is saved until confirmWatchImport */
     importWatchlistFile: () => Promise<ImportAttempt>;
     importWatchlistText: (text: string, defaultKind: WatchKind) => Promise<ImportAttempt>;
-    confirmWatchImport: (token: string) => Promise<boolean>;
+    /** keepBoth: import as a new list (numbered label) instead of replacing one with the same label */
+    confirmWatchImport: (token: string, opts?: { keepBoth: boolean }) => Promise<boolean>;
     /** Friend null or '' = teammate not named. False when a name is invalid */
     linkNick: (nick: string, friend: string | null) => Promise<boolean>;
     unlinkNick: (nick: string) => Promise<boolean>;

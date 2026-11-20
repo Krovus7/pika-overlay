@@ -50,20 +50,44 @@ export function repairFile(doc: unknown, now: number): WatchlistFile {
     return { version: 1, entries, lists, nickLinks: repairNickLinks(d.nickLinks, now) };
 }
 
-/** Missing file: empty list. Corrupt file: renamed to `<file>.bad-<timestamp>`, empty list. */
-export function loadFile(filePath: string, now: number): WatchlistFile {
-    if (!fs.existsSync(filePath)) return emptyFile();
+export interface FileIo {
+    readFile: (filePath: string) => string;
+    rename: (from: string, to: string) => void;
+}
+
+const realIo: FileIo = { readFile: p => fs.readFileSync(p, 'utf8'), rename: (a, b) => fs.renameSync(a, b) };
+
+export interface LoadResult {
+    file: WatchlistFile;
+    /** False when an existing file could not be read or set aside: saving would destroy it. */
+    writable: boolean;
+}
+
+/**
+ * Missing file: empty list. Damaged file: renamed to `<file>.bad-<timestamp>`, empty list.
+ * A file that cannot be read, or cannot be moved aside, is left alone and the result is not writable.
+ */
+export function loadFile(filePath: string, now: number, io: FileIo = realIo): LoadResult {
+    if (!fs.existsSync(filePath)) return { file: emptyFile(), writable: true };
+    let text: string;
     try {
-        return repairFile(JSON.parse(fs.readFileSync(filePath, 'utf8')), now);
+        text = io.readFile(filePath);
+    } catch (e) {
+        console.error(`[Watchlist] Cannot read ${filePath} (${(e as Error).message}); changes will not be saved this session so the file is not overwritten.`);
+        return { file: emptyFile(), writable: false };
+    }
+    try {
+        return { file: repairFile(JSON.parse(text), now), writable: true };
     } catch (e) {
         const backup = `${filePath}.bad-${now}`;
-        console.warn(`[Watchlist] ${filePath} is unreadable (${(e as Error).message}); moving it to ${backup}`);
+        console.warn(`[Watchlist] ${filePath} is damaged (${(e as Error).message}); moving it to ${backup}`);
         try {
-            fs.renameSync(filePath, backup);
+            io.rename(filePath, backup);
         } catch (renameError) {
-            console.error('[Watchlist] Could not move the damaged file:', (renameError as Error).message);
+            console.error(`[Watchlist] Could not move the damaged file (${(renameError as Error).message}); changes will not be saved this session so the file is not overwritten.`);
+            return { file: emptyFile(), writable: false };
         }
-        return emptyFile();
+        return { file: emptyFile(), writable: true };
     }
 }
 

@@ -62,7 +62,10 @@ export async function launchAndAttach({ exe, args = [], cwd = process.cwd(), por
         child.kill('SIGKILL');
     }
 
-    return { ...overlay, page, pageExists, close };
+    /** Resolves once the app process has ended, so callers can wait before touching its files. */
+    const exited = new Promise(resolve => child.once('exit', resolve));
+
+    return { ...overlay, page, pageExists, close, exited };
 }
 
 /** CDP session on one page target: evaluate / waitFor / screenshot. */

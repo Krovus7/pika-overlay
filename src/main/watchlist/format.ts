@@ -19,6 +19,12 @@ export function defaultFileName(now: Date): string {
     return `pika-watchlist-${now.toISOString().slice(0, 10)}.json`;
 }
 
+/** Local date and time, so two pastes on one day get two lists. */
+export function pastedLabel(now: Date): string {
+    const p = (n: number): string => String(n).padStart(2, '0');
+    return `Pasted list ${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}`;
+}
+
 export function exportJson(entries: ParsedEntry[], now: number): string {
     const records = entries.map(({ name, kind, note, addedAt }) => ({ name, kind, note, addedAt }));
     return JSON.stringify({ format: FILE_FORMAT, version: 1, exportedAt: now, entries: records }, null, 2);

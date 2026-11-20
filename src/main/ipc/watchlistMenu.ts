@@ -6,6 +6,7 @@ import { IPC_CHANNELS } from '../../shared/ipc-contract';
 import type { PartyState } from '../state';
 import { buildMenuSpec } from '../watchlist/menuSpec';
 import { openSettings } from '../settingsWindow';
+import { toResolved } from '../watchlist/resolve';
 import { notifyWatchlist } from '../watchlist/notify';
 import type { WatchlistStore } from '../watchlist/store';
 
@@ -21,10 +22,11 @@ export function registerWatchlistMenu({ store, party, linkNick }: WatchlistMenuD
         const change = (change: Parameters<WatchlistStore['setOwn']>[1]): void => {
             if (store.setOwn(name, change)) notifyWatchlist(store);
         };
+        const found = store.lookup(name);
         const spec = buildMenuSpec({
             name,
             nicked: nicked === true,
-            resolved: store.view().resolved[name.toLowerCase()],
+            resolved: found && toResolved(found, store.snapshot().lists),
             partyMembers: party.snapshot(),
             mark: (kind, note) => change({ kind, note }),
             unmark: () => change(null),

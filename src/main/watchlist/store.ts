@@ -8,15 +8,18 @@ import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 
 import type { ImportedList, NickLink, WatchEntry, WatchKind, WatchlistFile, WatchlistSnapshot, WatchlistView } from '../../shared/watchlist';
-import { loadFile, saveFile } from './fileLoad';
+import { loadFile, saveFile, type FileIo } from './fileLoad';
 import { pickEntry, resolveAll } from './resolve';
 import { MAX_ENTRIES, cleanNote, isValidName, normalizeKind, type ParsedEntry } from './validate';
 
 export class WatchlistStore {
     private data: WatchlistFile;
+    private readonly writable: boolean;
 
-    constructor(private readonly filePath: string, private readonly now: () => number = Date.now) {
-        this.data = loadFile(filePath, now());
+    constructor(private readonly filePath: string, private readonly now: () => number = Date.now, io?: FileIo) {
+        const loaded = loadFile(filePath, now(), io);
+        this.data = loaded.file;
+        this.writable = loaded.writable;
     }
 
     static userDataPath(userDataDir: string): string {
@@ -43,8 +46,15 @@ export class WatchlistStore {
         return this.data.entries.filter(e => e.source === 'me');
     }
 
+    /** One entry per name, chosen with the usual precedence, so the receiver never sees an imported copy first. */
     entriesForExport(includeImported: boolean): WatchEntry[] {
-        return includeImported ? [...this.data.entries] : this.ownEntries();
+        if (!includeImported) return this.ownEntries();
+        const byName = new Map<string, WatchEntry[]>();
+        for (const e of this.data.entries) {
+            const key = e.name.toLowerCase();
+            byName.set(key, [...(byName.get(key) ?? []), e]);
+        }
+        return [...byName.values()].flatMap(matches => pickEntry(matches, this.data.lists) ?? []);
     }
 
     /** Adds, changes (keeping addedAt) or, with null, removes the own entry. False when refused or not saved. */
@@ -76,8 +86,18 @@ export class WatchlistStore {
         return this.data.lists.some(l => l.label === label);
     }
 
-    /** Own entries are never touched; a list with the same label is replaced. Null when not saved. */
-    applyImport(label: string, parsed: ParsedEntry[]): ImportedList | null {
+    /** `label`, or `label (2)`, `label (3)`, ... : the first one no list uses. */
+    freeLabel(label: string): string {
+        if (!this.hasListLabel(label)) return label;
+        for (let n = 2; ; n++) if (!this.hasListLabel(`${label} (${n})`)) return `${label} (${n})`;
+    }
+
+    /**
+     * Own entries are never touched; a list with the same label is replaced, unless keepBoth,
+     * which imports under the first free numbered label. Null when not saved.
+     */
+    applyImport(wanted: string, parsed: ParsedEntry[], keepBoth = false): ImportedList | null {
+        const label = keepBoth ? this.freeLabel(wanted) : wanted;
         const old = this.data.lists.find(l => l.label === label);
         const list: ImportedList = { id: crypto.randomUUID(), label, importedAt: this.now(), count: parsed.length };
         const kept = old ? this.data.entries.filter(e => e.source !== old.id) : this.data.entries;
@@ -113,6 +133,10 @@ export class WatchlistStore {
     }
 
     private commit(change: Partial<WatchlistFile>): boolean {
+        if (!this.writable) {
+            console.error('[Watchlist] Change refused: the existing watchlist file could not be read or set aside.');
+            return false;
+        }
         const next: WatchlistFile = { ...this.data, ...change };
         try {
             saveFile(this.filePath, next);
