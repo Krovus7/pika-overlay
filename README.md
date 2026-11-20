@@ -58,7 +58,7 @@ their BedWars stats from the official Pika stats API.
 2. Start **Pika Overlay** from the Start menu.
 
 Windows 10 or 11. The app updates itself: Settings → Updates checks for a new
-version at startup and installs it when you press **Update and restart**.
+version at startup and every 6 hours, shows a popup in the overlay, and installs it when you press **Update and restart**.
 
 ## First run
 

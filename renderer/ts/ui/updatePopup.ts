@@ -19,7 +19,7 @@ function render(): void {
     if (!el) return;
     const version = popupVersion(current, dismissed);
     const text = el.querySelector('.up-sub');
-    if (version && text) text.textContent = `Version ${version} is ready · click to update`;
+    if (version && text) text.textContent = `Version ${version} is available · click to update`;
     el.classList.toggle('is-visible', version !== null);
 }
 
@@ -41,9 +41,11 @@ export function initUpdatePopup(api: PikaOverlayApi): void {
     const fail = (what: string) => (err: unknown) => console.error(`[Overlay] ${what} failed:`, String(err));
 
     el.querySelector('.up-main')?.addEventListener('click', () => {
-        api.openSettings('updates').catch(fail('Opening settings'));
-        if (current.kind === 'available') dismissed = current.version;
-        render();
+        const version = current.kind === 'available' ? current.version : null;
+        // Hide only once Settings opened: on failure the card stays so the update is not lost
+        api.openSettings('updates')
+            .then(() => { dismissed = version; render(); })
+            .catch(fail('Opening settings'));
     });
     el.querySelector('.up-close')?.addEventListener('click', () => {
         if (current.kind === 'available') dismissed = current.version;

@@ -73,7 +73,10 @@ export async function checkForUpdates(): Promise<UpdateState> {
         }
     } catch (err) {
         console.error('[Update] Check failed:', String(err));
-        setState({ kind: 'error', message: String(err) });
+        // A failed re-check keeps an update already found (and its card) instead of hiding it
+        setState(pendingUpdate
+            ? { kind: 'available', version: pendingUpdate.TargetFullRelease.Version }
+            : { kind: 'error', message: String(err) });
     } finally {
         busy = false;
     }

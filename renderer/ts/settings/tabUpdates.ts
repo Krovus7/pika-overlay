@@ -42,8 +42,8 @@ export function buildUpdates(api: PikaOverlayApi): UpdatesView {
 
     const options = group('Options');
     const auto = toggle(on => void saveNow({ updateAutoCheck: on }));
-    options.list.appendChild(row('Check on startup',
-        'Looks for a new version when the app starts. It never downloads anything without your click.',
+    options.list.appendChild(row('Check automatically',
+        'Looks for a new version when the app starts and every 6 hours. It never downloads anything without your click.',
         auto.root, auto.input.id));
 
     function render(s: UpdateState): void {

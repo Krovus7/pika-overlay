@@ -12,8 +12,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import type { BrowserWindow } from 'electron';
 
 import { captureMenuShots } from './devShotsMenu';
-import { captureUpdateShots } from './devShotsUpdate';
 import { captureSettingsShots } from './devShotsSettings';
+import { captureUpdateShots } from './devShotsUpdate';
 
 export interface ShotsDeps {
     getOverlayWin: () => BrowserWindow | null;

@@ -25,7 +25,7 @@ Il solo check all'avvio non bastava: l'app resta aperta per molte ore e, senza
 avviso nell'overlay, nessuno vedeva la nuova versione (solo Settings › Updates
 la mostrava). Ora: un `setInterval` da 6 h in main (`startPeriodicChecks`, non
 tiene vivo il processo, legge `updateAutoCheck` a ogni tick; `checkForUpdates`
-ha già il busy guard e in dev non fa nulla) e la card nell'overlay. Costo: una
+ha già il busy guard e in dev non fa richieste di rete) e la card nell'overlay. Costo: una
 richiesta GET al feed ogni 6 h; il download resta esplicito. Lo stato `checking`
 di un ricontrollo non nasconde la card già visibile.
 

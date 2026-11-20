@@ -41,7 +41,7 @@ export interface AppConfig {
     columnEnabled: Record<string, boolean>;
     compactColumns: string[];
     fkdrThresholds: { good: number; medium: number }; // legacy v3 key — kept, migrated
-    updateAutoCheck: boolean; // v4: silent update check at startup
+    updateAutoCheck: boolean; // v4: silent update check at startup; 5.2.1: also every 6 hours
     apiKey: string; // v5: Pika API key (/apikey in-game), sent as X-Api-Key
     uiScale: number; // v5: overlay zoom factor
     rowDensity: 'comfortable' | 'dense';

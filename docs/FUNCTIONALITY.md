@@ -276,7 +276,7 @@ position and size are remembered (`settingsBounds`).
 | Columns | Detailed layout: show/hide, drag or arrows to reorder (`columnOrder`, `columnEnabled`); Compact layout: column chips (`compactColumns`) |
 | Colors | Tier colors (`ratioColors`, Reset colors); thresholds per ratio FKDR/KD/WLR (`ratioThresholds`, validated: each tier higher than the next, otherwise "Not saved yet"; Reset thresholds) |
 | Watchlist | own entries (add by name with kind and note, search, change kind, edit note, remove); imported lists ("someone else's notes", remove); Import file / Paste list / Export file (with "include imported lists") / Copy as text, each import with a preview step; nick links (session-only: nick, teammate, date, remove); Sniper detection (login age: `loginAge`, `loginAgeMaxLevel`, `freshMinutes`, BOT? for long sessions without stats); Alerts (`watchlistSound` "Play a beep", `watchlistOnTop` "Show marked players first") |
-| Updates | installed version; Check for updates; Update and restart; Check on startup (`updateAutoCheck`) |
+| Updates | installed version; Check for updates; Update and restart; Check automatically (`updateAutoCheck`: at startup and every 6 hours) |
 | Debug | app version, API connection state, log file found; last 60 of the 100 most recent log lines (a Pika API key in a line — `/apikey` answers in chat — is replaced by `pika_<hidden>`, `src/main/log/redact.ts`), Refresh, Copy |
 
 Defaults, ranges and validation of every key: `src/main/config.ts`
@@ -311,13 +311,13 @@ Disabled in dev mode (not packaged); the Updates tab then shows a message.
 
 **Update card (overlay):** when the state is `available` a small card appears
 bottom-right above the footer (bottom 10 px in the compact layout): download icon,
-"Update available", "Version X.Y.Z is ready · click to update", and a × button
+"Update available", "Version X.Y.Z is available · click to update", and a × button
 (aria-label "Dismiss"). The card also appears if the check finished before the
 overlay loaded (the overlay reads `update:getState` at load). Clicking the card
 opens Settings → Updates (`openSettings('updates')`, tab id validated in main by
-`isSettingsTab`) and hides it; × hides it. Both remember the version for the rest
+`isSettingsTab`) and hides it once Settings opened; × hides it. Both remember the version for the rest
 of the session (renderer memory), so a later broadcast does not show it again; a
-newer version does. It hides when the state becomes downloading, ready, uptodate,
-error or disabled; the transient `checking` of a re-check leaves it as it is
+newer version does. It hides when the state becomes downloading, ready, uptodate
+or disabled, and on error unless an update was already found (a failed re-check keeps it); the transient `checking` of a re-check leaves it as it is
 (`renderer/ts/ui/updateRule.ts`, `updatePopup.ts`). Fade/slide 150 ms, none under
 reduced motion; the card shrinks and ellipsizes in narrow windows.
