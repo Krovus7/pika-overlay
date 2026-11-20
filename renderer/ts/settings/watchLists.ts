@@ -2,7 +2,8 @@
 
 import type { PikaOverlayApi } from '../../../src/shared/preload-api';
 import type { ImportedList } from '../../../src/shared/watchlist';
-import { button, group, h } from './controls';
+import { block, button, group, h } from './controls';
+import { runAction } from './watchAction';
 import { formatAddedDate } from './watchText';
 
 export interface ListsSection {
@@ -13,7 +14,9 @@ export interface ListsSection {
 export function buildLists(api: PikaOverlayApi): ListsSection {
     const g = group("Imported lists", "Lists from other people. They are someone else's notes: your own entries always win over them.");
     const items = h('div', 's-watch-items');
-    g.list.appendChild(items);
+    const status = h('div', 's-status');
+    status.setAttribute('role', 'status');
+    g.list.append(items, block(status));
 
     function render(lists: readonly ImportedList[]): void {
         const rows = lists.map(l => {
@@ -23,7 +26,7 @@ export function buildLists(api: PikaOverlayApi): ListsSection {
             const meta = h('span', 's-watch-date', `${l.count} ${l.count === 1 ? 'name' : 'names'}, ${formatAddedDate(l.importedAt)}`);
             const remove = button('Remove', { icon: 'trash', variant: 'ghost' });
             remove.setAttribute('aria-label', `Remove list ${l.label}`);
-            remove.addEventListener('click', () => void api.removeWatchList(l.id));
+            remove.addEventListener('click', () => void runAction(status, () => api.removeWatchList(l.id), `Could not remove ${l.label}.`));
             item.append(label, meta, remove);
             return item;
         });

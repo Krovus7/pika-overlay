@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { filterEntries, formatAddedDate, friendLabel, nickLinksSorted, previewLines } from '../renderer/ts/settings/watchText';
+import { SETTINGS_TAB_IDS } from '../src/shared/ipc-contract';
 import type { WatchEntry } from '../src/shared/watchlist';
 
 const entry = (name: string, note: string, source = 'me'): WatchEntry => ({ name, kind: 'sniper', note, addedAt: 0, source });
@@ -37,5 +40,13 @@ describe('watchlist tab text helpers', () => {
         assert.equal(friendLabel(a), 'Someone else');
         assert.equal(friendLabel(b), 'Pal');
         assert.deepEqual(nickLinksSorted([a, b]).map(l => l.nick), ['A_nick', 'b_nick']);
+    });
+});
+
+describe('settings tab order', () => {
+    it('SETTINGS_TAB_IDS matches the tab buttons in settings.html', () => {
+        const html = fs.readFileSync(path.join(__dirname, '..', '..', 'renderer', 'settings.html'), 'utf8');
+        const ids = [...html.matchAll(/class="settings-tab-btn[^"]*" data-tab="([^"]+)"/g)].map(m => m[1]);
+        assert.deepEqual(ids, [...SETTINGS_TAB_IDS]);
     });
 });

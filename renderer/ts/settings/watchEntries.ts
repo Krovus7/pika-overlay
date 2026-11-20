@@ -2,7 +2,8 @@
 
 import type { PikaOverlayApi } from '../../../src/shared/preload-api';
 import { WATCH_KINDS, type WatchEntry, type WatchKind } from '../../../src/shared/watchlist';
-import { button, group, h, setStatus, textInput } from './controls';
+import { block, button, group, h, setStatus, textInput } from './controls';
+import { runAction } from './watchAction';
 import { filterEntries, formatAddedDate } from './watchText';
 
 export interface Section {
@@ -59,26 +60,26 @@ function buildAddForm(api: PikaOverlayApi): HTMLElement {
     return wrap;
 }
 
-function buildEntryRow(api: PikaOverlayApi, e: WatchEntry): HTMLElement {
+function buildEntryRow(api: PikaOverlayApi, e: WatchEntry, status: HTMLElement): HTMLElement {
     const item = h('div', 's-watch-row');
     item.dataset.name = e.name.toLowerCase();
     const who = h('span', 's-watch-name', e.name);
     who.title = e.name;
-    const select = kindSelect(e.kind, `Kind of ${e.name}`, k => void api.setWatchEntry(e.name, { kind: k, note: e.note }));
+    // Both controls save the current values of both, so one edit never overwrites the other
+    const save = (): void => void runAction(status, () => api.setWatchEntry(e.name, { kind: select.value as WatchKind, note: note.value.trim() }), `Could not save ${e.name}.`);
+    const select = kindSelect(e.kind, `Kind of ${e.name}`, save);
     const note = textInput('Note');
     note.maxLength = 120;
     note.value = e.note;
     note.setAttribute('aria-label', `Note for ${e.name}`);
-    const saveNote = (): void => {
-        if (note.value.trim() !== e.note) void api.setWatchEntry(e.name, { kind: e.kind, note: note.value.trim() });
-    };
+    const saveNote = (): void => { if (note.value.trim() !== e.note) save(); };
     note.addEventListener('blur', saveNote);
     note.addEventListener('keydown', ev => { if (ev.key === 'Enter') saveNote(); });
     const date = h('span', 's-watch-date', formatAddedDate(e.addedAt));
     date.title = 'Date added';
     const remove = button('', { icon: 'trash', variant: 'ghost', title: 'Remove' });
     remove.setAttribute('aria-label', `Remove ${e.name}`);
-    remove.addEventListener('click', () => void api.setWatchEntry(e.name, null));
+    remove.addEventListener('click', () => void runAction(status, () => api.setWatchEntry(e.name, null), `Could not remove ${e.name}.`));
     item.append(who, select, note, date, remove);
     return item;
 }
@@ -92,16 +93,18 @@ export function buildEntries(api: PikaOverlayApi): Section {
     searchWrap.appendChild(search);
     g.list.appendChild(searchWrap);
     const items = h('div', 's-watch-items');
-    g.list.appendChild(items);
+    const status = h('div', 's-status');
+    status.setAttribute('role', 'status');
+    g.list.append(items, block(status));
     let all: readonly WatchEntry[] = [];
 
     function render(entries: readonly WatchEntry[]): void {
         all = entries;
         // A broadcast must not wipe a note the user is typing
         const active = document.activeElement;
-        if (active instanceof HTMLInputElement && items.contains(active)) return;
+        if ((active instanceof HTMLInputElement || active instanceof HTMLSelectElement) && items.contains(active)) return;
         const shown = filterEntries(entries, search.value);
-        items.replaceChildren(...shown.map(e => buildEntryRow(api, e)));
+        items.replaceChildren(...shown.map(e => buildEntryRow(api, e, status)));
         if (shown.length === 0) {
             const hasOwn = entries.some(e => e.source === 'me');
             items.appendChild(h('p', 's-empty', hasOwn ? 'No match.' : 'Nothing here yet. Add a name above or right-click a player in the table.'));

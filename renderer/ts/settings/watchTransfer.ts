@@ -81,7 +81,11 @@ export function buildTransfer(api: PikaOverlayApi): HTMLElement {
     importFile.addEventListener('click', () => void run(async () => handle(await api.importWatchlistFile()), 'Could not import this file.'));
     pasteList.addEventListener('click', () => { paste.hidden = !paste.hidden; if (!paste.hidden) area.focus(); });
     preview.addEventListener('click', () => void run(async () => {
-        if (area.value.trim()) handle(await api.importWatchlistText(area.value, defaultKind));
+        if (!area.value.trim()) {
+            setStatus(status, 'warn', 'alert', 'Paste a list first.');
+            return;
+        }
+        handle(await api.importWatchlistText(area.value, defaultKind));
     }, 'Could not read this list.'));
     confirm.addEventListener('click', () => void run(async () => {
         const token = pending?.token;
