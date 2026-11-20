@@ -12,6 +12,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import type { BrowserWindow } from 'electron';
 
 import { captureMenuShots } from './devShotsMenu';
+import { captureUpdateShots } from './devShotsUpdate';
 import { captureSettingsShots } from './devShotsSettings';
 
 export interface ShotsDeps {
@@ -98,6 +99,7 @@ export async function driveShots(deps: ShotsDeps): Promise<void> {
         await shot('v5-11-narrow.png');
         win.setBounds(original);
         await captureMenuShots(js, shot);
+        await captureUpdateShots(js, shot, narrow => win.setBounds(narrow ? { ...original, width: NARROW_WIDTH } : original));
 
         // Opacity ladder, plain (transparent window) in both themes
         let n = 12;

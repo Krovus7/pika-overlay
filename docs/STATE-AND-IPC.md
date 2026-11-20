@@ -62,6 +62,7 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `config:save` | `saveConfig(cfg)` | `configHandlers.ts` |
 | `browse:logFile` / `test:logPath` | `browseLogFile()` / `testLogPath(path)` | `handlers.ts` |
 | `debug:logLines` | `getLogLines()` | `handlers.ts` (ring of the last 100 lines, API key redacted) |
+| `settings:open` (tab `'updates'` from the overlay's update card) | `openSettings(tab)` | `handlers.ts` (tab validated with `isSettingsTab`, `ipc-contract.ts`; unknown tab → opens without one) |
 | `update:getState` / `update:check` / `update:downloadApply` | `getUpdateState()` / `checkForUpdates()` / `downloadAndApply()` | `handlers.ts` → `velopackUpdate.ts` |
 | `api:getHealth` | `getApiHealth()` | `apiHandlers.ts` |
 | `api:testKey` | `testApiKey(key)` | `apiHandlers.ts` → `keyTest.ts` (no save, no health change) |
@@ -85,7 +86,7 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `settings:tab` | `onSettingsTab` | tab id (settings window only) |
 | `overlay:demo` | `onDemo` | `boolean` (overlay only) |
 | `config:updated` | `onConfigUpdate` | full config object (overlay + settings window) |
-| `update:state` | `onUpdateState` | `UpdateState` (overlay + settings window) |
+| `update:state` | `onUpdateState` | `UpdateState` (overlay + settings window); sent at startup, every 6 h (`startPeriodicChecks`) and on user action; the overlay's update card also reads `getUpdateState()` at load |
 | `api:health` | `onApiHealth` | `ApiHealth` (overlay + settings window) |
 | `watchlist:updated` | `onWatchlistUpdate` | `WatchlistView` = `{ entries, lists, nickLinks, resolved }`; `resolved` maps lowercase name to `{ kind, note, sourceLabel, imported }` with own-beats-imported already applied (overlay + settings window) |
 | `watchlist:alert` | `onWatchlistAlert` | `WatchAlert` `{ name, kind, note }`, overlay only: a watched player entered the table, once per player per lobby (`WatchAlerts`, reset on `players_clear`); main also calls `flashFrame` when the overlay is hidden |

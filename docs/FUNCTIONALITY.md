@@ -303,7 +303,21 @@ taken is logged and not registered.
 
 ## Auto-update
 
-Silent check at startup (opt-out `updateAutoCheck`), explicit download and
+Silent check at startup and every 6 hours while the app stays open (opt-out
+`updateAutoCheck`, ADR-0004), explicit download and
 apply from Settings → Updates, feed = GitHub Releases of
 `Krovus7/pika-overlay`, delta support (`src/main/update/velopackUpdate.ts`).
 Disabled in dev mode (not packaged); the Updates tab then shows a message.
+
+**Update card (overlay):** when the state is `available` a small card appears
+bottom-right above the footer (bottom 10 px in the compact layout): download icon,
+"Update available", "Version X.Y.Z is ready · click to update", and a × button
+(aria-label "Dismiss"). The card also appears if the check finished before the
+overlay loaded (the overlay reads `update:getState` at load). Clicking the card
+opens Settings → Updates (`openSettings('updates')`, tab id validated in main by
+`isSettingsTab`) and hides it; × hides it. Both remember the version for the rest
+of the session (renderer memory), so a later broadcast does not show it again; a
+newer version does. It hides when the state becomes downloading, ready, uptodate,
+error or disabled; the transient `checking` of a re-check leaves it as it is
+(`renderer/ts/ui/updateRule.ts`, `updatePopup.ts`). Fade/slide 150 ms, none under
+reduced motion; the card shrinks and ellipsizes in narrow windows.
