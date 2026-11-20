@@ -8,7 +8,7 @@ npm test          # build + node --test "dist/tests/*.test.js"
 npm run typecheck # tsc main + tsc renderer + tsc preload (noEmit)
 ```
 
-Last run (2026-11-20, branch `feat/watchlist-login-age`): `npm test` → 340 tests, 80 suites, 340 pass, 0 fail.
+Last run (2026-11-20, branch `feat/watchlist-login-age`): `npm test` → 387 tests, 94 suites, 387 pass, 0 fail.
 
 ## Automated suites (`tests/`)
 
@@ -27,12 +27,14 @@ Last run (2026-11-20, branch `feat/watchlist-login-age`): `npm test` → 340 tes
 | `fit.test.ts` | 5 | `fitColumns` (`renderer/ts/table/fit.ts`): everything fits, rightmost dropped first, Player never dropped, exact fit |
 | `windowBounds.test.ts` | 14 | `scaleBounds` (ratio, clamping, no drift), `overlayMinSize`, `placeBeside` (right / left / centered / vertical clamp), `isInsideAny` |
 | `tags-column.test.ts` | 8 | Tags column: chip order, titles, escaping, signature; status rows keep the tags cell before the pill (identical across column sets); colspan |
-| `login-age.test.ts` | 11 | `profileInfo.lastSeen` validation, `formatAge` / `loginAgeView` boundaries (level threshold, fresh threshold, off / low level / all, null), row signature changes when only the age chip changes, bot chip (12 h boundary, only `never_played`, no duplicate `BOT?`, title wording) |
-| `watchlist-format.test.ts` | 14 | names, kinds, note cleaning, HTML in notes stays text after `esc()`, size and count caps, duplicates, text format with comments and bare names, JSON with wrong `format` / `version` rejected, BOM |
-| `watchlist-store.test.ts` | 14 | own entry beats imported, removing a list removes only its entries, re-import with the same label replaces, corrupt file → backup + empty, atomic write, failed writes leave memory unchanged, nick links |
+| `login-age.test.ts` | 17 | `profileInfo.lastSeen` validation, `formatAge` / `loginAgeView` boundaries (level threshold, fresh threshold, off / low level / all, null), row signature changes when only the age chip changes, bot chip (12 h boundary, only `never_played`, no duplicate `BOT?`, title wording) |
+| `watchlist-format.test.ts` | 15 | names, kinds, note cleaning, HTML in notes stays text after `esc()`, size and count caps, duplicates, text format with comments and bare names, JSON with wrong `format` / `version` rejected, BOM |
+| `watchlist-store.test.ts` | 27 | own entry beats imported, removing a list removes only its entries, re-import with the same label replaces, corrupt file → backup + empty, atomic write, failed writes leave memory unchanged, nick links (one per teammate, pruning by party, "someone else" links dropped at a lobby clear) |
 | `watchlist-table.test.ts` | 11 | resolved view, watch chip and row class, sorting with `watchlistOnTop`, alerts (once per lobby, excluded sources), linked nicks ignored by lookup |
-| `watchlist-actions.test.ts` | 8 | row menu content (`buildMenuSpec`): marks keep the note, imported source line, nick link submenu, tone and checked kind |
-| `row-menu.test.ts` | 9 | menu placement/clamp math, highlight stepping, `MenuSession` tokens (stale token ignored, one pick) |
+| `watchlist-actions.test.ts` | 10 | row menu content (`buildMenuSpec`): marks keep the note, imported source line, nick link submenu, tone and checked kind; `mayLink` (a friend link needs the friend in the party); `linkNickAndHide` |
+| `row-menu.test.ts` | 10 | menu placement/clamp math, highlight stepping, `MenuSession` tokens (stale token ignored, one pick, the action's result is returned) |
+| `ratio-format.test.ts` | 6 | `fmtRatio` / `ratioTitle`: precision follows the rounded value (99.996 → 100.0, 999.96 → 1000), k form, tooltip only when the text was shortened |
+| `layoutSizes.test.ts` | 8 | `src/main/layoutSizes.ts`: per-layout window sizes (normalize, scale, bounds, `withSize`) |
 | `watchlist-settings-text.test.ts` | 6 | pure Watchlist-tab helpers: search, dates, preview lines, nick link labels, `noteNeedsSave` |
 | `review-fixes.test.ts` | 8 | regressions from the v5 review: late 401 of a replaced key, re-arming a key after a passing test, timeout covering the response body, manual clear (party kept, backlog dropped), API-key redaction in debug log lines, config written through a temp file |
 

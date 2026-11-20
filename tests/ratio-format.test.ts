@@ -17,6 +17,13 @@ describe('fmtRatio', () => {
         assert.equal(fmtRatio(9999.4), '9999');
     });
 
+    it('picks the precision from the rounded value', () => {
+        assert.equal(fmtRatio(99.996), '100.0');
+        assert.equal(fmtRatio(999.96), '1000');
+        assert.equal(fmtRatio(999.94), '999.9');
+        assert.equal(fmtRatio(9999.6), '10.0k');
+    });
+
     it('uses the k form from 10000', () => {
         assert.equal(fmtRatio(12_345), '12.3k');
         assert.equal(fmtRatio(250_000), '250k');
@@ -32,5 +39,7 @@ describe('ratioTitle', () => {
         assert.equal(ratioTitle(11.67), null);
         assert.equal(ratioTitle(undefined), null);
         assert.equal(ratioTitle(123.456), '123.46');
+        assert.equal(ratioTitle(99.996), '100.00');
+        assert.equal(ratioTitle(99.99), null);
     });
 });
