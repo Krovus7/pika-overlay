@@ -26,7 +26,7 @@ export function guildCell(guild: string | null | undefined): string {
 }
 
 export function sourceCell(source: string): string {
-    return `<td>${srcBadge(source)}</td>`;
+    return `<td class="col-src">${srcBadge(source)}</td>`;
 }
 
 function dimNum(v: number | undefined): string {

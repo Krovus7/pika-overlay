@@ -9,6 +9,8 @@ const COL_WIDTH: Record<string, number> = {
     rank: 108, tags: 148, guild: 80, fkdr: 58, finals: 60, kdr: 58, wlr: 58, wins: 56,
     beds: 52, winstreak: 42, kills: 58, deaths: 66, bowkills: 50, source: 72,
 };
+/** Compact overrides: smaller badges need less rank room, Source is an icon only */
+const COMPACT_COL_WIDTH: Record<string, number> = { rank: 98, source: 30 };
 const PLAYER_MIN_WIDTH = 120;
 const NUMERIC = new Set(['fkdr', 'finals', 'kdr', 'wlr', 'wins', 'beds', 'winstreak', 'kills', 'deaths', 'bowkills']);
 
@@ -17,6 +19,11 @@ const wrapper = document.querySelector('.table-wrapper') as HTMLElement;
 
 let fitted: ColumnDef[] = [];
 let hiddenCount = 0;
+
+/** Column width for the current layout (0 = no fixed width) */
+function colWidth(id: string): number {
+    return (state.layout === 'compact' ? COMPACT_COL_WIDTH[id] : undefined) ?? COL_WIDTH[id] ?? 0;
+}
 
 /** Columns the user wants: their order, enabled flags and the compact subset. */
 function wantedCols(): ColumnDef[] {
@@ -32,7 +39,7 @@ function refit(): boolean {
     const wanted = wantedCols();
     // Before the first layout the width is 0: show everything rather than nothing
     const result = width > 0
-        ? fitColumns(wanted, width, col => COL_WIDTH[col.id] ?? 0, PLAYER_MIN_WIDTH)
+        ? fitColumns(wanted, width, col => colWidth(col.id), PLAYER_MIN_WIDTH)
         : { shown: wanted, hiddenCount: 0 };
     const changed = result.shown.map(c => c.id).join() !== fitted.map(c => c.id).join();
     fitted = result.shown;
@@ -55,7 +62,7 @@ export function buildHeaders(): void {
     const ths = cols.map(col => {
         const th = document.createElement('th');
         th.className = col.cls;
-        const width = COL_WIDTH[col.id];
+        const width = colWidth(col.id);
         if (width) th.style.width = `${width}px`;
         if (NUMERIC.has(col.id)) th.classList.add('num');
 
@@ -69,6 +76,9 @@ export function buildHeaders(): void {
                 th.classList.toggle('asc', state.sortDir === 1);
                 th.setAttribute('aria-sort', state.sortDir === 1 ? 'ascending' : 'descending');
             }
+        } else if (col.id === 'source' && state.layout === 'compact') {
+            th.title = col.label;
+            th.setAttribute('aria-label', col.label);
         } else {
             th.textContent = col.label;
         }

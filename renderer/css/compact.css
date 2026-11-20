@@ -19,3 +19,15 @@ body.layout-compact .retry-btn span { display: none; }
 body.layout-compact .pill-long, body.layout-compact .row-error .pill { padding: 0 5px; }
 
 body.layout-compact .api-banner { min-height: 24px; padding: 3px 8px 3px 10px; font-size: 10.5px; }
+
+/* ─── Compact density: smaller badges, pills and chips; Source is a centered icon ─ */
+body.layout-compact .rank-tag, body.layout-compact .level-tag { font-size: 9.5px; line-height: 15px; padding: 0 3px; }
+body.layout-compact .pill { height: 16px; font-size: 9px; gap: 4px; }
+body.layout-compact .pill .ic { width: 10px; height: 10px; }
+body.layout-compact .tags-cell .tag { font-size: 9.5px; line-height: 15px; padding: 0 4px; margin-right: 3px; }
+
+body.layout-compact #stats-table th.col-src,
+body.layout-compact #stats-body td.col-src { padding: 0; text-align: center; }
+body.layout-compact .src-badge { display: flex; justify-content: center; color: var(--text-dim); }
+body.layout-compact .src-badge.src-party { color: var(--party-text); }
+body.layout-compact .src-badge .ic { width: 11px; height: 11px; }

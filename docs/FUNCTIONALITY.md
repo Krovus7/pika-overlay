@@ -221,7 +221,10 @@ otherwise it reads "Waiting for players".
 
 - **Detailed:** all enabled columns in the saved order. **Compact:** only the
   columns ticked in Settings → Columns → Compact layout (player always).
-  Toggle: title-bar layout button or Settings → Appearance.
+  Toggle: title-bar layout button or Settings → Appearance. In compact the Source
+  column is a narrow (30 px), icon-only, centered cell with no header text
+  (`COMPACT_COL_WIDTH` in `renderer/ts/table/header.ts`, also used to decide which
+  columns fit); the Rank column is a little narrower and badges are smaller.
 - **Window size per layout:** each layout remembers its own window size
   (`overlaySizes`, saved with `overlayBounds`). Switching layout restores that
   layout's size, top-left kept and clamped into the work area; a layout never
