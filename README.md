@@ -39,8 +39,8 @@ their BedWars stats from the official Pika stats API.
   Discord and imported by friends. Everything stays on your PC.
 - **Nicked teammates.** Tell the overlay that a nick is your teammate and it
   stops showing up as an unknown nicked player.
-- **Login age (experimental, off by default).** An optional chip with the time
-  since the player's profile was last seen, to spot fresh accounts.
+- **Login age.** A chip with how long a player has been logged in, to spot fresh
+  accounts; a long session with no BedWars stats is marked BOT?.
 - **Readable on any background.** Dark and light themes, and a legibility
   floor that keeps text readable down to 5 % background opacity.
 - **Within the API limit.** A 10-minute cache and a rate limiter keep the
@@ -124,7 +124,7 @@ window too. A narrow overlay hides the rightmost columns instead of scrolling.
 | Appearance | theme, background opacity, interface scale, layout, row density, always on top |
 | Columns | show, hide and reorder columns (including Tags); choose the columns of the compact layout |
 | Colors | tier colors and thresholds for FKDR, KD and WLR |
-| Watchlist | your marked players, imported lists, import and export, teammate nicks, login age (experimental), alerts |
+| Watchlist | your marked players, imported lists, import and export, teammate nicks, login age, alerts |
 | Updates | installed version, check and install updates |
 | Debug | connection state and the most recent log lines |
 

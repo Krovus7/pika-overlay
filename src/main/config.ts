@@ -47,7 +47,7 @@ export interface AppConfig {
     watchlistOnTop: boolean; // watched players right after the party
     watchlistSound: boolean; // short beep when a watched player enters the table
     highlightSuspects: boolean;
-    loginAge: 'off' | 'lowLevel' | 'all'; // login-age chip: off until lastSeen is verified
+    loginAge: 'off' | 'lowLevel' | 'all'; // login-age chip: who gets it
     loginAgeMaxLevel: number;
     freshMinutes: number;
 }
@@ -112,7 +112,7 @@ export function defaultConfig(): AppConfig {
         watchlistOnTop: true,
         watchlistSound: false,
         highlightSuspects: true,
-        loginAge: 'off',
+        loginAge: 'all',
         loginAgeMaxLevel: 10,
         freshMinutes: 5,
     };

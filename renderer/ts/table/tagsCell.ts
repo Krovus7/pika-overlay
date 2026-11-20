@@ -27,10 +27,10 @@ export function viewChips(view: { isSelf: boolean; isSuspect: boolean; age?: Log
     if (view.isSelf) chips.push({ kind: 'you', label: 'YOU', title: 'You', cls: 'tag-you' });
     if (view.watch) chips.push(watchChip(view.watch));
     if (view.age) {
-        const cls = view.age.fresh ? 'tag-age tag-age-fresh' : 'tag-age';
+        const cls = view.age.bot ? 'tag-bot' : view.age.fresh ? 'tag-age tag-age-fresh' : 'tag-age';
         chips.push({ kind: 'age', label: view.age.text, title: view.age.title, cls });
     }
-    if (view.isSuspect) {
+    if (view.isSuspect && !view.age?.bot) {
         chips.push({ kind: 'bot', label: 'BOT?', title: 'Level 1 with no stats: possible bot or fresh alt', cls: 'tag-bot' });
     }
     return chips;

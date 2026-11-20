@@ -11,12 +11,17 @@ export interface LoginAgeSettings {
 export interface LoginAgeView {
     text: string;
     fresh: boolean;
+    /** Connected for days with no BedWars stats: shown as a bot chip instead of the plain age. */
+    bot: boolean;
     title: string;
 }
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
+
+/** A session this long without a single BedWars game is a bot or an AFK account; a real player can play 12h. */
+export const BOT_SESSION_MS = 12 * HOUR;
 
 /** "<1m", "7m", "3h", "2d". */
 export function formatAge(ms: number): string {
@@ -37,9 +42,19 @@ function longAge(ms: number): string {
     return plural(Math.floor(ms / DAY), 'day');
 }
 
-/** Hover wording lives here only; what `lastSeen` means on Pika is not verified yet. */
-function ageTitle(ms: number): string {
-    return `Last seen on Pika ${longAge(ms)} ago (Pika profile)`;
+/** Local HH:MM of an epoch-ms moment. */
+function clock(ms: number): string {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+/** Hover wording lives here only. `lastSeen` is the login time while the player is online (verified 2026-11-20). */
+function ageTitle(age: number, lastSeen: number, fresh: boolean): string {
+    return `Logged in to Pika ${longAge(age)} ago (at ${clock(lastSeen)})${fresh ? ' \u2014 fresh login' : ''}`;
+}
+
+function botTitle(age: number): string {
+    return `Connected for ${longAge(age)} without logging out and no BedWars stats: likely a bot or AFK account`;
 }
 
 export function loginAgeView(
@@ -47,11 +62,15 @@ export function loginAgeView(
     level: number | null | undefined,
     now: number,
     settings: LoginAgeSettings,
+    status?: string,
 ): LoginAgeView | null {
     if (settings.loginAge === 'off' || typeof lastSeen !== 'number') return null;
     if (settings.loginAge === 'lowLevel' && (typeof level !== 'number' || level > settings.loginAgeMaxLevel)) return null;
     const age = Math.max(0, now - lastSeen);
-    const fresh = age <= settings.freshMinutes * MINUTE;
     const text = formatAge(age);
-    return { text: fresh ? `FRESH ${text}` : text, fresh, title: ageTitle(age) };
+    if (status === 'never_played' && age >= BOT_SESSION_MS) {
+        return { text: `BOT? ${text}`, fresh: false, bot: true, title: botTitle(age) };
+    }
+    const fresh = age <= settings.freshMinutes * MINUTE;
+    return { text, fresh, bot: false, title: ageTitle(age, lastSeen, fresh) };
 }

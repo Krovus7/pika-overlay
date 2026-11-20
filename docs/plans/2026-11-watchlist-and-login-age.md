@@ -66,7 +66,7 @@ identity (Pika accepts cracked accounts, so a Mojang UUID is not reliable).
 
 - New column `{ id: 'tags', label: 'Tags', sortKey: null, cls: 'col-tags' }`
   placed right after `player` in `COLUMN_DEFS`; fixed width in `COL_WIDTH`
-  (172 px at the 10px chip size: CHEATER + FRESH 99m chips side by side;
+  (148 px at the 10px chip size: CHEATER + a 3-4 character age chip side by side;
   was 92 px, which clipped the second chip); enabled by default and part of
   the default compact set.
 - Config migration: existing `columnOrder` without `tags` gets it inserted
@@ -94,7 +94,11 @@ identity (Pika accepts cracked accounts, so a Mojang UUID is not reliable).
   - `loginAgeMaxLevel`: default 10 (shown only when level ≤ this, for
     `'lowLevel'`);
   - `freshMinutes`: default 5. Age ≤ this → highlighted FRESH chip
-    ("FRESH 1m", warn tone); otherwise a dim age chip.
+    (orange, label "1m", no FRESH prefix); otherwise a dim age chip.
+  Revised 2026-11-20: `lastSeen` is the login time while online, so the hover reads
+  "Logged in to Pika 3 hours ago (at 20:31)"; a `never_played` player connected
+  12 h or more gets a `BOT? 2d` chip (orange `tag-bot`) instead of the age; default
+  `loginAge` is now `'all'`.
   - Title text follows Task 0 ("Logged in 3 minutes ago (Pika profile)").
 - Ages move with time: while at least one visible row shows an age, re-render
   every 30 s; include the formatted age in the row signature

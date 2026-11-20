@@ -28,7 +28,7 @@ export interface ConfigSection {
 
 export function buildSniper(): ConfigSection {
     const g = group('Sniper detection',
-        'Shows how long ago a player logged in, to spot fresh accounts. Experimental: it stays off by default until the meaning of the API field is verified.');
+        'Shows how long a player has been logged in, to spot fresh accounts. A player connected for 12 hours or more with no BedWars stats is marked BOT?.');
     const mode = segmented('Login age', [
         { value: 'off', label: 'Off' }, { value: 'lowLevel', label: 'Low level' }, { value: 'all', label: 'All players' },
     ], v => void saveNow({ loginAge: v }));

@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { profileInfo } from '../src/main/api/statsExtractor';
 import { decideFromTotal } from '../src/main/api/decision';
-import { formatAge, loginAgeView, type LoginAgeSettings } from '../renderer/ts/table/loginAge';
+import { BOT_SESSION_MS, formatAge, loginAgeView, type LoginAgeSettings, type LoginAgeView } from '../renderer/ts/table/loginAge';
 import { viewSignature } from '../renderer/ts/table/rowView';
 import { viewChips } from '../renderer/ts/table/tagsCell';
 import type { RowView } from '../renderer/ts/table/types';
@@ -11,7 +11,13 @@ import type { PlayerResult } from '../src/shared/types';
 
 const NOW = Date.UTC(2026, 10, 20, 12, 0, 0);
 const MIN = 60_000;
+const HOUR = 60 * MIN;
+const DAY = 24 * HOUR;
 const ago = (ms: number): number => NOW - ms;
+const clock = (ms: number): string => {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
 
 describe('profileInfo.lastSeen', () => {
     const seen = (v: unknown): number | null => profileInfo({ lastSeen: v }, NOW).lastSeen;
@@ -74,18 +80,70 @@ describe('loginAgeView', () => {
 
     it('fresh at exactly freshMinutes, dim just after', () => {
         const fresh = view(ago(5 * MIN), 1)!;
-        assert.deepEqual([fresh.fresh, fresh.text], [true, 'FRESH 5m']);
+        assert.deepEqual([fresh.fresh, fresh.text], [true, '5m']);
         const dim = view(ago(5 * MIN + 1), 1)!;
         assert.deepEqual([dim.fresh, dim.text], [false, '5m']);
-        assert.equal(view(ago(MIN), 1)!.text, 'FRESH 1m');
+        assert.equal(view(ago(MIN), 1)!.text, '1m');
+        assert.equal(view(ago(MIN), 1)!.fresh, true);
         assert.equal(view(ago(7 * MIN), 1)!.text, '7m');
         assert.equal(view(ago(3 * 60 * MIN), 1)!.text, '3h');
     });
 
     it('clamps a slightly future lastSeen to zero age and words the title neutrally', () => {
-        assert.equal(view(NOW + 2 * MIN, 1)!.text, 'FRESH <1m');
-        assert.equal(view(ago(3 * MIN), 1)!.title, 'Last seen on Pika 3 minutes ago (Pika profile)');
-        assert.equal(view(ago(60 * MIN), 1)!.title, 'Last seen on Pika 1 hour ago (Pika profile)');
+        assert.equal(view(NOW + 2 * MIN, 1)!.text, '<1m');
+        assert.equal(view(ago(60 * MIN), 1)!.title, `Logged in to Pika 1 hour ago (at ${clock(ago(60 * MIN))})`);
+    });
+
+    it('words the title as a login time, adding "fresh login" only for fresh ones', () => {
+        const fresh = view(ago(3 * MIN), 1)!.title;
+        assert.equal(fresh, `Logged in to Pika 3 minutes ago (at ${clock(ago(3 * MIN))}) \u2014 fresh login`);
+        assert.equal(view(ago(3 * HOUR), 1)!.title, `Logged in to Pika 3 hours ago (at ${clock(ago(3 * HOUR))})`);
+        assert.match(fresh, /\(at \d\d:\d\d\)/);
+    });
+});
+
+describe('bot chip for long sessions without stats', () => {
+    const all: LoginAgeSettings = { loginAge: 'all', loginAgeMaxLevel: 10, freshMinutes: 5 };
+    const view = (age: number, status?: string) => loginAgeView(ago(age), 1, NOW, all, status);
+
+    it('turns on at exactly 12h, not just under it', () => {
+        assert.equal(view(BOT_SESSION_MS - 1, 'never_played')!.bot, false);
+        assert.equal(view(BOT_SESSION_MS - 1, 'never_played')!.text, '11h');
+        const bot = view(BOT_SESSION_MS, 'never_played')!;
+        assert.deepEqual([bot.bot, bot.text, bot.fresh], [true, 'BOT? 12h', false]);
+    });
+
+    it('uses the age in days and a wording that explains it', () => {
+        const bot = view(2 * DAY + HOUR, 'never_played')!;
+        assert.equal(bot.text, 'BOT? 2d');
+        assert.equal(bot.title, 'Connected for 2 days without logging out and no BedWars stats: likely a bot or AFK account');
+    });
+
+    it('only for never_played: other statuses keep the plain age', () => {
+        for (const status of ['ok', 'api_off', 'no_data', undefined]) {
+            const v = view(30 * HOUR, status)!;
+            assert.deepEqual([v.bot, v.text], [false, '1d'], String(status));
+        }
+        assert.equal(view(14 * HOUR, 'ok')!.text, '14h');
+    });
+
+    it('still respects the off and level settings', () => {
+        assert.equal(loginAgeView(ago(DAY), 1, NOW, { ...all, loginAge: 'off' }, 'never_played'), null);
+        assert.equal(loginAgeView(ago(DAY), 50, NOW, { ...all, loginAge: 'lowLevel' }, 'never_played'), null);
+    });
+
+    it('renders one BOT? chip: the age chip, without the separate suspect chip', () => {
+        const row = (age: LoginAgeView | null, isSuspect: boolean): RowView => ({
+            data: { username: 'x', source: 'log', status: 'loading' },
+            name: 'x', isParty: false, isSelf: false, isSuspect, age,
+        });
+        const bot = view(2 * DAY, 'never_played')!;
+        const chips = viewChips(row(bot, true));
+        assert.deepEqual(chips.map(c => [c.kind, c.cls]), [['age', 'tag-bot']]);
+        assert.equal(chips.filter(c => c.label.startsWith('BOT?')).length, 1);
+        assert.deepEqual(viewChips(row(null, true)).map(c => c.label), ['BOT?']);
+        assert.notEqual(viewSignature(row(bot, true)), viewSignature(row(view(2 * HOUR, 'never_played'), true)));
+        assert.notEqual(viewSignature(row(bot, true)), viewSignature(row(view(2 * DAY, 'ok'), true)));
     });
 });
 
@@ -95,7 +153,7 @@ describe('age chip in the row signature', () => {
         name: 'x', isParty: false, isSelf: false, isSuspect: false, age: null,
     };
     const aged = (text: string, fresh = false): RowView =>
-        ({ ...base, age: { text, fresh, title: `Last seen ${text}` } });
+        ({ ...base, age: { text, fresh, bot: false, title: `Logged in ${text}` } });
 
     it('changes when only the age chip changes', () => {
         assert.notEqual(viewSignature(base), viewSignature(aged('7m')));
@@ -106,6 +164,6 @@ describe('age chip in the row signature', () => {
     it('turns the age into an age chip, fresh or dim', () => {
         const [dim] = viewChips(aged('7m'));
         assert.deepEqual([dim!.kind, dim!.label, dim!.cls], ['age', '7m', 'tag-age']);
-        assert.equal(viewChips(aged('FRESH 1m', true))[0]!.cls, 'tag-age tag-age-fresh');
+        assert.equal(viewChips(aged('1m', true))[0]!.cls, 'tag-age tag-age-fresh');
     });
 });

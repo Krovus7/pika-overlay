@@ -6,7 +6,7 @@ import { icon } from '../ui/icons';
 import { fitColumns } from './fit';
 
 const COL_WIDTH: Record<string, number> = {
-    rank: 108, tags: 172, guild: 80, fkdr: 58, finals: 60, kdr: 58, wlr: 58, wins: 56,
+    rank: 108, tags: 148, guild: 80, fkdr: 58, finals: 60, kdr: 58, wlr: 58, wins: 56,
     beds: 52, winstreak: 42, kills: 58, deaths: 66, bowkills: 50, source: 72,
 };
 const PLAYER_MIN_WIDTH = 120;

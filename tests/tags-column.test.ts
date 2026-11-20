@@ -10,7 +10,7 @@ import type { RenderContext, RowView } from '../renderer/ts/table/types';
 const ctx = { periodNote: '' } as RenderContext;
 const col = (id: string) => COLUMN_DEFS.find(c => c.id === id)!;
 const watch: Chip = { kind: 'watchlist', label: 'SNIPER', title: 'Sniper', cls: 'tag-sniper' };
-const age: Chip = { kind: 'age', label: 'FRESH 1m', title: 'Logged in 1m ago', cls: 'tag-age' };
+const age: Chip = { kind: 'age', label: '1m', title: 'Logged in 1m ago', cls: 'tag-age' };
 
 describe('tags cell', () => {
     const view = { isSelf: true, isSuspect: true };
@@ -23,7 +23,7 @@ describe('tags cell', () => {
     it('renders chips in the fixed order whatever order they arrive in', () => {
         const html = tagsCell([...viewChips(view), age, watch].reverse());
         const labels = [...html.matchAll(/>([A-Z?0-9 a-z]+)<\/span>/g)].map(m => m[1]);
-        assert.deepEqual(labels, ['YOU', 'SNIPER', 'FRESH 1m', 'BOT?']);
+        assert.deepEqual(labels, ['YOU', 'SNIPER', '1m', 'BOT?']);
     });
 
     it('puts the full list in the cell title and escapes it', () => {
@@ -38,7 +38,7 @@ describe('tags cell', () => {
 
     it('signature changes when a chip is added or changes text', () => {
         assert.notEqual(chipsSignature([]), chipsSignature([watch]));
-        assert.notEqual(chipsSignature([age]), chipsSignature([{ ...age, label: 'FRESH 7m' }]));
+        assert.notEqual(chipsSignature([age]), chipsSignature([{ ...age, label: '7m' }]));
         assert.equal(chipsSignature([watch, age]), chipsSignature([age, watch]));
     });
 });

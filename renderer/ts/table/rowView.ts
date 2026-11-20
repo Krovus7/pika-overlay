@@ -25,7 +25,7 @@ function displayName(d: RowData, ctx: RenderContext): string {
 
 function ageOf(d: RowData, ctx: RenderContext): RowView['age'] {
     if (d.status !== 'ok' && d.status !== 'api_off' && d.status !== 'never_played' && d.status !== 'no_data') return null;
-    return loginAgeView(d.lastSeen, d.level, ctx.now, ctx.loginAge);
+    return loginAgeView(d.lastSeen, d.level, ctx.now, ctx.loginAge, d.status);
 }
 
 export function viewOf(d: RowData, ctx: RenderContext): RowView {

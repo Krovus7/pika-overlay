@@ -87,7 +87,7 @@ the lowercase player name.
 - Config keys: `watchlistOnTop` (default true), `watchlistSound` (default
   false). Channels and events: `docs/STATE-AND-IPC.md`.
 - Login age shares the Tags column and the Watchlist tab but not the store; see
-  `docs/API-CLIENT.md` for why it is off by default.
+  `docs/API-CLIENT.md` for what `lastSeen` means (it is on for all players by default).
 
 ## Validation
 - `tests/watchlist-format.test.ts`, `watchlist-store.test.ts`,

@@ -133,13 +133,21 @@ A local list of names with a kind (sniper, cheater, other) and a note
 
 ### Login age
 
-An optional chip with the time since the profile's `lastSeen` (`FRESH 3m` when
-it is at most `freshMinutes` old, otherwise `7m`, `3h`, `2d`). It costs no extra
-request: the profile is already fetched. **Off by default**, because what
-`lastSeen` means (last login or last logout) is not verified yet; see
-`docs/API-CLIENT.md`. Settings → Watchlist → Sniper detection: off, low level only
-(`loginAgeMaxLevel`, default 10) or all players, and `freshMinutes` (default
-5). The chip's hover text reads "Last seen on Pika <time> ago (Pika profile)".
+A chip with the time since the profile's `lastSeen`, which for an online player
+is the moment they logged in (verified 2026-11-20): how long they have been
+connected. Shown as `3m` (orange when it is at most `freshMinutes` old),
+`7m`, `3h`, `2d`. It costs no extra request: the profile is already fetched.
+Hover: "Logged in to Pika 3 hours ago (at 20:31)", with " - fresh login" added
+for a fresh one. **On for all players by default** (`loginAge`). Settings →
+Watchlist → Sniper detection: off, low level only (`loginAgeMaxLevel`, default
+10) or all players, and `freshMinutes` (default 5).
+
+**Bot form:** a player with no BedWars stats at all (NO STATS, `never_played`)
+who has been connected for 12 hours or more gets an orange `BOT? 2d` chip
+instead of the age ("Connected for 2 days without logging out and no BedWars
+stats: likely a bot or AFK account"); the separate level-1 `BOT?` chip is not
+added then. Players with stats, private stats or no data keep the plain age
+(`14h`), since a real player can play 12 hours.
 
 ### Sort order
 
@@ -259,7 +267,7 @@ position and size are remembered (`settingsBounds`).
 | Appearance | Theme; Background opacity (`opacity`); Interface scale (`uiScale`, reset button); Always on top (`alwaysOnTop`); Layout (`overlayMode`); Row density (`rowDensity`); Show nicked players first (`nickedOnTop`); Highlight suspected bots and alts (`highlightSuspects`); "Preview with sample players" demo rows |
 | Columns | Detailed layout: show/hide, drag or arrows to reorder (`columnOrder`, `columnEnabled`); Compact layout: column chips (`compactColumns`) |
 | Colors | Tier colors (`ratioColors`, Reset colors); thresholds per ratio FKDR/KD/WLR (`ratioThresholds`, validated: each tier higher than the next, otherwise "Not saved yet"; Reset thresholds) |
-| Watchlist | own entries (add by name with kind and note, search, change kind, edit note, remove); imported lists ("someone else's notes", remove); Import file / Paste list / Export file (with "include imported lists") / Copy as text, each import with a preview step; nick links (session-only: nick, teammate, date, remove); Sniper detection (login age: `loginAge`, `loginAgeMaxLevel`, `freshMinutes`, marked experimental); Alerts (`watchlistSound` "Play a beep", `watchlistOnTop` "Show marked players first") |
+| Watchlist | own entries (add by name with kind and note, search, change kind, edit note, remove); imported lists ("someone else's notes", remove); Import file / Paste list / Export file (with "include imported lists") / Copy as text, each import with a preview step; nick links (session-only: nick, teammate, date, remove); Sniper detection (login age: `loginAge`, `loginAgeMaxLevel`, `freshMinutes`, BOT? for long sessions without stats); Alerts (`watchlistSound` "Play a beep", `watchlistOnTop` "Show marked players first") |
 | Updates | installed version; Check for updates; Update and restart; Check on startup (`updateAutoCheck`) |
 | Debug | app version, API connection state, log file found; last 60 of the 100 most recent log lines (a Pika API key in a line — `/apikey` answers in chat — is replaced by `pika_<hidden>`, `src/main/log/redact.ts`), Refresh, Copy |
 

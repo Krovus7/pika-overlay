@@ -262,16 +262,17 @@ describe('normalizeConfig — settingsBounds', () => {
 });
 
 describe('normalizeConfig — login age', () => {
-    it('defaults to off with level 10 and 5 fresh minutes', () => {
+    it('defaults to all with level 10 and 5 fresh minutes', () => {
         const cfg = normalizeConfig({});
-        assert.deepEqual([cfg.loginAge, cfg.loginAgeMaxLevel, cfg.freshMinutes], ['off', 10, 5]);
+        assert.deepEqual([cfg.loginAge, cfg.loginAgeMaxLevel, cfg.freshMinutes], ['all', 10, 5]);
     });
 
     it('accepts the three modes and rejects anything else', () => {
         assert.equal(normalizeConfig({ loginAge: 'all' }).loginAge, 'all');
         assert.equal(normalizeConfig({ loginAge: 'lowLevel' }).loginAge, 'lowLevel');
-        assert.equal(normalizeConfig({ loginAge: 'sometimes' }).loginAge, 'off');
-        assert.equal(normalizeConfig({ loginAge: true }).loginAge, 'off');
+        assert.equal(normalizeConfig({ loginAge: 'off' }).loginAge, 'off');
+        assert.equal(normalizeConfig({ loginAge: 'sometimes' }).loginAge, 'all');
+        assert.equal(normalizeConfig({ loginAge: true }).loginAge, 'all');
     });
 
     it('clamps and rounds the numeric keys, falling back when mistyped', () => {

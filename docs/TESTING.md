@@ -27,7 +27,7 @@ Last run (2026-11-20, branch `feat/watchlist-login-age`): `npm test` → 340 tes
 | `fit.test.ts` | 5 | `fitColumns` (`renderer/ts/table/fit.ts`): everything fits, rightmost dropped first, Player never dropped, exact fit |
 | `windowBounds.test.ts` | 14 | `scaleBounds` (ratio, clamping, no drift), `overlayMinSize`, `placeBeside` (right / left / centered / vertical clamp), `isInsideAny` |
 | `tags-column.test.ts` | 8 | Tags column: chip order, titles, escaping, signature; status rows keep the tags cell before the pill (identical across column sets); colspan |
-| `login-age.test.ts` | 11 | `profileInfo.lastSeen` validation, `formatAge` / `loginAgeView` boundaries (level threshold, fresh threshold, off / low level / all, null), row signature changes when only the age chip changes |
+| `login-age.test.ts` | 11 | `profileInfo.lastSeen` validation, `formatAge` / `loginAgeView` boundaries (level threshold, fresh threshold, off / low level / all, null), row signature changes when only the age chip changes, bot chip (12 h boundary, only `never_played`, no duplicate `BOT?`, title wording) |
 | `watchlist-format.test.ts` | 14 | names, kinds, note cleaning, HTML in notes stays text after `esc()`, size and count caps, duplicates, text format with comments and bare names, JSON with wrong `format` / `version` rejected, BOM |
 | `watchlist-store.test.ts` | 14 | own entry beats imported, removing a list removes only its entries, re-import with the same label replaces, corrupt file → backup + empty, atomic write, failed writes leave memory unchanged, nick links |
 | `watchlist-table.test.ts` | 11 | resolved view, watch chip and row class, sorting with `watchlistOnTop`, alerts (once per lobby, excluded sources), linked nicks ignored by lookup |
