@@ -34,11 +34,15 @@ the lowercase player name.
   kept in memory, never written to `watchlist.json` (a `nickLinks` array in an old
   file is ignored on load and dropped at the next write), never exported or
   imported. One nick per teammate (linking F replaces F's other link). A link to a
-  friend ends as soon as a party change leaves F out of the party; a "Someone
-  else" link ends when the party goes from non-empty to empty. Reason: a link
-  that outlived the party hid an enemy once the friend changed nick or a
-  stranger took the old one. Pruning runs in main (`onPartyChange` in
-  `watcherBindings.ts` -> `WatchlistStore.pruneNickLinks`).
+  friend ends as soon as a party change leaves F out of the party, and a link to
+  a friend who is not in the party right now is refused. A "Someone else" link
+  lasts until the current game/lobby ends: it is dropped whenever the player list
+  is cleared for a new lobby (`onLobbyClear` -> `WatchlistStore.dropFriendlessLinks`),
+  and also when the party goes from non-empty to empty. Reason: a link that
+  outlived the game hid an enemy once the friend changed nick or a stranger took
+  the old one. Party pruning runs in main (`onPartyChange` in `watcherBindings.ts`
+  -> `WatchlistStore.pruneNickLinks`). A pruned link does not bring the nick back
+  to the current table; it shows again only when it is detected again.
 - **No server.** Sharing is by file (JSON) or pasted text; the receiver
   previews the import and confirms it.
 - The file is written through a temp file and renamed; a corrupt file is

@@ -7,21 +7,23 @@
 import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 
-import type { ImportedList, NickLink, WatchEntry, WatchKind, WatchlistFile, WatchlistSnapshot, WatchlistView } from '../../shared/watchlist';
+import type { ImportedList, WatchEntry, WatchKind, WatchlistFile, WatchlistSnapshot, WatchlistView } from '../../shared/watchlist';
 import { loadFile, saveFile, type FileIo } from './fileLoad';
+import { NickLinks } from './nickLinks';
 import { pickEntry, resolveAll } from './resolve';
 import { MAX_ENTRIES, cleanNote, isValidName, normalizeKind, type ParsedEntry } from './validate';
 
 export class WatchlistStore {
     private data: WatchlistFile;
-    /** Session-only: never saved, see pruneNickLinks. */
-    private nickLinks: NickLink[] = [];
+    /** Session-only: never saved. */
+    private readonly links: NickLinks;
     private readonly writable: boolean;
 
     constructor(private readonly filePath: string, private readonly now: () => number = Date.now, io?: FileIo) {
         const loaded = loadFile(filePath, now(), io);
         this.data = loaded.file;
         this.writable = loaded.writable;
+        this.links = new NickLinks(now);
     }
 
     static userDataPath(userDataDir: string): string {
@@ -30,7 +32,7 @@ export class WatchlistStore {
 
     snapshot(): WatchlistSnapshot {
         const { entries, lists } = this.data;
-        return { entries: [...entries], lists: [...lists], nickLinks: [...this.nickLinks] };
+        return { entries: [...entries], lists: [...lists], nickLinks: this.links.list() };
     }
 
     /** Snapshot plus the resolved view the table uses. */
@@ -116,42 +118,23 @@ export class WatchlistStore {
     }
 
     isLinkedNick(name: string): boolean {
-        const key = name.toLowerCase();
-        return this.nickLinks.some(l => l.nick.toLowerCase() === key);
+        return this.links.has(name);
     }
 
-    /**
-     * Adds or replaces a nick link in memory; friend null or '' means "not given".
-     * A teammate has one nick: linking F removes F's other links. False when a name is invalid.
-     */
     linkNick(nick: string, friend: string | null): boolean {
-        if (!isValidName(nick) || (friend && !isValidName(friend))) return false;
-        const key = nick.toLowerCase();
-        const friendKey = friend?.toLowerCase();
-        const link: NickLink = { nick, friend: friend ?? '', addedAt: this.now() };
-        const kept = this.nickLinks.filter(l => l.nick.toLowerCase() !== key && !(friendKey && l.friend.toLowerCase() === friendKey));
-        this.nickLinks = [...kept, link];
-        return true;
+        return this.links.link(nick, friend);
     }
 
     unlinkNick(nick: string): boolean {
-        const key = nick.toLowerCase();
-        if (!this.nickLinks.some(l => l.nick.toLowerCase() === key)) return false;
-        this.nickLinks = this.nickLinks.filter(l => l.nick.toLowerCase() !== key);
-        return true;
+        return this.links.unlink(nick);
     }
 
-    /**
-     * Drops links whose friend left the party; "someone else" links go when the party went
-     * from non-empty to empty. True when something was removed.
-     */
     pruneNickLinks(partyMembers: readonly string[], wasNonEmpty: boolean): boolean {
-        const inParty = new Set(partyMembers.map(m => m.toLowerCase()));
-        const kept = this.nickLinks.filter(l =>
-            l.friend ? inParty.has(l.friend.toLowerCase()) : !(wasNonEmpty && inParty.size === 0));
-        const changed = kept.length !== this.nickLinks.length;
-        this.nickLinks = kept;
-        return changed;
+        return this.links.pruneByParty(partyMembers, wasNonEmpty);
+    }
+
+    dropFriendlessLinks(): boolean {
+        return this.links.dropFriendless();
     }
 
     private commit(change: Partial<WatchlistFile>): boolean {

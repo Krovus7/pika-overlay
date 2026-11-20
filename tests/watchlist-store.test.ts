@@ -98,6 +98,15 @@ describe('watchlist store', () => {
         assert.equal(fs.readFileSync(path.join(dir, names[0] ?? ''), 'utf8'), '{broken');
     });
 
+    it('drops only the "someone else" links when asked, whatever the party does', () => {
+        const s = open();
+        s.linkNick('Anon', null);
+        s.linkNick('One', 'Alpha');
+        assert.equal(s.dropFriendlessLinks(), true);
+        assert.deepEqual(s.snapshot().nickLinks.map(l => l.nick), ['One']);
+        assert.equal(s.dropFriendlessLinks(), false);
+    });
+
     it('loads an older file without nickLinks and drops entries of unknown lists', () => {
         const entry = { name: 'Steve', kind: 'sniper', note: '', addedAt: 1 };
         const ghost = { ...entry, name: 'Ghost', source: 'gone' };

@@ -113,8 +113,9 @@ A local list of names with a kind (sniper, cheater, other) and a note
   teammate" (opens the party members, or "Someone else", in place with a Back row). The nick is then hidden from the
   table and ignored when detected again. Nick links last for the session only
   (not saved, never exported): one nick per teammate, deleted when that teammate
-  leaves your party; a "Someone else" link is deleted when the party empties. They
-  are listed in Settings → Watchlist and can be removed there.
+  leaves your party (a link to a friend who is not in the party is refused); a "Someone else" link lasts
+  until the current game/lobby ends. A link that ends does not bring the nick back to the current table until
+  it is detected again. They are listed in Settings → Watchlist and can be removed there.
 - **Alert:** when a watched player enters the table from the log (not typed
   names, party members or the own row) a toast "SNIPER Name is in your lobby"
   shows for about 6 s, once per player per lobby. Optional beep

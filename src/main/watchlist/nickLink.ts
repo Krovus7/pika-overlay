@@ -1,4 +1,4 @@
-/** Linking a nick to a teammate: saved in the store, then the nick leaves the table for good. */
+/** Linking a nick to a teammate: kept in the store for this session, then the nick leaves the table. */
 
 import type { PlayerRegistry } from '../state';
 import type { WatchlistStore } from './store';
@@ -14,4 +14,9 @@ export function linkNickAndHide(
     if (!store.linkNick(nick, friend)) return false;
     if (registry.delete(nick)) hide(nick.toLowerCase());
     return true;
+}
+
+/** A link to a friend needs that friend in the party right now; "someone else" (null or '') always may. */
+export function mayLink(friend: string | null, party: { has(name: string): boolean }): boolean {
+    return !friend || party.has(friend.toLowerCase());
 }

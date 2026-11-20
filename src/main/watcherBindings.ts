@@ -70,6 +70,13 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
             !job.refresh && !USER_TYPED_SOURCES.includes(job.source) && !party.has(job.username.toLowerCase()));
     };
 
+    // Runs a party mutation and tells main about it, with the party state from before it
+    const changeParty = (mutate: () => void): void => {
+        const wasNonEmpty = party.size > 0;
+        mutate();
+        onPartyChange?.(wasNonEmpty);
+    };
+
     logWatcher.on('log_line', (line: string) => pushLogLine(line));
 
     logWatcher.on('players_sync', (detectedNames: string[]) => {
@@ -115,7 +122,6 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
     });
 
     logWatcher.on('party_members', (names: string[]) => {
-        const wasNonEmpty = party.size > 0;
         const newSet = new Set(names.map(n => n.toLowerCase()));
 
         // Remove players no longer in the party from overlay
@@ -123,40 +129,41 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
             if (!newSet.has(key)) removeShown(key);
         }
 
-        party.clear();
-        names.forEach(n => party.add(n));
-        send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
-        onPartyChange?.(wasNonEmpty);
+        changeParty(() => {
+            party.clear();
+            names.forEach(n => party.add(n));
+            send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        });
         console.log(`[Party] Sync: ${party.snapshot().join(', ')}`);
 
         for (const name of names) enqueueFresh(name, 'party');
     });
 
     logWatcher.on('party_joined', (username: string) => {
-        const wasNonEmpty = party.size > 0;
-        party.add(username.toLowerCase());
-        send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
-        onPartyChange?.(wasNonEmpty);
+        changeParty(() => {
+            party.add(username.toLowerCase());
+            send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        });
         console.log(`[Party] Joined: ${username}`);
         enqueueFresh(username, 'party');
     });
 
     logWatcher.on('party_left', (username: string) => {
         const key = username.toLowerCase();
-        const wasNonEmpty = party.size > 0;
-        party.delete(key);
-        removeShown(key);
-        send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
-        onPartyChange?.(wasNonEmpty);
+        changeParty(() => {
+            party.delete(key);
+            removeShown(key);
+            send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        });
         console.log(`[Party] Left: ${username} — removed from overlay`);
     });
 
     logWatcher.on('party_clear', () => {
-        const wasNonEmpty = party.size > 0;
-        for (const key of party.snapshot()) removeShown(key);
-        party.clear();
-        send(IPC_EVENTS.PARTY_UPDATE, []);
-        onPartyChange?.(wasNonEmpty);
+        changeParty(() => {
+            for (const key of party.snapshot()) removeShown(key);
+            party.clear();
+            send(IPC_EVENTS.PARTY_UPDATE, []);
+        });
         console.log('[Party] Cleared — all pins and party players removed from overlay');
     });
 }

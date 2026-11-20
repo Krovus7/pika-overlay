@@ -28,7 +28,7 @@ Outside `state/`:
 | `src/main/api/cache.ts` | profile and stats caches (TTLs in `docs/API-CLIENT.md`) |
 | `src/main/api/rateLimiter.ts` | request budget of the current window |
 | `src/main/ipc/autoRetry.ts` | per-player automatic retry counters and timers |
-| `src/main/watchlist/store.ts` `WatchlistStore` | own entries and imported lists (`watchlist.json`, ADR-0014) plus session-only nick links (memory only, pruned by `pruneNickLinks` on every party change); every file change is saved first and only then kept in memory, then broadcast as `watchlist:updated`; reached through `getWatchlist()` (`instance.ts`, set once in `main.ts`) |
+| `src/main/watchlist/store.ts` `WatchlistStore` | own entries and imported lists (`watchlist.json`, ADR-0014) plus session-only nick links (memory only, pruned by `pruneNickLinks` on every party change; "someone else" links dropped by `dropFriendlessLinks` at every lobby clear); every file change is saved first and only then kept in memory, then broadcast as `watchlist:updated`; reached through `getWatchlist()` (`instance.ts`, set once in `main.ts`) |
 | `src/main/watchlist/importPreview.ts` | pending import previews (in memory, single use, 5 minute TTL, at most 5) |
 | `src/main/watchlist/alerts.ts` `WatchAlerts` | players already alerted in this lobby; reset on `players_clear` |
 | `renderer/ts/core/state.ts` `watch` | the overlay's copy of `WatchlistView.resolved` (a `Map`), plus `watchlistOnTop`, `watchlistSound` and the login-age settings from the config |

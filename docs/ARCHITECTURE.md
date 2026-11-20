@@ -45,7 +45,7 @@ src/
     │   ├── alerts.ts, alertDelivery.ts   once per player per lobby; toast event, taskbar flash
     │   ├── menuSpec.ts       row context menu as data (testable)
     │   ├── menuSession.ts    menu view for the overlay + latest-token click map
-    │   ├── nickLink.ts, notify.ts, instance.ts
+    │   ├── nickLinks.ts (session-only links, used by the store), nickLink.ts, notify.ts, instance.ts
     ├── log/              log parsing (ported from v3; see LOG-PARSING.md)
     │   ├── patterns.ts, nameCleaner.ts, partyParser.ts, lineParser.ts
     │   └── logWatcher.ts     fs polling every 500 ms

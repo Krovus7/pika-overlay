@@ -27,7 +27,7 @@ import { bindWatcherEvents } from './watcherBindings';
 import { clearAlertFlash, deliverAlert } from './watchlist/alertDelivery';
 import { WatchAlerts } from './watchlist/alerts';
 import { getWatchlist, initWatchlist } from './watchlist/instance';
-import { linkNickAndHide } from './watchlist/nickLink';
+import { linkNickAndHide, mayLink } from './watchlist/nickLink';
 import { notifyWatchlist } from './watchlist/notify';
 import { WatchlistStore } from './watchlist/store';
 import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale, switchLayoutSize } from './windowManager';
@@ -102,6 +102,7 @@ app.whenReady().then(() => {
     };
     registerIpcHandlers(handlerDeps);
     const linkNick = (nick: string, friend: string | null): boolean =>
+        mayLink(friend, partyState) &&
         linkNickAndHide(watchlist, playerRegistry, key => send(IPC_EVENTS.PLAYER_REMOVE, key), nick, friend);
     registerWatchlistHandlers(watchlist, linkNick);
     registerWatchlistMenu({ store: watchlist, party: partyState, linkNick });
@@ -111,7 +112,10 @@ app.whenReady().then(() => {
     bindWatcherEvents({
         logWatcher, queue, registry: playerRegistry, party: partyState, game: gameState, send,
         isSelf: name => name.toLowerCase() === watcherSettings(store).name.toLowerCase(),
-        onLobbyClear: () => alerts.reset(),
+        onLobbyClear: () => {
+            alerts.reset();
+            if (watchlist.dropFriendlessLinks()) notifyWatchlist(watchlist);
+        },
         onPartyChange: wasNonEmpty => {
             if (watchlist.pruneNickLinks(partyState.snapshot(), wasNonEmpty)) notifyWatchlist(watchlist);
         },

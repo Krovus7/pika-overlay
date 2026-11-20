@@ -7,10 +7,10 @@ import type { BrowserWindow } from 'electron';
 
 import { LookupService } from '../src/main/ipc/lookup';
 import { buildMenuSpec, type MenuInput } from '../src/main/watchlist/menuSpec';
-import { linkNickAndHide } from '../src/main/watchlist/nickLink';
+import { linkNickAndHide, mayLink } from '../src/main/watchlist/nickLink';
 import { WatchlistStore } from '../src/main/watchlist/store';
 import type { ConfigStore } from '../src/main/config';
-import { PlayerRegistry } from '../src/main/state';
+import { PartyState, PlayerRegistry } from '../src/main/state';
 import type { WatchResolved } from '../src/shared/watchlist';
 import { empty, freshSession, mockFetch, restoreFetch, routes } from './apiMock';
 
@@ -19,9 +19,10 @@ const imported: WatchResolved = { kind: 'cheater', note: 'x', sourceLabel: 'list
 
 describe('row menu content', () => {
     const calls: string[] = [];
+    const record = (call: string): boolean => { calls.push(call); return true; };
     const input = (over: Partial<MenuInput>): MenuInput => ({
         name: 'Nick', nicked: false, resolved: undefined, partyMembers: [],
-        mark: (k, n) => calls.push(`mark:${k}:${n}`), unmark: () => calls.push('unmark'), editNote: () => calls.push('editNote'), link: f => calls.push(`link:${f}`),
+        mark: (k, n) => record(`mark:${k}:${n}`), unmark: () => record('unmark'), editNote: () => record('editNote'), link: f => record(`link:${f}`),
         ...over,
     });
     const labels = (items: ReturnType<typeof buildMenuSpec>) => items.map(i => i.kind === 'separator' ? '---' : i.label);
@@ -100,6 +101,15 @@ describe('nick links in the table', () => {
         assert.equal(registry.has('Sneaky'), true);
         assert.equal(linkNickAndHide(store, registry, k => hidden.push(k), 'Sneaky', 'Pal'), true);
         assert.deepEqual([registry.snapshot(), hidden], [[], ['sneaky']]);
+    });
+
+    it('a link to a friend needs that friend in the party; "someone else" always may', () => {
+        const party = new PartyState();
+        party.add('pal');
+        assert.equal(mayLink('Pal', party), true);
+        assert.equal(mayLink('Stranger', party), false);
+        assert.equal(mayLink(null, party), true);
+        assert.equal(mayLink('', party), true);
     });
 
     it('later detections of a linked nick are ignored; a typed lookup still works', async () => {
