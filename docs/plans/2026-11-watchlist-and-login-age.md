@@ -208,34 +208,7 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
 - Copy everywhere in English, short; imported lists are described as "someone
   else's notes".
 
-## Task 6 — Your team on top (owner request 2026-11-18)
-
-The owner asked for players split by team when the game starts, as an in-game
-mod does. Checked on 2026-11-18 against all 25 Badlion logs and the live
-`latest.log`: Pika never prints the team of other players, and colour codes
-survive only next to the owner's own name. So only the owner's team can be
-known; opponents stay one group.
-
-- Log lines (exact, from the logs; `?` is a decorative glyph, match `\S+`):
-  - `BedWars ? You and your party are now in team Yellow.` → my team colour;
-  - `BedWars ? You are placed in team Pink with meow269.` → my team colour and
-    the named mates (split on `,` and ` and `, names validated);
-  - `Team Upgrade ? meow269 purchased Sharpened Swords I.` → only my team sees
-    these, so the buyer is a teammate (today these lines are skipped by
-    `patterns.ts`; keep them out of player detection).
-  - Colours seen: Red, Blue, Green, Yellow, Aqua, White, Pink, Gray, Orange
-    (unknown colour → neutral rail).
-- Parser emits `my_team(color, mates[])` / `teammate(name)`; main state holds
-  `myTeam: { color, mates }` (ADR-0003: state owned by main, broadcast to the
-  renderer). Reset on the same events that clear the lobby (`players_clear`,
-  server change, game end).
-- Table: setting `teamOnTop` (default on): me, party members and teammates are
-  grouped first (before watchlist and nicked in the sort), with a rail in the
-  team colour and a small header line "YOUR TEAM · YELLOW". Team colours are
-  new tokens tuned for both themes. No grouping before the team is known.
-- Settings: the toggle in the General tab next to `nickedOnTop`.
-- Tests: parser lines above (including names with `_`, two mates, unknown
-  colour), state reset, sort order.
+Team split (owner request 2026-11-18) was dropped on 2026-11-20: Pika never logs other players' teams, and a premium login is encrypted (checked: the server sends an Encryption Request), so sniffing cannot read the Teams packet; a proxy was ruled out by the owner.
 
 ## Task 5 — Docs, ADR, verification
 
@@ -247,7 +220,7 @@ known; opponents stay one group.
   `docs/STATE-AND-IPC.md` (channels, events, new state owner),
   `docs/ARCHITECTURE.md` (module map), `docs/API-CLIENT.md` (lastSeen),
   `docs/TESTING.md` (suites, counts), `README.md` (features, settings table).
-- Version 5.2.0 in `package.json` and `package-lock.json` (root entries
+- Version 5.2.0-beta.1 in `package.json` (owner 2026-11-20: beta until the owner plays and Task 0 + live checks run; then the final 5.2.0) and `package-lock.json` (root entries
   only). Do **not** publish a release without the owner's explicit OK.
 
 ## Tests (node:test)
@@ -301,4 +274,4 @@ known; opponents stay one group.
 
 Task 0 (owner) can run any time. Task 1 first. Task 3 is independent of
 Tasks 1–2 and can run in parallel. Task 2 needs Task 1; Task 4 needs Tasks 1
-and 3. Task 6 needs Task 1. Task 5 last.
+and 3. Task 5 last.
