@@ -28,6 +28,10 @@ Outside `state/`:
 | `src/main/api/cache.ts` | profile and stats caches (TTLs in `docs/API-CLIENT.md`) |
 | `src/main/api/rateLimiter.ts` | request budget of the current window |
 | `src/main/ipc/autoRetry.ts` | per-player automatic retry counters and timers |
+| `src/main/watchlist/store.ts` `WatchlistStore` | own entries, imported lists and nick links (`watchlist.json`, ADR-0014); every change is saved first and only then kept in memory, then broadcast as `watchlist:updated`; reached through `getWatchlist()` (`instance.ts`, set once in `main.ts`) |
+| `src/main/watchlist/importPreview.ts` | pending import previews (in memory, single use, 5 minute TTL, at most 5) |
+| `src/main/watchlist/alerts.ts` `WatchAlerts` | players already alerted in this lobby; reset on `players_clear` |
+| `renderer/ts/core/state.ts` `watch` | the overlay's copy of `WatchlistView.resolved` (a `Map`), plus `watchlistOnTop`, `watchlistSound` and the login-age settings from the config |
 | `renderer/ts/core/state.ts` | overlay-side mirror: shown rows, sort, party, layout, health |
 
 ## IPC contract (`src/shared/ipc-contract.ts`)
@@ -131,6 +135,20 @@ overlay reacts to `game:start` with the status pill only.
 `lookup:bulk` and watcher detections go through the queue; `lookup:player`
 runs directly. `stats:refetchAll` and an API-key change queue a refresh of
 every registered player (`refresh: true`, sources preserved).
+
+## Watchlist flow
+
+1. Lookup: `LookupService.lookup` ignores a linked nick from a non-typed
+   source (`isLinkedNick`), so the renderer never gets that row.
+2. After `registry.add`, `onPlayerEnter(name, source)` asks `WatchAlerts.check`;
+   typed sources (`manual`, `bulk`), `party`, the own name and party members are
+   excluded. A hit sends `watchlist:alert` and flashes the taskbar button when
+   the overlay is hidden or minimized (`alertDelivery.ts`).
+3. Every successful change (set, remove list, confirmed import, link, unlink)
+   goes through `notifyWatchlist`, which broadcasts `WatchlistView` to both
+   windows. Own entries beat imported ones in `resolve.ts`.
+4. Linking a nick (menu or `watchlist:linkNick`) saves the link and removes the
+   shown row with `player:remove` (`nickLink.ts`).
 
 ## Config flow (`ipc/configHandlers.ts`)
 

@@ -29,6 +29,21 @@ Every statement below was observed against the real API with a real key.
 
 One player costs two requests (profile + leaderboard), fetched in parallel.
 
+### `lastSeen` (observed 2026-11-14; meaning not verified)
+
+| Fact | Observation |
+|---|---|
+| Field | `GET /profile/{name}` returns `lastSeen`, epoch milliseconds, among `discord_verified, lastSeen, ranks, email_verified, discord_boosting, clan, skin, rank, friends, username`. There is no UUID field. |
+| Cost | none: the profile is already fetched for every lookup and cached for 10 minutes |
+| Values seen | three players who were online in the same hub had `lastSeen` about 4 minutes, 20 minutes and 28 hours before the moment they were seen, so it is not refreshed while a player is online |
+| **Meaning** | **NOT verified**: it is either the last login or the last logout. `scripts/last-seen-probe.mjs` (`PIKA_API_KEY=<key> node scripts/last-seen-probe.mjs <name> [--every 60] [--minutes 20]`) polls one profile once a minute to settle it; it has not been run yet |
+
+The client keeps `lastSeen` only when it is a finite number between 2015-01-01
+and now plus 5 minutes, otherwise `null` (`profileInfo` in
+`statsExtractor.ts`); `no_data` results keep it. Because the meaning is open,
+the login-age chip ships **off by default** in 5.2.0-beta.1 (`loginAge: 'off'`)
+and its hover text only says "Last seen on Pika <time> ago (Pika profile)".
+
 ## Classification (ADR-0010)
 
 `getPlayerStats` returns a `PlayerResult` whose `status` is the single source
