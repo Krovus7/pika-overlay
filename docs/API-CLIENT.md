@@ -36,7 +36,7 @@ One player costs two requests (profile + leaderboard), fetched in parallel.
 | Field | `GET /profile/{name}` returns `lastSeen`, epoch milliseconds, among `discord_verified, lastSeen, ranks, email_verified, discord_boosting, clan, skin, rank, friends, username`. There is no UUID field. |
 | Cost | none: the profile is already fetched for every lookup and cached for 10 minutes |
 | Values seen | three players who were online in the same hub had `lastSeen` about 4 minutes, 20 minutes and 28 hours before the moment they were seen, so it is not refreshed while a player is online (first seen 2026-11-14) |
-| **Meaning** | for a player who is online, `lastSeen` equals the moment they logged in (verified live 2026-11-20); it does not tick while they stay online. Behaviour after logout is **not yet verified**. `scripts/last-seen-probe.mjs` (`PIKA_API_KEY=<key> node scripts/last-seen-probe.mjs <name> [--every 60] [--minutes 20]`) polls one profile once a minute |
+| **Meaning** | for a player who is online, `lastSeen` equals the moment they logged in (verified live 2026-11-20); it does not tick while they stay online, and it does not change at logout either (probe 2026-11-20: login 22:21:12, logout 23:35, value unchanged 4 minutes later). So it is always the **last login**: for a player in your lobby, how long they have been connected. `scripts/last-seen-probe.mjs` (`PIKA_API_KEY=<key> node scripts/last-seen-probe.mjs <name> [--every 60] [--minutes 20]`) polls one profile once a minute |
 
 The client keeps `lastSeen` only when it is a finite number between 2015-01-01
 and now plus 5 minutes, otherwise `null` (`profileInfo` in
