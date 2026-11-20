@@ -30,7 +30,7 @@ import { getWatchlist, initWatchlist } from './watchlist/instance';
 import { linkNickAndHide } from './watchlist/nickLink';
 import { notifyWatchlist } from './watchlist/notify';
 import { WatchlistStore } from './watchlist/store';
-import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale } from './windowManager';
+import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale, switchLayoutSize } from './windowManager';
 import { broadcast } from './broadcast';
 import { applySettingsWindowConfig, initSettingsWindow, openSettings } from './settingsWindow';
 import { watcherSettings } from './ipc/configHandlers';
@@ -95,6 +95,7 @@ app.whenReady().then(() => {
         queue,
         applyWindowConfig: s => { applyWindowConfig(s); applySettingsWindowConfig(s); },
         resizeForScale: (oldScale, newScale) => resizeForScale(store, oldScale, newScale),
+        switchLayoutSize: oldMode => switchLayoutSize(store, oldMode),
         registerHotkeys: registerHotkeysFn,
         logWatcher,
         party: partyState,

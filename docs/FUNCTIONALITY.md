@@ -222,6 +222,10 @@ otherwise it reads "Waiting for players".
 - **Detailed:** all enabled columns in the saved order. **Compact:** only the
   columns ticked in Settings → Columns → Compact layout (player always).
   Toggle: title-bar layout button or Settings → Appearance.
+- **Window size per layout:** each layout remembers its own window size
+  (`overlaySizes`, saved with `overlayBounds`). Switching layout restores that
+  layout's size, top-left kept and clamped into the work area; a layout never
+  resized keeps the current size. Interface scale rescales both saved sizes.
 - **Row density:** comfortable (row height 34 px), dense (28 px); compact
   layout rows are 26 px (`renderer/css/tokens.css`).
 - **Interface scale:** 80–150 %, applied as the window zoom factor and the

@@ -12,6 +12,7 @@ import type {
     RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey,
 } from '../shared/types';
 import { mergeColumnOrder } from '../shared/columns';
+import { EMPTY_SIZES, normalizeOverlaySizes, type OverlaySizes } from './layoutSizes';
 
 export type { RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey };
 
@@ -23,6 +24,8 @@ export interface AppConfig {
     isNicked: boolean;
     myNickName: string;
     overlayBounds: { x: number; y: number; width: number; height: number };
+    /** Window size each layout last had; null until that layout was resized */
+    overlaySizes: OverlaySizes;
     /** Last position of the settings window; null until it has been moved or resized */
     settingsBounds: { x: number; y: number; width: number; height: number } | null;
     alwaysOnTop: boolean;
@@ -81,6 +84,7 @@ export function defaultConfig(): AppConfig {
         isNicked: false,
         myNickName: '',
         overlayBounds: { x: 20, y: 60, width: 960, height: 600 },
+        overlaySizes: { ...EMPTY_SIZES },
         settingsBounds: null,
         alwaysOnTop: true,
         toggleHotkey: 'F4',
@@ -200,6 +204,7 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
             width: num(bounds.width, defaults.overlayBounds.width),
             height: num(bounds.height, defaults.overlayBounds.height),
         },
+        overlaySizes: normalizeOverlaySizes(merged.overlaySizes),
         settingsBounds: normalizeBounds(merged.settingsBounds),
         alwaysOnTop: bool(merged.alwaysOnTop, defaults.alwaysOnTop),
         toggleHotkey: str(merged.toggleHotkey, defaults.toggleHotkey),

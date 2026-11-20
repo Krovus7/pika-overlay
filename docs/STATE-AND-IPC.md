@@ -156,7 +156,9 @@ every registered player (`refresh: true`, sources preserved).
 `config:save` and `config:set` share one path: apply the change; when `apiKey`
 changed, `setApiKey` (resets health, cache, budget) and refresh every row;
 re-apply always-on-top and zoom (of both windows); when `uiScale` changed, resize the
-overlay by new/old first (`windowManager.resizeForScale`, saves `overlayBounds`);
+overlay by new/old first (`windowManager.resizeForScale`, saves `overlayBounds` and
+scales `overlaySizes`); when `overlayMode` changed, `windowManager.switchLayoutSize`
+stores the old layout's size and restores the new layout's (`layoutSizes.ts`);
 broadcast `config:updated`. `config:save`
 additionally restarts the log watcher only when the log path or the watched
 name changed (the nick when "I am nicked" is on, else the username) and
