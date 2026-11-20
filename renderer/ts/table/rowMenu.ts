@@ -43,7 +43,10 @@ function draw(): void {
     if (!menu) return;
     menu.innerHTML = contentHtml(current?.title, level, inSubmenu);
     position();
-    highlight(0);
+    // Focus the menu itself: keys work at once, but no item looks pre-selected after a mouse open
+    active = -1;
+    menu.tabIndex = -1;
+    menu.focus({ preventScroll: true });
 }
 
 export function closeRowMenu(): void {

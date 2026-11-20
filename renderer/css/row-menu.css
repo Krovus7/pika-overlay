@@ -65,3 +65,4 @@
 @media (prefers-reduced-motion: reduce) {
   .row-menu { transition: none; transform: none; }
 }
+.row-menu:focus, .rm-item:focus { outline: none; }
