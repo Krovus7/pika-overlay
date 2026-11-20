@@ -5,6 +5,7 @@
 
 import { COLUMN_DEFS } from '../../../src/shared/columns';
 import type { ApiHealth, RatioColors, RatioThresholds } from '../../../src/shared/types';
+import type { WatchResolved } from '../../../src/shared/watchlist';
 import type { LoginAgeSettings } from '../table/loginAge';
 import type { RowData } from '../table/types';
 
@@ -36,6 +37,9 @@ export interface OverlayState {
     myUsername: string;
     myNickName: string;
     nickedOnTop: boolean;
+    watchlistOnTop: boolean;
+    watchlistSound: boolean;
+    watch: ReadonlyMap<string, WatchResolved>;
     highlightSuspects: boolean;
     loginAge: LoginAgeSettings;
     thresholds: RatioThresholds;
@@ -59,6 +63,9 @@ export const state: OverlayState = {
     myUsername: '',
     myNickName: '',
     nickedOnTop: true,
+    watchlistOnTop: true,
+    watchlistSound: false,
+    watch: new Map(),
     highlightSuspects: true,
     loginAge: { loginAge: 'off', loginAgeMaxLevel: 10, freshMinutes: 5 },
     thresholds: DEFAULT_THRESHOLDS,

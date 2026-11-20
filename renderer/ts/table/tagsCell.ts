@@ -4,7 +4,9 @@
  */
 
 import { esc } from './format';
+import type { WatchResolved } from '../../../src/shared/watchlist';
 import type { LoginAgeView } from './loginAge';
+import { watchChip } from './watchView';
 
 export type ChipKind = 'you' | 'watchlist' | 'age' | 'bot';
 
@@ -20,9 +22,10 @@ export interface Chip {
 const CHIP_ORDER: readonly ChipKind[] = ['you', 'watchlist', 'age', 'bot'];
 
 /** Chips for the facts every row view already carries. */
-export function viewChips(view: { isSelf: boolean; isSuspect: boolean; age?: LoginAgeView | null }): Chip[] {
+export function viewChips(view: { isSelf: boolean; isSuspect: boolean; age?: LoginAgeView | null; watch?: WatchResolved | null }): Chip[] {
     const chips: Chip[] = [];
     if (view.isSelf) chips.push({ kind: 'you', label: 'YOU', title: 'You', cls: 'tag-you' });
+    if (view.watch) chips.push(watchChip(view.watch));
     if (view.age) {
         const cls = view.age.fresh ? 'tag-age tag-age-fresh' : 'tag-age';
         chips.push({ kind: 'age', label: view.age.text, title: view.age.title, cls });

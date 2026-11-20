@@ -44,6 +44,7 @@ export const IPC_CHANNELS = {
     WATCHLIST_CONFIRM_IMPORT: 'watchlist:confirmImport',
     WATCHLIST_LINK_NICK: 'watchlist:linkNick',
     WATCHLIST_UNLINK_NICK: 'watchlist:unlinkNick',
+    WATCHLIST_MENU: 'watchlist:menu',
 } as const;
 
 export const IPC_EVENTS = {
@@ -61,6 +62,7 @@ export const IPC_EVENTS = {
     UPDATE_STATE: 'update:state',
     API_HEALTH: 'api:health',
     WATCHLIST_UPDATED: 'watchlist:updated',
+    WATCHLIST_ALERT: 'watchlist:alert',
 } as const;
 
 /** Tab ids of the settings window, in display order. */

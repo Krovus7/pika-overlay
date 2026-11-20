@@ -68,6 +68,8 @@ export function applyConfigToState(cfg: Record<string, unknown>): void {
     state.isNicked = !!cfg.isNicked;
     state.myNickName = String(cfg.myNickName || '').toLowerCase();
     state.nickedOnTop = cfg.nickedOnTop !== false;
+    state.watchlistOnTop = cfg.watchlistOnTop !== false;
+    state.watchlistSound = cfg.watchlistSound === true;
     state.highlightSuspects = cfg.highlightSuspects !== false;
     state.loginAge = {
         loginAge: cfg.loginAge === 'lowLevel' || cfg.loginAge === 'all' ? cfg.loginAge : 'off',

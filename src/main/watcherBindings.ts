@@ -25,13 +25,15 @@ export interface WatcherBindingDeps {
     send: (channel: string, ...args: unknown[]) => void;
     /** True for the name the user plays under (username, or nick when nicked) */
     isSelf: (username: string) => boolean;
+    /** The lobby changed (players_clear) */
+    onLobbyClear?: () => void;
 }
 
 /** One lobby join is one refresh, however many times the join line repeats */
 const LOBBY_REFRESH_MIN_GAP_MS = 20_000;
 
 export function bindWatcherEvents(deps: WatcherBindingDeps): void {
-    const { logWatcher, queue, registry, party, game, send, isSelf } = deps;
+    const { logWatcher, queue, registry, party, game, send, isSelf, onLobbyClear } = deps;
     let lastLobbyRefresh = 0;
 
     const removeShownExcept = (keep: ReadonlySet<string>): void => {
@@ -87,6 +89,7 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
 
     logWatcher.on('players_clear', () => {
         game.reset();
+        onLobbyClear?.();
         dropStaleLookups();
         removeShownExcept(new Set(party.snapshot()));
         send(IPC_EVENTS.PLAYERS_CLEAR);

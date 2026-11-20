@@ -8,7 +8,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, IPC_EVENTS, type StatsPayload } from './shared/ipc-contract';
 import type { PikaOverlayApi } from './shared/preload-api';
 import type { ApiHealth, PlayerLoading, UpdateState } from './shared/types';
-import type { WatchlistSnapshot } from './shared/watchlist';
+import type { WatchAlert, WatchlistView } from './shared/watchlist';
 
 function on<T>(channel: string, cb: (data: T) => void): void {
     ipcRenderer.removeAllListeners(channel);
@@ -81,7 +81,9 @@ const api: PikaOverlayApi = {
     confirmWatchImport: (token) => ipcRenderer.invoke(IPC_CHANNELS.WATCHLIST_CONFIRM_IMPORT, token),
     linkNick: (nick, friend) => ipcRenderer.invoke(IPC_CHANNELS.WATCHLIST_LINK_NICK, nick, friend),
     unlinkNick: (nick) => ipcRenderer.invoke(IPC_CHANNELS.WATCHLIST_UNLINK_NICK, nick),
-    onWatchlistUpdate: (cb) => on<WatchlistSnapshot>(IPC_EVENTS.WATCHLIST_UPDATED, cb),
+    onWatchlistUpdate: (cb) => on<WatchlistView>(IPC_EVENTS.WATCHLIST_UPDATED, cb),
+    onWatchlistAlert: (cb) => on<WatchAlert>(IPC_EVENTS.WATCHLIST_ALERT, cb),
+    showWatchMenu: (name, nicked) => ipcRenderer.invoke(IPC_CHANNELS.WATCHLIST_MENU, name, nicked),
 };
 
 contextBridge.exposeInMainWorld('pikaOverlay', api);

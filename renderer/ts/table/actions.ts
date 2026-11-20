@@ -1,5 +1,6 @@
 /** Row actions via one delegated listener on the table body. */
 
+import { state } from '../core/state';
 import { showToast } from '../ui/toast';
 
 const api = window.pikaOverlay;
@@ -22,8 +23,18 @@ function copyName(el: HTMLElement): void {
         .catch(err => console.error('[Overlay] Copy failed:', String(err)));
 }
 
+function openWatchMenu(e: MouseEvent): void {
+    const key = (e.target as HTMLElement).closest<HTMLElement>('tr[data-key]')?.dataset.key;
+    const row = key ? state.players.get(key) : undefined;
+    if (!row) return;
+    e.preventDefault();
+    api.showWatchMenu(row.username, row.status === 'nicked')
+        .catch(err => console.error('[Overlay] Row menu failed:', String(err)));
+}
+
 export function initRowActions(): void {
     const tbody = document.getElementById('stats-body') as HTMLElement;
+    tbody.addEventListener('contextmenu', openWatchMenu);
     tbody.addEventListener('click', e => {
         const el = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
         if (!el) return;

@@ -5,6 +5,7 @@
 
 import type { StatsPayload } from '../../../src/shared/ipc-contract';
 import type { LoginAgeSettings, LoginAgeView } from './loginAge';
+import type { WatchResolved } from '../../../src/shared/watchlist';
 import type { RatioColors, RatioThresholds } from '../../../src/shared/types';
 
 export interface LoadingRow {
@@ -25,6 +26,8 @@ export interface RenderContext {
     colors: RatioColors;
     highlightSuspects: boolean;
     loginAge: LoginAgeSettings;
+    /** Watched names (lowercase) with the precedence already applied in main */
+    watch?: ReadonlyMap<string, WatchResolved>;
     /** One clock reading per render so every row agrees on ages. */
     now: number;
     /** Wording for "no games" rows, e.g. "this week in Solo" */
@@ -39,4 +42,5 @@ export interface RowView {
     isSelf: boolean;
     isSuspect: boolean;
     age: LoginAgeView | null;
+    watch?: WatchResolved | null;
 }

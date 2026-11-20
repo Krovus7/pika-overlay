@@ -64,6 +64,7 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `watchlist:get` / `set` / `removeList` | `getWatchlist()` / `setWatchEntry(name, change \| null)` / `removeWatchList(id)` | `watchlistHandlers.ts` → `watchlist/store.ts` (`watchlist.json`; set/remove broadcast `watchlist:updated`) |
 | `watchlist:export` / `copyText` | `exportWatchlist({ includeImported })` / `copyWatchlistText()` | `watchlistHandlers.ts` (save dialog, clipboard; own entries unless imported ones are ticked) |
 | `watchlist:importFile` / `importText` / `confirmImport` | `importWatchlistFile()` / `importWatchlistText(text, kind)` / `confirmWatchImport(token)` | `watchlistHandlers.ts` → `importPreview.ts` (preview in memory for 5 minutes, saved on confirm) |
+| `watchlist:menu` | `showWatchMenu(name, nicked)` | `watchlistMenu.ts` + `menuSpec.ts`: native row menu (marks, remove, imported source line, nick link submenu with the party) |
 | `watchlist:linkNick` / `unlinkNick` | `linkNick(nick, friend \| null)` / `unlinkNick(nick)` | `watchlistHandlers.ts` (nick links: personal, never exported or imported) |
 
 ### Push events (`IPC_EVENTS`, main → renderer)
@@ -81,7 +82,8 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `config:updated` | `onConfigUpdate` | full config object (overlay + settings window) |
 | `update:state` | `onUpdateState` | `UpdateState` (overlay + settings window) |
 | `api:health` | `onApiHealth` | `ApiHealth` (overlay + settings window) |
-| `watchlist:updated` | `onWatchlistUpdate` | `WatchlistSnapshot` `{ entries, lists, nickLinks }` (overlay + settings window) |
+| `watchlist:updated` | `onWatchlistUpdate` | `WatchlistView` = `{ entries, lists, nickLinks, resolved }`; `resolved` maps lowercase name to `{ kind, note, sourceLabel, imported }` with own-beats-imported already applied (overlay + settings window) |
+| `watchlist:alert` | `onWatchlistAlert` | `WatchAlert` `{ name, kind, note }`, overlay only: a watched player entered the table, once per player per lobby (`WatchAlerts`, reset on `players_clear`); main also calls `flashFrame` when the overlay is hidden |
 
 `player:error` no longer exists (removed in v5, ADR-0010). The preload keeps
 one listener per event (`removeAllListeners` before `on`). `config:updated`,

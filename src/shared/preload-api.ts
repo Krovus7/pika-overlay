@@ -5,7 +5,7 @@
 
 import type { ApiHealth, ApiKeyTestResult, PlayerLoading, UpdateState } from './types';
 import type { StatsPayload } from './ipc-contract';
-import type { ImportAttempt, WatchKind, WatchlistSnapshot } from './watchlist';
+import type { ImportAttempt, WatchAlert, WatchKind, WatchlistView } from './watchlist';
 
 export interface PikaOverlayApi {
     // === Overlay events ===
@@ -71,7 +71,7 @@ export interface PikaOverlayApi {
     /** Validates a key against the live API without saving it */
     testApiKey: (key: string) => Promise<ApiKeyTestResult>;
     // === Watchlist and nick links (Task 3) ===
-    getWatchlist: () => Promise<WatchlistSnapshot>;
+    getWatchlist: () => Promise<WatchlistView>;
     /** Adds or changes the own entry; null removes it. False when refused (invalid name, limit) */
     setWatchEntry: (name: string, change: { kind: WatchKind; note: string } | null) => Promise<boolean>;
     removeWatchList: (id: string) => Promise<boolean>;
@@ -86,5 +86,9 @@ export interface PikaOverlayApi {
     /** Friend null or '' = teammate not named. False when a name is invalid */
     linkNick: (nick: string, friend: string | null) => Promise<boolean>;
     unlinkNick: (nick: string) => Promise<boolean>;
-    onWatchlistUpdate: (cb: (data: WatchlistSnapshot) => void) => void;
+    onWatchlistUpdate: (cb: (data: WatchlistView) => void) => void;
+    /** Overlay only: a watched player entered the table (once per player per lobby) */
+    onWatchlistAlert: (cb: (alert: WatchAlert) => void) => void;
+    /** Pops up the native row menu at the cursor; `nicked` adds the nick-link items */
+    showWatchMenu: (name: string, nicked: boolean) => Promise<void>;
 }

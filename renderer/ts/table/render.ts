@@ -24,6 +24,7 @@ function buildContext(): RenderContext {
         colors: state.colors,
         highlightSuspects: state.highlightSuspects,
         loginAge: state.loginAge,
+        watch: state.watch,
         now: Date.now(),
         periodNote: noGamesNote(state.interval, state.mode),
     };
@@ -39,6 +40,8 @@ export function renderNow(): void {
         selfKey: selfKey(ctx),
         nickedOnTop: state.nickedOnTop,
         partyMembers: state.party,
+        watchlistOnTop: state.watchlistOnTop,
+        watched: state.watch,
     };
     const sorted = [...state.players.values()].sort((a, b) => comparePlayers(a, b, sortState));
     const ctxSig = JSON.stringify([cols.map(c => c.id), ctx.thresholds, ctx.colors, ctx.highlightSuspects, ctx.loginAge, ctx.periodNote]);

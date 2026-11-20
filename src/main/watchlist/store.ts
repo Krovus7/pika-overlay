@@ -7,8 +7,9 @@
 import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 
-import type { ImportedList, NickLink, WatchEntry, WatchKind, WatchlistFile, WatchlistSnapshot } from '../../shared/watchlist';
+import type { ImportedList, NickLink, WatchEntry, WatchKind, WatchlistFile, WatchlistSnapshot, WatchlistView } from '../../shared/watchlist';
 import { loadFile, saveFile } from './fileLoad';
+import { pickEntry, resolveAll } from './resolve';
 import { MAX_ENTRIES, cleanNote, isValidName, normalizeKind, type ParsedEntry } from './validate';
 
 export class WatchlistStore {
@@ -27,14 +28,15 @@ export class WatchlistStore {
         return { entries: [...entries], lists: [...lists], nickLinks: [...nickLinks] };
     }
 
+    /** Snapshot plus the resolved view the table uses. */
+    view(): WatchlistView {
+        return { ...this.snapshot(), resolved: resolveAll(this.data.entries, this.data.lists) };
+    }
+
     /** The owner's own entry wins; otherwise the entry of the most recently imported list. */
     lookup(name: string): WatchEntry | undefined {
         const key = name.toLowerCase();
-        const matches = this.data.entries.filter(e => e.name.toLowerCase() === key);
-        const own = matches.find(e => e.source === 'me');
-        if (own) return own;
-        const importedAt = (e: WatchEntry) => this.data.lists.find(l => l.id === e.source)?.importedAt ?? 0;
-        return matches.sort((a, b) => importedAt(b) - importedAt(a))[0];
+        return pickEntry(this.data.entries.filter(e => e.name.toLowerCase() === key), this.data.lists);
     }
 
     ownEntries(): WatchEntry[] {

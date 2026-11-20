@@ -80,6 +80,8 @@ describe('normalizeConfig — v5 keys', () => {
         assert.equal(cfg.uiScale, 1);
         assert.equal(cfg.rowDensity, 'comfortable');
         assert.equal(cfg.nickedOnTop, true);
+        assert.equal(cfg.watchlistOnTop, true);
+        assert.equal(cfg.watchlistSound, false);
         assert.equal(cfg.highlightSuspects, true);
     });
 
@@ -103,6 +105,10 @@ describe('normalizeConfig — v5 keys', () => {
         assert.equal(normalizeConfig({ theme: 'sepia' }).theme, 'dark');
         assert.equal(normalizeConfig({ nickedOnTop: false }).nickedOnTop, false);
         assert.equal(normalizeConfig({ nickedOnTop: 'no' }).nickedOnTop, true);
+        assert.equal(normalizeConfig({ watchlistOnTop: false }).watchlistOnTop, false);
+        assert.equal(normalizeConfig({ watchlistOnTop: 'no' }).watchlistOnTop, true);
+        assert.equal(normalizeConfig({ watchlistSound: true }).watchlistSound, true);
+        assert.equal(normalizeConfig({ watchlistSound: 1 }).watchlistSound, false);
         assert.equal(normalizeConfig({ highlightSuspects: false }).highlightSuspects, false);
     });
 

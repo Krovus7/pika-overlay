@@ -38,6 +38,7 @@ export function viewOf(d: RowData, ctx: RenderContext): RowView {
         isSelf: !!self && key === self,
         isSuspect: ctx.highlightSuspects && isSuspect(d),
         age: ageOf(d, ctx),
+        watch: ctx.watch?.get(key) ?? null,
     };
 }
 

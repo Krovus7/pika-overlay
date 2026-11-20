@@ -1,18 +1,18 @@
 /**
  * Watchlist IPC (Task 3): thin Electron layer over WatchlistStore, format and
  * ImportPreviews. Every argument is type-checked; a malformed call is ignored.
- * The row context menu (watchlist:menu) is added with the table UI.
+ * The row context menu lives in watchlistMenu.ts.
  */
 
 import { BrowserWindow, clipboard, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { IPC_CHANNELS, IPC_EVENTS } from '../../shared/ipc-contract';
+import { IPC_CHANNELS } from '../../shared/ipc-contract';
 import type { ImportAttempt } from '../../shared/watchlist';
-import { broadcast } from '../broadcast';
 import { FormatError, defaultFileName, exportJson, exportText, parseAny, type ParseResult } from '../watchlist/format';
 import { ImportPreviews } from '../watchlist/importPreview';
+import { notifyWatchlist } from '../watchlist/notify';
 import type { WatchlistStore } from '../watchlist/store';
 import { MAX_FILE_BYTES, normalizeKind } from '../watchlist/validate';
 
@@ -23,9 +23,9 @@ function readImportFile(filePath: string): string {
     return fs.readFileSync(filePath, 'utf8');
 }
 
-export function registerWatchlistHandlers(store: WatchlistStore): void {
+export function registerWatchlistHandlers(store: WatchlistStore, linkNick: (nick: string, friend: string | null) => boolean): void {
     const previews = new ImportPreviews();
-    const notify = (): void => broadcast(IPC_EVENTS.WATCHLIST_UPDATED, store.snapshot());
+    const notify = (): void => notifyWatchlist(store);
 
     const preview = (label: string, parse: () => ParseResult): ImportAttempt => {
         try {
@@ -38,7 +38,7 @@ export function registerWatchlistHandlers(store: WatchlistStore): void {
         }
     };
 
-    ipcMain.handle(IPC_CHANNELS.WATCHLIST_GET, () => store.snapshot());
+    ipcMain.handle(IPC_CHANNELS.WATCHLIST_GET, () => store.view());
 
     ipcMain.handle(IPC_CHANNELS.WATCHLIST_SET, (_e, name: unknown, change: unknown) => {
         if (typeof name !== 'string') return false;
@@ -108,7 +108,7 @@ export function registerWatchlistHandlers(store: WatchlistStore): void {
 
     ipcMain.handle(IPC_CHANNELS.WATCHLIST_LINK_NICK, (_e, nick: unknown, friend: unknown) => {
         if (typeof nick !== 'string' || (friend !== null && typeof friend !== 'string')) return false;
-        const ok = store.linkNick(nick, friend);
+        const ok = linkNick(nick, friend);
         if (ok) notify();
         return ok;
     });

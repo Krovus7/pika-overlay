@@ -56,3 +56,22 @@ export interface ImportPreview {
 
 /** Result of an import attempt: a preview, an error to show, or null when the dialog was cancelled. */
 export type ImportAttempt = ImportPreview | { error: string } | null;
+
+/** What the table needs to know about one watched name, with the precedence already applied in main. */
+export interface WatchResolved {
+    kind: WatchKind;
+    note: string;
+    /** 'me' for an own entry, else the label of the imported list */
+    sourceLabel: string;
+    imported: boolean;
+}
+
+/** What watchlist:get returns and watchlist:updated broadcasts: the snapshot plus the resolved view by lowercase name. */
+export type WatchlistView = WatchlistSnapshot & { resolved: Record<string, WatchResolved> };
+
+/** Event sent to the overlay when a watched player enters the table. */
+export interface WatchAlert {
+    name: string;
+    kind: WatchKind;
+    note: string;
+}

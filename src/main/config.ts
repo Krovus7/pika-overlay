@@ -44,6 +44,8 @@ export interface AppConfig {
     rowDensity: 'comfortable' | 'dense';
     theme: 'dark' | 'light'; // light = light panels + dark text, for bright game scenes
     nickedOnTop: boolean;
+    watchlistOnTop: boolean; // watched players right after the party
+    watchlistSound: boolean; // short beep when a watched player enters the table
     highlightSuspects: boolean;
     loginAge: 'off' | 'lowLevel' | 'all'; // login-age chip: off until lastSeen is verified
     loginAgeMaxLevel: number;
@@ -107,6 +109,8 @@ export function defaultConfig(): AppConfig {
         rowDensity: 'comfortable',
         theme: 'dark',
         nickedOnTop: true,
+        watchlistOnTop: true,
+        watchlistSound: false,
         highlightSuspects: true,
         loginAge: 'off',
         loginAgeMaxLevel: 10,
@@ -225,6 +229,8 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
         rowDensity: enumOf(merged.rowDensity, ['comfortable', 'dense'], defaults.rowDensity),
         theme: enumOf(merged.theme, ['dark', 'light'], defaults.theme),
         nickedOnTop: bool(merged.nickedOnTop, defaults.nickedOnTop),
+        watchlistOnTop: bool(merged.watchlistOnTop, defaults.watchlistOnTop),
+        watchlistSound: bool(merged.watchlistSound, defaults.watchlistSound),
         highlightSuspects: bool(merged.highlightSuspects, defaults.highlightSuspects),
         loginAge: enumOf(merged.loginAge, ['off', 'lowLevel', 'all'], defaults.loginAge),
         loginAgeMaxLevel: Math.min(1000, Math.max(1, Math.round(num(merged.loginAgeMaxLevel, defaults.loginAgeMaxLevel)))),
