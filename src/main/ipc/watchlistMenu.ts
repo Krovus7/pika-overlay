@@ -23,8 +23,10 @@ export function registerWatchlistMenu({ store, party, linkNick }: WatchlistMenuD
 
     ipcMain.handle(IPC_CHANNELS.WATCHLIST_MENU, (_e, name: unknown, nicked: unknown): MenuView | null => {
         if (typeof name !== 'string' || !name) return null;
-        const change = (change: Parameters<WatchlistStore['setOwn']>[1]): void => {
-            if (store.setOwn(name, change)) notifyWatchlist(store);
+        const change = (change: Parameters<WatchlistStore['setOwn']>[1]): boolean => {
+            const ok = store.setOwn(name, change);
+            if (ok) notifyWatchlist(store);
+            return ok;
         };
         const found = store.lookup(name);
         const spec = buildMenuSpec({
@@ -34,8 +36,12 @@ export function registerWatchlistMenu({ store, party, linkNick }: WatchlistMenuD
             partyMembers: party.snapshot(),
             mark: (kind, note) => change({ kind, note }),
             unmark: () => change(null),
-            editNote: () => openSettings('watchlist'),
-            link: friend => { if (linkNick(name, friend)) notifyWatchlist(store); },
+            editNote: () => { openSettings('watchlist'); return true; },
+            link: friend => {
+                const ok = linkNick(name, friend);
+                if (ok) notifyWatchlist(store);
+                return ok;
+            },
         });
         return session.open(name, spec);
     });

@@ -8,7 +8,8 @@ export interface MenuSpec {
     kind: 'action' | 'info' | 'separator' | 'submenu';
     tone?: MenuTone;
     checked?: boolean;
-    click?: () => void;
+    /** True when the action worked; the overlay tells the user when it did not. */
+    click?: () => boolean;
     items?: MenuSpec[];
 }
 
@@ -17,10 +18,10 @@ export interface MenuInput {
     nicked: boolean;
     resolved: WatchResolved | undefined;
     partyMembers: readonly string[];
-    mark: (kind: WatchKind, note: string) => void;
-    unmark: () => void;
-    editNote: () => void;
-    link: (friend: string | null) => void;
+    mark: (kind: WatchKind, note: string) => boolean;
+    unmark: () => boolean;
+    editNote: () => boolean;
+    link: (friend: string | null) => boolean;
 }
 
 const KIND_ITEM: Record<WatchKind, string> = {

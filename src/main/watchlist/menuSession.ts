@@ -7,7 +7,7 @@ import type { MenuSpec } from './menuSpec';
 
 export class MenuSession {
     private token = '';
-    private actions = new Map<string, () => void>();
+    private actions = new Map<string, () => boolean>();
 
     /** Starts a new menu; every earlier token stops working. */
     open(title: string, specs: readonly MenuSpec[]): MenuView {
@@ -16,15 +16,14 @@ export class MenuSession {
         return { token: this.token, title, items: specs.map(spec => this.view(spec)) };
     }
 
-    /** Runs the picked action if the token is the latest, then forgets the menu. True when something ran. */
+    /** Runs the picked action if the token is the latest, then forgets the menu. The action's result; false for a stale token or unknown id. */
     pick(token: unknown, id: unknown): boolean {
         if (typeof token !== 'string' || typeof id !== 'string' || token !== this.token) return false;
         const action = this.actions.get(id);
         this.token = '';
         this.actions = new Map();
         if (!action) return false;
-        action();
-        return true;
+        return action();
     }
 
     private view(spec: MenuSpec): MenuItemView {

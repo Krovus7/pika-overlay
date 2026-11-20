@@ -37,13 +37,9 @@ export function placeMenu(p: PlaceInput): Placement {
     };
 }
 
-/** Next enabled index when moving the highlight; wraps. `current` -1 means none. */
-export function stepIndex(enabled: readonly boolean[], current: number, dir: 1 | -1): number {
-    const n = enabled.length;
-    const from = current < 0 && dir < 0 ? 0 : current;
-    for (let i = 1; i <= n; i++) {
-        const next = ((from + dir * i) % n + n) % n;
-        if (enabled[next]) return next;
-    }
-    return -1;
+/** Next index when moving the highlight over `count` items; wraps. `current` -1 means none. */
+export function stepIndex(count: number, current: number, dir: 1 | -1): number {
+    if (count === 0) return -1;
+    if (current < 0) return dir > 0 ? 0 : count - 1;
+    return ((current + dir) % count + count) % count;
 }

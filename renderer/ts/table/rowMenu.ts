@@ -2,8 +2,8 @@
 
 import type { MenuItemView, MenuView } from '../../../src/shared/menu';
 import { showToast } from '../ui/toast';
-import { esc } from './format';
 import { placeMenu, stepIndex } from './menuPlacement';
+import { contentHtml } from './rowMenuHtml';
 
 const MARGIN = 6;
 const api = window.pikaOverlay;
@@ -15,22 +15,6 @@ let inSubmenu = false;
 let active = -1;
 let anchor = { x: 0, y: 0 };
 
-const isPickable = (item: MenuItemView): boolean => item.kind === 'action' || item.kind === 'submenu';
-
-function itemHtml(item: MenuItemView, index: number): string {
-    if (item.kind === 'separator') return '<div class="rm-sep" role="separator"></div>';
-    if (item.kind === 'info') return `<div class="rm-info">${esc(item.label)}</div>`;
-    const tone = item.tone ? ` rm-${item.tone}` : '';
-    const dot = item.tone && item.tone !== 'danger' ? '<span class="rm-dot"></span>' : '';
-    const tail = item.kind === 'submenu' ? '<span class="rm-tail">›</span>' : item.checked ? '<span class="rm-tail rm-check">✓</span>' : '';
-    return `<button type="button" class="rm-item${tone}" role="menuitem" data-i="${index}">${dot}<span class="rm-label">${esc(item.label)}</span>${tail}</button>`;
-}
-
-function contentHtml(): string {
-    const back = inSubmenu ? '<button type="button" class="rm-item rm-back" role="menuitem" data-back="1"><span class="rm-label">‹ Back</span></button><div class="rm-sep" role="separator"></div>' : '';
-    return `<div class="rm-title" title="${esc(current?.title)}">${esc(current?.title)}</div>${back}${level.map(itemHtml).join('')}`;
-}
-
 function buttons(): HTMLElement[] {
     return menu ? [...menu.querySelectorAll<HTMLElement>('.rm-item')] : [];
 }
@@ -39,6 +23,7 @@ function highlight(index: number): void {
     const list = buttons();
     active = index;
     list.forEach((b, i) => b.classList.toggle('is-active', i === index));
+    list[index]?.focus({ preventScroll: true });
     list[index]?.scrollIntoView({ block: 'nearest' });
 }
 
@@ -56,9 +41,9 @@ function position(): void {
 
 function draw(): void {
     if (!menu) return;
-    menu.innerHTML = contentHtml();
-    active = -1;
+    menu.innerHTML = contentHtml(current?.title, level, inSubmenu);
     position();
+    highlight(0);
 }
 
 export function closeRowMenu(): void {
@@ -78,6 +63,9 @@ function pick(item: MenuItemView): void {
     closeRowMenu();
     if (!token || !item.id) return;
     api.pickWatchMenu(token, item.id)
+        .then(ok => {
+            if (!ok) showToast('Action failed', 2500);
+        })
         .catch(err => {
             console.error('[Overlay] Row menu action failed:', String(err));
             showToast('Menu action failed', 2500);
@@ -104,10 +92,13 @@ function onClick(e: MouseEvent): void {
 function onKey(e: KeyboardEvent): void {
     if (!menu) return;
     const list = buttons();
-    const enabled = list.map(() => true);
     const key = e.key;
+    if (key === 'Tab') {
+        closeRowMenu();
+        return;
+    }
     if (key === 'Escape') closeRowMenu();
-    else if (key === 'ArrowDown' || key === 'ArrowUp') highlight(stepIndex(enabled, active, key === 'ArrowDown' ? 1 : -1));
+    else if (key === 'ArrowDown' || key === 'ArrowUp') highlight(stepIndex(list.length, active, key === 'ArrowDown' ? 1 : -1));
     else if (key === 'Enter') list[active]?.click();
     else if ((key === 'ArrowLeft' || key === 'Backspace') && inSubmenu) back();
     else return;

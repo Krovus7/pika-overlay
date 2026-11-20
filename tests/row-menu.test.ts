@@ -40,23 +40,23 @@ describe('placeMenu', () => {
 });
 
 describe('stepIndex', () => {
-    it('moves over enabled entries and wraps', () => {
-        const enabled = [true, false, true];
-        assert.equal(stepIndex(enabled, -1, 1), 0);
-        assert.equal(stepIndex(enabled, 0, 1), 2);
-        assert.equal(stepIndex(enabled, 2, 1), 0);
-        assert.equal(stepIndex(enabled, -1, -1), 2);
-        assert.equal(stepIndex([false], 0, 1), -1);
+    it('moves over the items and wraps', () => {
+        assert.equal(stepIndex(3, -1, 1), 0);
+        assert.equal(stepIndex(3, 0, 1), 1);
+        assert.equal(stepIndex(3, 2, 1), 0);
+        assert.equal(stepIndex(3, 0, -1), 2);
+        assert.equal(stepIndex(3, -1, -1), 2);
+        assert.equal(stepIndex(0, -1, 1), -1);
     });
 });
 
 describe('MenuSession', () => {
     const calls: string[] = [];
     const specs: MenuSpec[] = [
-        { label: 'A', kind: 'action', tone: 'sniper', checked: true, click: () => calls.push('A') },
+        { label: 'A', kind: 'action', tone: 'sniper', checked: true, click: () => { calls.push('A'); return true; } },
         { label: '', kind: 'separator' },
         { label: 'Info', kind: 'info' },
-        { label: 'Sub', kind: 'submenu', items: [{ label: 'B', kind: 'action', click: () => calls.push('B') }] },
+        { label: 'Sub', kind: 'submenu', items: [{ label: 'B', kind: 'action', click: () => { calls.push('B'); return true; } }] },
     ];
 
     it('serializes without closures and gives ids only to pickable items', () => {
@@ -75,6 +75,13 @@ describe('MenuSession', () => {
         assert.equal(s.pick(view.token, view.items[3]!.items![0]!.id), true);
         assert.equal(s.pick(view.token, view.items[0]!.id), false);
         assert.deepEqual(calls, ['B']);
+    });
+
+    it('returns the result of the action, so a failed one can be reported', () => {
+        const s = new MenuSession();
+        const view = s.open('x', [{ label: 'Bad', kind: 'action', click: () => false }]);
+        assert.equal(s.pick(view.token, view.items[0]!.id), false);
+        assert.equal(s.pick(view.token, view.items[0]!.id), false);
     });
 
     it('a newer menu invalidates older tokens, and bad input is ignored', () => {
