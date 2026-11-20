@@ -24,6 +24,9 @@ const KIND_ITEM: Record<WatchKind, string> = {
     sniper: 'Mark as sniper', cheater: 'Mark as cheater', other: 'Mark as other',
 };
 
+/** A native menu reads `&` as a mnemonic marker; user and imported text must show it literally. */
+export const menuText = (text: string): string => text.replace(/&/g, '&&');
+
 const SEPARATOR: MenuSpec = { type: 'separator' };
 
 export function buildMenuSpec(input: MenuInput): MenuSpec[] {
@@ -40,10 +43,10 @@ export function buildMenuSpec(input: MenuInput): MenuSpec[] {
     if (resolved) {
         items.push(SEPARATOR);
         if (!resolved.imported) items.push({ label: 'Remove from watchlist', click: input.unmark });
-        else items.push({ label: `From list: ${resolved.sourceLabel}`, enabled: false });
+        else items.push({ label: menuText(`From list: ${resolved.sourceLabel}`), enabled: false });
     }
     if (nicked) {
-        const members: MenuSpec[] = input.partyMembers.map(m => ({ label: m, click: () => input.link(m) }));
+        const members: MenuSpec[] = input.partyMembers.map(m => ({ label: menuText(m), click: () => input.link(m) }));
         items.push(SEPARATOR, {
             label: 'This is my teammate',
             submenu: [...members, { label: 'Someone else', click: () => input.link(null) }],

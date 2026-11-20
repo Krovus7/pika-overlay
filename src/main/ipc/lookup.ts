@@ -28,7 +28,7 @@ export interface LookupDeps {
     /** Detected names that are linked nicks (teammates) never enter the table */
     isLinkedNick?: (name: string) => boolean;
     /** A player was added to the table (once per registration) */
-    onPlayerEnter?: (name: string) => void;
+    onPlayerEnter?: (name: string, source: string) => void;
 }
 
 /** The client only says not_found; a name seen live in a game is a nick. */
@@ -68,7 +68,7 @@ export class LookupService {
         if (!name) return null;
         if (!USER_TYPED_SOURCES.includes(source) && this.deps.isLinkedNick?.(name)) return null;
         if (!this.deps.registry.add(name, source)) return null;
-        this.deps.onPlayerEnter?.(name);
+        this.deps.onPlayerEnter?.(name, source);
         this.autoRetry.reset(name.toLowerCase());
         this.settled.delete(name.toLowerCase());
         return this.run(name, source, interval, mode, fresh, false);

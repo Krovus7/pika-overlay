@@ -66,21 +66,32 @@ describe('sorting with watchlistOnTop', () => {
 });
 
 describe('WatchAlerts', () => {
+    const SELF_OR_PARTY = new Set(['me', 'pal']);
     const entry = { name: 'Snipe', kind: 'sniper', note: '', addedAt: 1, source: 'me' } as WatchEntry;
     const alerts = () => new WatchAlerts(n => (n.toLowerCase() === 'snipe' ? entry : undefined));
 
     it('fires once per player per lobby, case-insensitive, and again after reset', () => {
         const a = alerts();
-        assert.equal(a.check('Snipe'), entry);
-        assert.equal(a.check('SNIPE'), undefined);
+        assert.equal(a.check('Snipe', 'join'), entry);
+        assert.equal(a.check('SNIPE', 'join'), undefined);
         a.reset();
-        assert.equal(a.check('snipe'), entry);
+        assert.equal(a.check('snipe', 'join'), entry);
+    });
+
+    it('ignores typed lookups, party sources, self and party members', () => {
+        const a = new WatchAlerts(() => entry, n => SELF_OR_PARTY.has(n.toLowerCase()));
+        assert.equal(a.check('Snipe', 'manual'), undefined);
+        assert.equal(a.check('Snipe', 'bulk'), undefined);
+        assert.equal(a.check('Snipe', 'party'), undefined);
+        assert.equal(a.check('Me', 'join'), undefined);
+        assert.equal(a.check('Pal', 'tab_list'), undefined);
+        assert.equal(a.check('Snipe', 'tab_list'), entry);
     });
 
     it('ignores players that are not watched', () => {
         const a = alerts();
-        assert.equal(a.check('Nobody'), undefined);
-        assert.equal(a.check('Nobody'), undefined);
+        assert.equal(a.check('Nobody', 'join'), undefined);
+        assert.equal(a.check('Nobody', 'join'), undefined);
     });
 });
 

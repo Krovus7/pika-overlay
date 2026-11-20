@@ -24,7 +24,7 @@ import { LookupQueue } from './state/lookupQueue';
 import { createTray } from './tray';
 import { checkForUpdates, onUpdateStateChange, runStartupHooks } from './update/velopackUpdate';
 import { bindWatcherEvents } from './watcherBindings';
-import { deliverAlert } from './watchlist/alertDelivery';
+import { clearAlertFlash, deliverAlert } from './watchlist/alertDelivery';
 import { WatchAlerts } from './watchlist/alerts';
 import { getWatchlist, initWatchlist } from './watchlist/instance';
 import { linkNickAndHide } from './watchlist/nickLink';
@@ -56,12 +56,15 @@ app.whenReady().then(() => {
 
     initWatchlist(new WatchlistStore(WatchlistStore.userDataPath(app.getPath('userData'))));
     const watchlist = getWatchlist();
-    const alerts = new WatchAlerts(name => watchlist.lookup(name));
+    const alerts = new WatchAlerts(
+        name => watchlist.lookup(name),
+        name => name.toLowerCase() === watcherSettings(store).name.toLowerCase() || partyState.has(name),
+    );
     const lookupDeps: LookupDeps = {
         store, registry: playerRegistry, getOverlayWin,
         isLinkedNick: name => watchlist.isLinkedNick(name),
-        onPlayerEnter: name => {
-            const entry = alerts.check(name);
+        onPlayerEnter: (name, source) => {
+            const entry = alerts.check(name, source);
             if (entry) deliverAlert(getOverlayWin(), name, entry);
         },
     };
@@ -72,6 +75,10 @@ app.whenReady().then(() => {
     });
 
     createOverlay(store, rootDir);
+    const stopFlash = (): void => clearAlertFlash(getOverlayWin());
+    getOverlayWin()?.on('show', stopFlash);
+    getOverlayWin()?.on('restore', stopFlash);
+    getOverlayWin()?.on('focus', stopFlash);
     initSettingsWindow({ store, rootDir, getOverlayWin });
     createTray(rootDir, getOverlayWin, openSettings);
 

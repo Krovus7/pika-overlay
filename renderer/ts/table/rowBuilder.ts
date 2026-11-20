@@ -16,7 +16,7 @@ function rowClasses(v: RowView): string {
     if (status === 'nicked') c.push('row-nicked');
     if (v.isSelf) c.push('row-self');
     if (v.isParty) c.push('row-party');
-    if (v.watch) c.push(`row-watch-${v.watch.kind}`);
+    if (v.watch) c.push('row-watch', `row-watch-${v.watch.kind}`);
     if (v.isSuspect) c.push('row-suspect');
     return c.join(' ');
 }

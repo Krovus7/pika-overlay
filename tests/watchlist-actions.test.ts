@@ -40,6 +40,12 @@ describe('row menu content', () => {
         assert.deepEqual(calls, ['mark:cheater:camps beds', 'unmark']);
     });
 
+    it('escapes & in imported labels and party names so the menu shows them literally', () => {
+        const items = buildMenuSpec(input({ resolved: { ...imported, sourceLabel: 'A&B' }, nicked: true, partyMembers: ['x&y'] }));
+        assert.ok(labels(items).includes('From list: A&&B'));
+        assert.deepEqual(labels(items[items.length - 1]!.submenu!), ['x&&y', 'Someone else']);
+    });
+
     it('imported entry: informative disabled line, no remove, note not copied', () => {
         const items = buildMenuSpec(input({ resolved: { ...imported, sourceLabel: 'Friends' } }));
         assert.deepEqual(labels(items).slice(3), ['---', 'From list: Friends']);
