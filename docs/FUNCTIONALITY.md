@@ -311,7 +311,7 @@ Disabled in dev mode (not packaged); the Updates tab then shows a message.
 
 **Update card (overlay):** when the state is `available` a small card appears
 bottom-right above the footer (bottom 10 px in the compact layout): download icon,
-"Update available", "Version X.Y.Z is available · click to update", and a × button
+"Update available", "Version X.Y.Z · click to update", and a × button
 (aria-label "Dismiss"). The card also appears if the check finished before the
 overlay loaded (the overlay reads `update:getState` at load). Clicking the card
 opens Settings → Updates (`openSettings('updates')`, tab id validated in main by

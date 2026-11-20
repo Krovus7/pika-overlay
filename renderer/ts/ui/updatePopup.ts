@@ -19,7 +19,7 @@ function render(): void {
     if (!el) return;
     const version = popupVersion(current, dismissed);
     const text = el.querySelector('.up-sub');
-    if (version && text) text.textContent = `Version ${version} is available · click to update`;
+    if (version && text) text.textContent = `Version ${version} · click to update`;
     el.classList.toggle('is-visible', version !== null);
 }
 
