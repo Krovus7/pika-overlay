@@ -131,11 +131,12 @@ body.density-dense #stats-body td { font-size: 12.5px; }
   vertical-align: middle;
 }
 .tags-cell { white-space: nowrap; overflow: hidden; text-overflow: clip; }
-.tags-cell .tag { margin-left: 0; margin-right: 4px; }
-.tag-you { background: var(--teal-tint); color: var(--teal-text); }
-.tag-age { background: rgba(var(--ink-rgb), 0.06); color: var(--text-dim); }
-.tag-age-fresh { background: var(--medium-tint); color: var(--medium-text); }
-.tag-bot { background: var(--medium-tint); color: var(--medium-text); }
+/* Tags column chips: 10px / 16px so they read as labels over the game (width budget in header.ts COL_WIDTH) */
+.tags-cell .tag { margin-left: 0; margin-right: 4px; padding: 0 5px; font-size: 10px; line-height: 16px; font-weight: 700; }
+.tag-you { background: rgba(var(--accent2-rgb), calc(0.26 + var(--lo) * 0.18)); color: var(--teal-text); }
+.tag-age { background: rgba(var(--ink-rgb), calc(0.14 + var(--lo) * 0.14)); color: var(--text-soft); }
+.tag-age-fresh { background: rgba(var(--medium-rgb), calc(0.26 + var(--lo) * 0.18)); color: var(--medium-text); }
+.tag-bot { background: rgba(var(--medium-rgb), calc(0.26 + var(--lo) * 0.18)); color: var(--medium-text); }
 .party-ic { color: var(--party-text); }
 
 /* ─── Row rails and meaning tints: self, suspect, party, nicked ───────────────

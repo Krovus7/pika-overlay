@@ -1,9 +1,9 @@
 /* Watchlist chips and row rail. Backings gain alpha with --lo (low overlay opacity) so chips stay readable like the others. */
-.tag-sniper  { background: rgba(var(--medium-rgb), calc(0.16 + var(--lo) * 0.22)); color: var(--medium-text); }
-.tag-cheater { background: rgba(var(--bad-rgb),    calc(0.16 + var(--lo) * 0.22)); color: var(--bad-text); }
-.tag-other   { background: rgba(var(--ink-rgb),    calc(0.10 + var(--lo) * 0.18)); color: var(--text); }
+.tag-sniper  { background: rgba(var(--medium-rgb), calc(0.26 + var(--lo) * 0.2)); color: var(--medium-text); }
+.tag-cheater { background: rgba(var(--bad-rgb),    calc(0.26 + var(--lo) * 0.2)); color: var(--bad-text); }
+.tag-other   { background: rgba(var(--ink-rgb),    calc(0.20 + var(--lo) * 0.18)); color: var(--text); }
 /* Imported entries (someone else's notes): outline only */
-.tag-imported { background: transparent; box-shadow: inset 0 0 0 1px currentColor; }
+.tag-imported { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
 
 /* Weaker than the nicked rail: base tint, rail at 70%. Loaded after table.css; the :not() list keeps
    self, suspect, party and nicked rows on their own rail, and out-ranks the zebra and hover tints. */
