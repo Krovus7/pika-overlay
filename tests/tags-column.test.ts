@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { COLUMN_DEFS } from '../src/shared/columns';
+import { viewSignature } from '../renderer/ts/table/rowView';
 import { buildStatusCells } from '../renderer/ts/table/statusRow';
 import { chipsSignature, tagsCell, viewChips, type Chip } from '../renderer/ts/table/tagsCell';
 import type { RenderContext, RowView } from '../renderer/ts/table/types';
@@ -63,5 +64,18 @@ describe('status row with the tags column', () => {
     it('spans only the remaining stat columns with the pill', () => {
         const html = buildStatusCells(nicked, ['rank', 'player', 'tags', 'guild', 'fkdr', 'wlr'].map(col), ctx);
         assert.match(html, /<td colspan="2">/);
+    });
+});
+
+describe('row signature', () => {
+    const base: RowView = {
+        data: { username: 'x', source: 'log', status: 'loading' },
+        name: 'x', isParty: false, isSelf: false, isSuspect: false,
+    };
+
+    it('differs when the chips differ', () => {
+        assert.notEqual(viewSignature(base), viewSignature({ ...base, isSuspect: true }));
+        assert.notEqual(viewSignature({ ...base, isSelf: true }), viewSignature({ ...base, isSuspect: true }));
+        assert.equal(viewSignature(base), viewSignature({ ...base }));
     });
 });

@@ -46,6 +46,14 @@ describe('normalizeConfig — defaults', () => {
         assert.equal(cfg.columnOrder.length, old.length + 1);
     });
 
+    it('tags joins a saved compact set only when the config predates the column', () => {
+        const oldOrder = ['rank', 'player', 'guild', 'fkdr', 'source'];
+        const compact = ['rank', 'player', 'fkdr'];
+        assert.ok(normalizeConfig({ columnOrder: oldOrder, compactColumns: compact }).compactColumns.includes('tags'));
+        const deliberate = normalizeConfig({ columnOrder: ['rank', 'player', 'tags', 'fkdr'], compactColumns: compact });
+        assert.ok(!deliberate.compactColumns.includes('tags'));
+    });
+
     it('tags is enabled by default, also for configs saved before it existed', () => {
         assert.equal(defaultConfig().columnEnabled.tags, true);
         assert.equal(normalizeConfig({ columnEnabled: { rank: true, player: true } }).columnEnabled.tags, true);

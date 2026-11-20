@@ -208,7 +208,7 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
         },
         columnOrder: normalizeColumnOrder(merged.columnOrder),
         columnEnabled: normalizeColumnEnabled(merged.columnEnabled),
-        compactColumns: mergeCompactColumns(merged.compactColumns),
+        compactColumns: mergeCompactColumns(merged.compactColumns, !hasColumn(merged.columnOrder, 'tags')),
         fkdrThresholds: {
             good: num((merged.fkdrThresholds as RawConfig)?.good, 3.0),
             medium: num((merged.fkdrThresholds as RawConfig)?.medium, 1.0),
@@ -249,10 +249,16 @@ function normalizeColumnEnabled(v: unknown): Record<string, boolean> {
     return out;
 }
 
-function mergeCompactColumns(v: unknown): string[] {
+function hasColumn(order: unknown, id: string): boolean {
+    return Array.isArray(order) && order.includes(id);
+}
+
+/** `addTags`: the saved config predates the Tags column, so it joins the compact set once. */
+function mergeCompactColumns(v: unknown, addTags: boolean): string[] {
     const saved = Array.isArray(v) ? v.filter((id): id is string => typeof id === 'string') : [];
     const merged = saved.filter(id => KNOWN_COLUMNS.includes(id));
     if (!merged.includes('player')) merged.push('player');
+    if (addTags && Array.isArray(v) && !merged.includes('tags')) merged.push('tags');
     return merged;
 }
 
