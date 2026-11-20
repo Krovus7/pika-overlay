@@ -30,7 +30,7 @@ export function registerWatchlistHandlers(store: WatchlistStore): void {
     const preview = (label: string, parse: () => ParseResult): ImportAttempt => {
         try {
             const { entries, invalid } = parse();
-            return previews.create(label, entries, store.countOwnConflicts(entries), invalid);
+            return previews.create(label, entries, store.countOwnConflicts(entries), invalid, store.hasListLabel(label));
         } catch (e) {
             if (e instanceof FormatError) return { error: e.message };
             console.error('[Watchlist] Import failed:', (e as Error).message);
@@ -101,7 +101,7 @@ export function registerWatchlistHandlers(store: WatchlistStore): void {
     ipcMain.handle(IPC_CHANNELS.WATCHLIST_CONFIRM_IMPORT, (_e, token: unknown) => {
         const pending = typeof token === 'string' ? previews.take(token) : null;
         if (!pending) return false;
-        store.applyImport(pending.label, pending.entries);
+        if (!store.applyImport(pending.label, pending.entries)) return false;
         notify();
         return true;
     });

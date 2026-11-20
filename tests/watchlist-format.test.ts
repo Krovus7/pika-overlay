@@ -80,6 +80,11 @@ describe('watchlist formats', () => {
         assert.equal(exportText([e, { ...e, name: 'Alex', note: '' }]), 'Steve, other, 1 camper\nAlex, other');
     });
 
+    it('accepts a UTF-8 BOM in JSON and text files', () => {
+        assert.equal(parseAny('\ufeff' + doc({ entries: [{ name: 'Steve' }] }), 'other', NOW).entries.length, 1);
+        assert.deepEqual(parseAny('\ufeffSteve\nAlex', 'other', NOW).entries.map(e => e.name), ['Steve', 'Alex']);
+    });
+
     it('names the export file by date', () => {
         assert.equal(defaultFileName(new Date('2026-11-20T10:00:00Z')), 'pika-watchlist-2026-11-20.json');
     });
@@ -89,11 +94,11 @@ describe('import previews', () => {
     it('are single use and expire after five minutes', () => {
         let t = NOW;
         const previews = new ImportPreviews(() => t);
-        const p = previews.create('list', [], 2, 3);
-        assert.deepEqual([p.count, p.conflicts, p.invalid, p.label], [0, 2, 3, 'list']);
+        const p = previews.create('list', [], 2, 3, true);
+        assert.deepEqual([p.count, p.conflicts, p.invalid, p.label, p.replacesExisting], [0, 2, 3, 'list', true]);
         assert.equal(previews.take(p.token)?.label, 'list');
         assert.equal(previews.take(p.token), null);
-        const q = previews.create('l2', [], 0, 0);
+        const q = previews.create('l2', [], 0, 0, false);
         t += PREVIEW_TTL_MS;
         assert.equal(previews.take(q.token), null);
         assert.equal(previews.take('unknown'), null);

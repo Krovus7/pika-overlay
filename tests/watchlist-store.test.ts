@@ -52,7 +52,7 @@ describe('watchlist store', () => {
         s.setOwn('Steve', { kind: 'other', note: '' });
         const a = s.applyImport('a', [parsed('Alex')]);
         s.applyImport('b', [parsed('Bobby')]);
-        assert.equal(s.removeList(a.id), true);
+        assert.equal(s.removeList(a?.id ?? ''), true);
         assert.deepEqual(s.snapshot().entries.map(e => e.name).sort(), ['Bobby', 'Steve']);
         assert.equal(s.removeList('missing'), false);
     });
@@ -62,7 +62,7 @@ describe('watchlist store', () => {
         s.applyImport('list.json', [parsed('Alex'), parsed('Bobby')]);
         const again = s.applyImport('list.json', [parsed('Carl')]);
         assert.equal(s.snapshot().lists.length, 1);
-        assert.deepEqual(s.snapshot().entries.map(e => [e.name, e.source]), [['Carl', again.id]]);
+        assert.deepEqual(s.snapshot().entries.map(e => [e.name, e.source]), [['Carl', again?.id]]);
     });
 
     it('exports own entries only unless imported ones are included', () => {
@@ -106,6 +106,50 @@ describe('watchlist store', () => {
         const s = open();
         assert.deepEqual(s.snapshot().entries.map(e => e.name), ['Steve']);
         assert.deepEqual(s.snapshot().nickLinks, []);
+    });
+});
+
+describe('failed writes', () => {
+    // The parent of the list file is a regular file, so every save fails
+    const failing = () => {
+        const blocker = path.join(dir, 'blocker');
+        fs.writeFileSync(blocker, 'x');
+        return new WatchlistStore(path.join(blocker, 'watchlist.json'), () => ++clock);
+    };
+    const quiet = <T>(run: () => T): T => {
+        const err = console.error;
+        console.error = () => {};
+        try { return run(); } finally { console.error = err; }
+    };
+
+    it('leave memory unchanged and report failure', () => {
+        const s = failing();
+        quiet(() => {
+            assert.equal(s.setOwn('Steve', { kind: 'other', note: '' }), false);
+            assert.equal(s.applyImport('a', [parsed('Alex')]), null);
+            assert.equal(s.linkNick('Nicky', null), false);
+        });
+        assert.deepEqual(s.snapshot(), { entries: [], lists: [], nickLinks: [] });
+    });
+
+    it('keep an existing list and entries when a re-import cannot be saved', () => {
+        const s = open();
+        s.applyImport('a', [parsed('Alex')]);
+        s.setOwn('Steve', { kind: 'other', note: '' });
+        fs.rmSync(file);
+        fs.mkdirSync(file);
+        const before = s.snapshot();
+        quiet(() => assert.equal(s.applyImport('a', [parsed('Carl')]), null));
+        assert.deepEqual(s.snapshot(), before);
+    });
+});
+
+describe('import labels', () => {
+    it('reports whether a list with the label exists', () => {
+        const s = open();
+        assert.equal(s.hasListLabel('a'), false);
+        s.applyImport('a', [parsed('Alex')]);
+        assert.equal(s.hasListLabel('a'), true);
     });
 });
 

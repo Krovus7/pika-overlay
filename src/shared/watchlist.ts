@@ -50,6 +50,8 @@ export interface ImportPreview {
     conflicts: number;
     /** Lines or records that were not valid names */
     invalid: number;
+    /** A list with this label already exists and the import will replace it */
+    replacesExisting: boolean;
 }
 
 /** Result of an import attempt: a preview, an error to show, or null when the dialog was cancelled. */

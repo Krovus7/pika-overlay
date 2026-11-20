@@ -12,6 +12,9 @@ export interface ParseResult {
     invalid: number;
 }
 
+/** Windows editors prepend a BOM that JSON.parse rejects. */
+const stripBom = (text: string): string => (text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
+
 export function defaultFileName(now: Date): string {
     return `pika-watchlist-${now.toISOString().slice(0, 10)}.json`;
 }
@@ -37,7 +40,7 @@ function finish(entries: ParsedEntry[], invalid: number): ParseResult {
 export function parseJson(text: string, now: number): ParseResult {
     let doc: unknown;
     try {
-        doc = JSON.parse(text);
+        doc = JSON.parse(stripBom(text));
     } catch {
         throw new FormatError('The file is not valid JSON.');
     }
@@ -60,7 +63,7 @@ export function parseJson(text: string, now: number): ParseResult {
 export function parseText(text: string, defaultKind: WatchKind, now: number): ParseResult {
     const entries: ParsedEntry[] = [];
     let invalid = 0;
-    for (const rawLine of text.split(/\r?\n/)) {
+    for (const rawLine of stripBom(text).split(/\r?\n/)) {
         const line = rawLine.split('#')[0]?.trim() ?? '';
         if (!line) continue;
         const [name = '', kindPart = '', ...noteParts] = line.split(',');
@@ -75,5 +78,5 @@ export function parseText(text: string, defaultKind: WatchKind, now: number): Pa
 /** A document starting with '{' is the JSON file; anything else is the text format. */
 export function parseAny(text: string, defaultKind: WatchKind, now: number): ParseResult {
     if (Buffer.byteLength(text, 'utf8') > MAX_FILE_BYTES) throw new FormatError('The list is larger than 1 MB.');
-    return text.trimStart().startsWith('{') ? parseJson(text, now) : parseText(text, defaultKind, now);
+    return stripBom(text).trimStart().startsWith('{') ? parseJson(text, now) : parseText(text, defaultKind, now);
 }

@@ -19,7 +19,7 @@ export class ImportPreviews {
 
     constructor(private readonly now: () => number = Date.now) {}
 
-    create(label: string, entries: ParsedEntry[], conflicts: number, invalid: number): ImportPreview {
+    create(label: string, entries: ParsedEntry[], conflicts: number, invalid: number, replacesExisting: boolean): ImportPreview {
         this.purge();
         while (this.pending.size >= MAX_PENDING) {
             const oldest = this.pending.keys().next().value;
@@ -28,7 +28,7 @@ export class ImportPreviews {
         }
         const token = crypto.randomUUID();
         this.pending.set(token, { label, entries, expiresAt: this.now() + PREVIEW_TTL_MS });
-        return { token, label, count: entries.length, conflicts, invalid };
+        return { token, label, count: entries.length, conflicts, invalid, replacesExisting };
     }
 
     /** Single use: the token is gone afterwards. Null when unknown or expired. */

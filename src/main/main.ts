@@ -14,9 +14,8 @@ import { registerHotkeys, unregisterAll } from './hotkeyManager';
 import { IPC_EVENTS } from '../shared/ipc-contract';
 import { clearPlayers } from './ipc/clearPlayers';
 import { registerIpcHandlers, type HandlerDeps } from './ipc/handlers';
-import { registerWatchlistHandlers } from './ipc/watchlistHandlers';
-import { WatchlistStore } from './watchlist/store';
 import { LookupService, type LookupDeps } from './ipc/lookup';
+import { registerWatchlistHandlers } from './ipc/watchlistHandlers';
 import { LogWatcher } from './log/logWatcher';
 import { driveReplay, replayFilePath } from './replay';
 import { gameState, partyState, playerRegistry } from './state';
@@ -24,6 +23,8 @@ import { LookupQueue } from './state/lookupQueue';
 import { createTray } from './tray';
 import { checkForUpdates, onUpdateStateChange, runStartupHooks } from './update/velopackUpdate';
 import { bindWatcherEvents } from './watcherBindings';
+import { getWatchlist, initWatchlist } from './watchlist/instance';
+import { WatchlistStore } from './watchlist/store';
 import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale } from './windowManager';
 import { broadcast } from './broadcast';
 import { applySettingsWindowConfig, initSettingsWindow, openSettings } from './settingsWindow';
@@ -77,7 +78,8 @@ app.whenReady().then(() => {
         party: partyState,
     };
     registerIpcHandlers(handlerDeps);
-    registerWatchlistHandlers(new WatchlistStore(WatchlistStore.userDataPath(app.getPath('userData'))));
+    initWatchlist(new WatchlistStore(WatchlistStore.userDataPath(app.getPath('userData'))));
+    registerWatchlistHandlers(getWatchlist());
 
     onUpdateStateChange(s => broadcast(IPC_EVENTS.UPDATE_STATE, s));
 
