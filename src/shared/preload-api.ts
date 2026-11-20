@@ -5,6 +5,8 @@
 
 import type { ApiHealth, ApiKeyTestResult, PlayerLoading, UpdateState } from './types';
 import type { StatsPayload } from './ipc-contract';
+import type { MenuView } from './menu';
+import type { ImportAttempt, WatchAlert, WatchKind, WatchlistView } from './watchlist';
 
 export interface PikaOverlayApi {
     // === Overlay events ===
@@ -69,4 +71,28 @@ export interface PikaOverlayApi {
     onApiHealth: (cb: (h: ApiHealth) => void) => void;
     /** Validates a key against the live API without saving it */
     testApiKey: (key: string) => Promise<ApiKeyTestResult>;
+    // === Watchlist and nick links (Task 3) ===
+    getWatchlist: () => Promise<WatchlistView>;
+    /** Adds or changes the own entry; null removes it. False when refused (invalid name, limit) */
+    setWatchEntry: (name: string, change: { kind: WatchKind; note: string } | null) => Promise<boolean>;
+    removeWatchList: (id: string) => Promise<boolean>;
+    /** Save dialog; resolves to the written path or null (cancelled or failed) */
+    exportWatchlist: (opts: { includeImported: boolean }) => Promise<string | null>;
+    /** Puts the own entries on the clipboard, one per line */
+    copyWatchlistText: () => Promise<void>;
+    /** Open dialog + parse; nothing is saved until confirmWatchImport */
+    importWatchlistFile: () => Promise<ImportAttempt>;
+    importWatchlistText: (text: string, defaultKind: WatchKind) => Promise<ImportAttempt>;
+    /** keepBoth: import as a new list (numbered label) instead of replacing one with the same label */
+    confirmWatchImport: (token: string, opts?: { keepBoth: boolean }) => Promise<boolean>;
+    /** Friend null or '' = teammate not named. False when a name is invalid */
+    linkNick: (nick: string, friend: string | null) => Promise<boolean>;
+    unlinkNick: (nick: string) => Promise<boolean>;
+    onWatchlistUpdate: (cb: (data: WatchlistView) => void) => void;
+    /** Overlay only: a watched player entered the table (once per player per lobby) */
+    onWatchlistAlert: (cb: (alert: WatchAlert) => void) => void;
+    /** What the row menu offers for this name (nicked adds the nick-link items); null for an invalid name. The overlay draws it. */
+    showWatchMenu: (name: string, nicked: boolean) => Promise<MenuView | null>;
+    /** Runs the picked item of the latest menu; false when the token is stale or the id unknown */
+    pickWatchMenu: (token: string, id: string) => Promise<boolean>;
 }

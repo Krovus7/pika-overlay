@@ -70,18 +70,90 @@ Every lookup ends in one status (`src/shared/types.ts`, classification table in
   (`src/main/ipc/autoRetry.ts`, `lookup.ts`).
 - Profile data (level, rank, guild) stays visible on `api_off`, `never_played`
   and `no_data` rows.
-- Row markers: diamond icon = party member; `YOU` tag = own row; `BOT?` tag =
-  `ok` row at level 0 or 1 with zero final kills, kills and wins (only when
-  "Highlight suspected bots and alts" is on); red rail + tint = nicked.
+- Row markers: diamond icon = party member; red rail + tint = nicked; amber,
+  red or grey rail + faint tint = watchlist (weaker than party, nicked and own
+  row). Chips (`YOU`, `BOT?`, watchlist, login age) sit in the Tags column, see
+  below.
 - A source badge (Search, Paste, Tab, Join, Kill, Bed, Team, Party) shows how
   the player was found (`renderer/ts/table/sourceBadge.ts`).
 - The footer summarizes the table: player count, plus counts of nicked, API
   off and new (`never_played`) rows when non-zero.
 
+### Tags column
+
+`renderer/ts/table/tagsCell.ts`: small chips, left-aligned in one fixed order
+(`YOU`, watchlist, login age, `BOT?`). Status rows keep the cell too, before the
+guild cell, so pills still share one left edge. The full list is also the cell's
+hover text. The column is on by default, in the compact layout as well; a saved
+column order without it gets it right after Player. If the window is too narrow
+it is dropped like any other column (rightmost first).
+
+- `YOU` = own row. `BOT?` = `ok` row at level 0 or 1 with zero final kills,
+  kills and wins (only when "Highlight suspected bots and alts" is on).
+- Watchlist chip: `SNIPER` (amber), `CHEATER` (red), `OTHER` (neutral). An entry
+  from an imported list is outlined and its hover text says "From <list>:
+  <note>"; an own entry shows its note.
+- Login age chip, see "Login age". It re-renders every 30 s, only while the
+  Tags column is visible and a row shows an age.
+
+### Watchlist
+
+A local list of names with a kind (sniper, cheater, other) and a note
+(ADR-0014); stored in `watchlist.json`, keyed by name.
+
+- **Mark a player:** right-click a row. The menu is drawn in the overlay
+  look, headed by the player name, and has Mark as sniper /
+  cheater / other (colored dot, a check on the current own kind; changing the
+  kind keeps an own note), Edit note in Settings
+  (opens Settings → Watchlist), Remove from watchlist (own entry) or a dim
+  "From list: <label>" line (imported entry). Esc, a click outside, scrolling or
+  resizing closes it; arrow keys, Enter and Esc work. Left click still copies the name.
+- **Nicked teammate:** on a NICKED row the menu starts with a dim line
+  saying the tag follows the nick, not the player, and ends with "This is my
+  teammate" (opens the party members, or "Someone else", in place with a Back row). The nick is then hidden from the
+  table and ignored when detected again. Nick links last for the session only
+  (not saved, never exported): one nick per teammate, deleted when that teammate
+  leaves your party (a link to a friend who is not in the party is refused); a "Someone else" link lasts
+  until the current game/lobby ends. A link that ends does not bring the nick back to the current table until
+  it is detected again. They are listed in Settings → Watchlist and can be removed there.
+- **Alert:** when a watched player enters the table from the log (not typed
+  names, party members or the own row) a toast "SNIPER Name is in your lobby"
+  shows for about 6 s, once per player per lobby. Optional beep
+  (`watchlistSound`, default off). If the overlay is hidden or minimized the
+  taskbar button flashes until it is shown again.
+- **Sorting:** watched rows come right after the party (`watchlistOnTop`,
+  default on).
+- **Share:** export own entries (optionally with imported lists) as a JSON file,
+  copy them as text (`name, kind, note` per line), import a `.json`/`.txt` file or
+  pasted text. An import shows a preview (count, conflicts, invalid lines, a
+  warning when it replaces a list of the same label) and saves only on confirm.
+  Imported entries form a list of their own: they never override an own entry
+  and the whole list can be removed in one click. Limits: names 3-16
+  `[A-Za-z0-9_]`, notes 120 characters, 5000 entries and 1 MB per file.
+- A rename or a nick change loses the tag (the name is the key).
+
+### Login age
+
+A chip with the time since the profile's `lastSeen`, which for an online player
+is the moment they logged in (verified 2026-11-20): how long they have been
+connected. Shown as `3m` (orange when it is at most `freshMinutes` old),
+`7m`, `3h`, `2d`. It costs no extra request: the profile is already fetched.
+Hover: "Logged in to Pika 3 hours ago (at 20:31)", with " - fresh login" added
+for a fresh one. **On for all players by default** (`loginAge`). Settings →
+Watchlist → Sniper detection: off, low level only (`loginAgeMaxLevel`, default
+10) or all players, and `freshMinutes` (default 5).
+
+**Bot form:** a player with no BedWars stats at all (NO STATS, `never_played`)
+who has been connected for 12 hours or more gets an orange `BOT? 2d` chip
+instead of the age ("Connected for 2 days without logging out and no BedWars
+stats: likely a bot or AFK account"); the separate level-1 `BOT?` chip is not
+added then. Players with stats, private stats or no data keep the plain age
+(`14h`), since a real player can play 12 hours.
+
 ### Sort order
 
 `renderer/ts/table/sorting.ts`: own row first (if "Pin my row" is on) → party
-members → nicked (if "Show nicked players first" is on) → `ok` rows by the
+members → watched (if "Show marked players first" is on) → nicked (if "Show nicked players first" is on) → `ok` rows by the
 selected column → rows without stats (`not_found`, `api_off`, `never_played`,
 `no_data`) → `error` / `rate_limited` / `auth` → rows still loading. Click a
 sortable header to sort; a second click flips the direction. Default: FKDR
@@ -106,7 +178,7 @@ otherwise it reads "Waiting for players".
 
 ## Stats
 
-- 14 columns (`src/shared/columns.ts`): rank (LV), player, guild, FKDR,
+- 15 columns (`src/shared/columns.ts`): rank (LV), player, tags, guild, FKDR,
   finals, KD, WLR, wins, beds, winstreak, kills, deaths, bow kills, source.
   Default visible: all except guild, kills, deaths, bow kills
   (`src/main/config.ts`). Player is always visible. Numbers of 10 000 and up
@@ -150,7 +222,14 @@ otherwise it reads "Waiting for players".
 
 - **Detailed:** all enabled columns in the saved order. **Compact:** only the
   columns ticked in Settings → Columns → Compact layout (player always).
-  Toggle: title-bar layout button or Settings → Appearance.
+  Toggle: title-bar layout button or Settings → Appearance. In compact the Source
+  column is a narrow (30 px), icon-only, centered cell with no header text
+  (`COMPACT_COL_WIDTH` in `renderer/ts/table/header.ts`, also used to decide which
+  columns fit); the Rank column is a little narrower and badges are smaller.
+- **Window size per layout:** each layout remembers its own window size
+  (`overlaySizes`, saved with `overlayBounds`). Switching layout restores that
+  layout's size, top-left kept and clamped into the work area; a layout never
+  resized keeps the current size. Interface scale rescales both saved sizes.
 - **Row density:** comfortable (row height 34 px), dense (28 px); compact
   layout rows are 26 px (`renderer/css/tokens.css`).
 - **Interface scale:** 80–150 %, applied as the window zoom factor and the
@@ -196,6 +275,7 @@ position and size are remembered (`settingsBounds`).
 | Appearance | Theme; Background opacity (`opacity`); Interface scale (`uiScale`, reset button); Always on top (`alwaysOnTop`); Layout (`overlayMode`); Row density (`rowDensity`); Show nicked players first (`nickedOnTop`); Highlight suspected bots and alts (`highlightSuspects`); "Preview with sample players" demo rows |
 | Columns | Detailed layout: show/hide, drag or arrows to reorder (`columnOrder`, `columnEnabled`); Compact layout: column chips (`compactColumns`) |
 | Colors | Tier colors (`ratioColors`, Reset colors); thresholds per ratio FKDR/KD/WLR (`ratioThresholds`, validated: each tier higher than the next, otherwise "Not saved yet"; Reset thresholds) |
+| Watchlist | own entries (add by name with kind and note, search, change kind, edit note, remove); imported lists ("someone else's notes", remove); Import file / Paste list / Export file (with "include imported lists") / Copy as text, each import with a preview step; nick links (session-only: nick, teammate, date, remove); Sniper detection (login age: `loginAge`, `loginAgeMaxLevel`, `freshMinutes`, BOT? for long sessions without stats); Alerts (`watchlistSound` "Play a beep", `watchlistOnTop` "Show marked players first") |
 | Updates | installed version; Check for updates; Update and restart; Check on startup (`updateAutoCheck`) |
 | Debug | app version, API connection state, log file found; last 60 of the 100 most recent log lines (a Pika API key in a line — `/apikey` answers in chat — is replaced by `pika_<hidden>`, `src/main/log/redact.ts`), Refresh, Copy |
 

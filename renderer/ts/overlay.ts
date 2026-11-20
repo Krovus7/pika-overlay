@@ -6,6 +6,7 @@
 import { applyConfigToState } from './core/config';
 import { addLoadingRow, applyResult, clearTable, removeRow, setParty } from './core/players';
 import { state } from './core/state';
+import { initWatchlist } from './core/watchlist';
 import { registerDemo } from './demo/demo';
 import { initRowActions } from './table/actions';
 import { createDropdowns } from './table/dropdown';
@@ -91,6 +92,7 @@ function start(): void {
     bindControls();
     initThemeToggle(api);
     bindIpc();
+    initWatchlist(api);
     const version = document.querySelector('.logo-version');
     if (version) version.textContent = `v${__APP_VERSION__}`;
     registerDemo();

@@ -2,7 +2,7 @@
 
 import type { PlayerProfileInfo, PlayerStats } from '../../../src/shared/types';
 import { icon } from '../ui/icons';
-import { esc, fmt, fmtInt, ratioColor, safeHex } from './format';
+import { esc, fmtInt, fmtRatio, ratioColor, ratioTitle, safeHex } from './format';
 import { srcBadge } from './sourceBadge';
 import type { RenderContext, RowView } from './types';
 
@@ -18,10 +18,7 @@ export function rankCell(info: PlayerProfileInfo | null): string {
 
 export function playerCell(view: RowView, leadingIcon = ''): string {
     const badge = view.isParty ? icon('diamond', 'party-ic') : '';
-    const you = view.isSelf ? '<span class="tag tag-you" title="You">YOU</span>' : '';
-    const bot = view.isSuspect
-        ? '<span class="tag tag-bot" title="Level 1 with no stats: possible bot or fresh alt">BOT?</span>' : '';
-    return `<td class="player-name" title="${esc(view.name)}">${leadingIcon}${badge}<span class="player-copy" data-action="copy" data-name="${esc(view.name)}" title="Click to copy">${esc(view.name)}</span>${you}${bot}</td>`;
+    return `<td class="player-name" title="${esc(view.name)}">${leadingIcon}${badge}<span class="player-copy" data-action="copy" data-name="${esc(view.name)}" title="Click to copy">${esc(view.name)}</span></td>`;
 }
 
 export function guildCell(guild: string | null | undefined): string {
@@ -29,7 +26,7 @@ export function guildCell(guild: string | null | undefined): string {
 }
 
 export function sourceCell(source: string): string {
-    return `<td>${srcBadge(source)}</td>`;
+    return `<td class="col-src">${srcBadge(source)}</td>`;
 }
 
 function dimNum(v: number | undefined): string {
@@ -37,7 +34,9 @@ function dimNum(v: number | undefined): string {
 }
 
 function ratioCell(v: number | undefined, key: 'fkdr' | 'kdr' | 'wlr', ctx: RenderContext): string {
-    return `<td class="num tiered" style="--tier:${safeHex(ratioColor(v, key, ctx))};font-weight:600">${fmt(v)}</td>`;
+    const exact = ratioTitle(v);
+    const title = exact ? ` title="${exact}"` : '';
+    return `<td class="num tiered"${title} style="--tier:${safeHex(ratioColor(v, key, ctx))};font-weight:600">${fmtRatio(v)}</td>`;
 }
 
 export function statCell(colId: string, p: PlayerStats, ctx: RenderContext): string {

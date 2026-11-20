@@ -16,7 +16,8 @@ src/
 │   ├── types.ts          PlayerResult/PlayerStatus, ApiHealth, UpdateState, LookupSource
 │   ├── ipc-contract.ts   IPC_CHANNELS, IPC_EVENTS, SETTINGS_TAB_IDS, StatsPayload
 │   ├── preload-api.ts    PikaOverlayApi (typed window.pikaOverlay)
-│   └── columns.ts        COLUMN_DEFS (ids, labels, sort keys)
+│   ├── columns.ts        COLUMN_DEFS (ids, labels, sort keys), mergeColumnOrder
+│   └── watchlist.ts      watchlist types: WatchEntry, WatchlistView, WatchResolved, ImportPreview
 └── main/                 Electron main process
     ├── main.ts           bootstrap, wiring; creates LookupService + LookupQueue
     ├── watcherBindings.ts  log-watcher event → state/queue/overlay (bound once)
@@ -35,6 +36,16 @@ src/
     │   ├── playerRegistry.ts shown players: key → {name, source}
     │   ├── lookupQueue.ts    bounded queue (concurrency 6), priority, dropPending
     │   └── index.ts          singletons + class exports
+    ├── watchlist/        local watchlist (ADR-0014)
+    │   ├── store.ts          WatchlistStore: own entries, imported lists, nick links; save-then-commit
+    │   ├── fileLoad.ts       load/repair/atomic save of watchlist.json, corrupt file → .bad-<ts>
+    │   ├── validate.ts, format.ts   pure: names, notes, caps; JSON and text export/import
+    │   ├── importPreview.ts  pending previews (5 min, single use)
+    │   ├── resolve.ts        own entry beats imported; resolved view for the table
+    │   ├── alerts.ts, alertDelivery.ts   once per player per lobby; toast event, taskbar flash
+    │   ├── menuSpec.ts       row context menu as data (testable)
+    │   ├── menuSession.ts    menu view for the overlay + latest-token click map
+    │   ├── nickLinks.ts (session-only links, used by the store), nickLink.ts, notify.ts, instance.ts
     ├── log/              log parsing (ported from v3; see LOG-PARSING.md)
     │   ├── patterns.ts, nameCleaner.ts, partyParser.ts, lineParser.ts
     │   └── logWatcher.ts     fs polling every 500 ms
@@ -55,6 +66,7 @@ src/
     │   ├── clearPlayers.ts   manual clear shared by the button and the hotkey
     │   ├── configHandlers.ts config:* and the side effects of a config change
     │   ├── apiHandlers.ts    api:getHealth, api:testKey, api:health push
+    │   ├── watchlistHandlers.ts, watchlistMenu.ts   watchlist:* IPC and the row menu data/pick
     │   ├── lookup.ts         LookupService: lookup/refresh/retry/refreshAll, race guards
     │   └── autoRetry.ts      automatic retry of error / rate_limited rows
     └── update/velopackUpdate.ts  Velopack check/download/apply state machine
@@ -68,13 +80,15 @@ renderer/
 ├── bundle/               overlay.js, settings.js: esbuild output (gitignored)
 └── ts/                   entries: overlay.ts (IPC wiring), settingsWindow.ts (settings window)
     ├── core/             state.ts (single mutable state), config.ts, players.ts
-    ├── table/            header, sorting, rowBuilder, statusRow, cells, render,
+    ├── table/            header, sorting, rowBuilder, rowView (pure row view + signature), statusRow,
+    │                     cells, tagsCell (chips), loginAge + ageTimer, watchView, render,
     │                     reconcile (keyed DOM), dropdown, format, sourceBadge, actions, types,
     │                     fit (columns that fit the window width)
     ├── ui/               appearance, banner, emptyState, footer, gameStatus, icons,
     │                     lowOpacity, search, theme, toast
     ├── settings/         index (shell: tabs, save indicator), saveQueue, store, controls, hotkeyField,
-    │                     tabGeneral/Api/Appearance/Columns/Colors/Updates/Debug,
+    │                     tabGeneral/Api/Appearance/Columns/Colors/Watchlist/Updates/Debug,
+    │                     watchEntries/Lists/Transfer/NickLinks/Sniper/Action/Text (Watchlist tab),
     │                     apiHealthView, statusLegend
     └── demo/             window.__pikaDemo* helpers (demo rows, backdrops)
 
@@ -129,6 +143,10 @@ config:updated (broadcast to both windows) → overlay: core/config.ts, ui/appea
   still in use (`api/fetch.ts`); a passing key test re-arms it (`api/apiSession.ts`).
 - The config file is written to a temp file and renamed (`config.ts`).
 - Watcher events are bound once, never on config save.
+- The watchlist file is keyed by lowercase name; the own entry always beats an
+  imported one, and a change reaches memory only after it was saved
+  (`watchlist/store.ts`, ADR-0014). Imported text is rendered through `esc()` or
+  `textContent` only.
 - Every lookup outcome is one `player:stats` event carrying `status`; there is
   no separate error event (ADR-0010).
 - Stylesheets use the semantic tokens of `renderer/css/tokens.css`, never

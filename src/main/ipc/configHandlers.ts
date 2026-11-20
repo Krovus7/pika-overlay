@@ -44,9 +44,11 @@ export function registerConfigHandlers(deps: HandlerDeps): void {
     const mutate = (change: () => void): void => {
         const keyBefore = store.get('apiKey');
         const scaleBefore = store.get('uiScale');
+        const modeBefore = store.get('overlayMode');
         change();
         const scale = store.get('uiScale');
         if (scale !== scaleBefore) deps.resizeForScale(scaleBefore, scale);
+        if (store.get('overlayMode') !== modeBefore) deps.switchLayoutSize(modeBefore);
         const key = store.get('apiKey');
         if (key !== keyBefore) {
             setApiKey(key);

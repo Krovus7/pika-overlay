@@ -7,11 +7,19 @@ import { BrowserWindow, screen } from 'electron';
 import * as path from 'node:path';
 
 import type { ConfigStore } from './config';
+import type { Rect } from './windowBounds';
+import { boundsForLayout, scaleSizes, withSize, type LayoutMode } from './layoutSizes';
 import { overlayMinSize, scaleBounds } from './windowBounds';
 
 const BOUNDS_SAVE_DEBOUNCE_MS = 400;
 
 let overlayWin: BrowserWindow | null = null;
+
+/** Saves the window bounds and remembers their size for the current layout */
+function saveOverlayBounds(store: ConfigStore, bounds: Rect): void {
+    store.set('overlayBounds', bounds);
+    store.set('overlaySizes', withSize(store.get('overlaySizes'), store.get('overlayMode'), bounds));
+}
 
 export function getOverlayWin(): BrowserWindow | null {
     return overlayWin;
@@ -58,7 +66,7 @@ export function createOverlay(store: ConfigStore, rootDir: string): BrowserWindo
         if (boundsTimer) clearTimeout(boundsTimer);
         boundsTimer = null;
         if (!overlayWin || overlayWin.isDestroyed()) return;
-        store.set('overlayBounds', overlayWin.getBounds());
+        saveOverlayBounds(store, overlayWin.getBounds());
     };
     const saveBoundsDebounced = () => {
         if (boundsTimer) clearTimeout(boundsTimer);
@@ -96,6 +104,23 @@ export function resizeForScale(store: ConfigStore, oldScale: number, newScale: n
     const next = scaleBounds(current, oldScale, newScale, workArea);
     overlayWin.setBounds(next);
     store.set('overlayBounds', next);
+    store.set('overlaySizes', scaleSizes(store.get('overlaySizes'), oldScale, newScale));
+}
+
+/**
+ * The layout changed (the store already holds the new mode): remember the size
+ * the old layout had, then restore the new layout's size if it has one.
+ */
+export function switchLayoutSize(store: ConfigStore, oldMode: LayoutMode): void {
+    if (!overlayWin || overlayWin.isDestroyed()) return;
+    const current = overlayWin.getBounds();
+    store.set('overlaySizes', withSize(store.get('overlaySizes'), oldMode, current));
+    const saved = store.get('overlaySizes')[store.get('overlayMode')];
+    const workArea = screen.getDisplayMatching(current).workArea;
+    const next = boundsForLayout(current, saved, store.get('uiScale'), workArea);
+    if (!next) return;
+    overlayWin.setBounds(next);
+    saveOverlayBounds(store, next);
 }
 
 /** Zoom is applied once the page has loaded and again on every config change */

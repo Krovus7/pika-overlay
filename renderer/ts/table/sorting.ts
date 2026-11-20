@@ -1,5 +1,5 @@
 /**
- * Row ordering: self pinned -> party -> nicked (optional) -> status groups ->
+ * Row ordering: self pinned -> party -> watchlist (optional) -> nicked (optional) -> status groups ->
  * selected column. Groups are fixed so a sort direction flip never moves
  * rows without stats above rows with stats.
  */
@@ -21,6 +21,9 @@ export interface SortState {
     selfKey: string;
     nickedOnTop: boolean;
     partyMembers: ReadonlySet<string>;
+    watchlistOnTop?: boolean;
+    /** Lowercase names on the watchlist */
+    watched?: { has(key: string): boolean };
 }
 
 function group(d: RowData, nickedOnTop: boolean): number {
@@ -51,6 +54,10 @@ export function comparePlayers(a: RowData, b: RowData, s: SortState): number {
     if (s.partyMembers.size > 0) {
         const pa = s.partyMembers.has(ka);
         if (pa !== s.partyMembers.has(kb)) return pa ? -1 : 1;
+    }
+    if (s.watchlistOnTop && s.watched) {
+        const wa = s.watched.has(ka);
+        if (wa !== s.watched.has(kb)) return wa ? -1 : 1;
     }
 
     const ga = group(a, s.nickedOnTop);

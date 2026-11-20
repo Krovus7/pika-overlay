@@ -9,6 +9,6 @@ export function icon(name: IconName, extraClass = ''): string {
     return `<svg class="ic ${extraClass}"><use href="#i-${name}"/></svg>`;
 }
 
-export function setUseIcon(useEl: Element, name: IconName): void {
+export function setUseIcon(useEl: { setAttribute(name: string, value: string): void }, name: IconName): void {
     useEl.setAttribute('href', `#i-${name}`);
 }

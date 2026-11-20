@@ -2,6 +2,7 @@
 
 import type { StatsPayload } from '../../../src/shared/ipc-contract';
 import type { PlayerProfileInfo } from '../../../src/shared/types';
+import type { WatchResolved } from '../../../src/shared/watchlist';
 import type { RowData } from '../table/types';
 
 type Rank = PlayerProfileInfo['rank'];
@@ -12,7 +13,7 @@ interface Nums { fkdr: number; finals: number; kdr: number; wlr: number; wins: n
 
 function ok(username: string, source: string, level: number, r: Rank, guild: string | null, n: Nums): StatsPayload {
     return {
-        username, source, status: 'ok', rank: r, level, guild,
+        username, source, status: 'ok', rank: r, level, guild, lastSeen: null,
         finalKills: n.finals, finalDeaths: Math.round(n.finals / Math.max(n.fkdr, 0.01)), fkdr: n.fkdr,
         wins: n.wins, losses: Math.round(n.wins / Math.max(n.wlr, 0.01)), wlr: n.wlr,
         kills: n.kills, deaths: n.deaths, kdr: n.kdr,
@@ -23,7 +24,7 @@ function ok(username: string, source: string, level: number, r: Rank, guild: str
 
 function profile(username: string, source: string, status: 'api_off' | 'never_played' | 'no_data',
     level: number, r: Rank, guild: string | null): StatsPayload {
-    return { username, source, status, rank: r, level, guild };
+    return { username, source, status, rank: r, level, guild, lastSeen: null };
 }
 
 function bare(username: string, source: string, status: 'nicked' | 'not_found' | 'error' | 'rate_limited' | 'auth'): StatsPayload {
@@ -33,7 +34,31 @@ function bare(username: string, source: string, status: 'nicked' | 'not_found' |
 export const DEMO_SELF = 'DemoSelf';
 export const DEMO_PARTY = ['Nova_Kai', 'Mira__'];
 
-export function demoRows(): RowData[] {
+const MINUTE = 60_000;
+
+/** Login ages for the demo: one fresh, two older; every other row stays null. */
+function demoLastSeen(now: number): Map<string, number> {
+    return new Map([['sweatlord99', now - 90_000], ['tenebris', now - 130 * MINUTE], ['xn1ghtmare', now - 3 * 24 * 60 * MINUTE]]);
+}
+
+/** Watchlist entries for the demo: own sniper, own cheater, imported other. */
+export function demoWatch(): Map<string, WatchResolved> {
+    return new Map<string, WatchResolved>([
+        ['sweatlord99', { kind: 'sniper', note: 'Queued on me twice', sourceLabel: 'Mine', imported: false }],
+        ['tenebris', { kind: 'cheater', note: 'Reach in the last game', sourceLabel: 'Mine', imported: false }],
+        ['casualplayer', { kind: 'other', note: 'Friend of a friend', sourceLabel: 'friends.json', imported: true }],
+    ]);
+}
+
+export function demoRows(now: number = Date.now()): RowData[] {
+    const seen = demoLastSeen(now);
+    return rawDemoRows().map(row => {
+        const lastSeen = seen.get(row.username.toLowerCase());
+        return row.status === 'ok' && lastSeen !== undefined ? { ...row, lastSeen } : row;
+    });
+}
+
+function rawDemoRows(): RowData[] {
     return [
         ok(DEMO_SELF, 'manual', 112, rank('LEGEND', '#ffaa00'), 'Pika', { fkdr: 3.42, finals: 1840, kdr: 1.9, wlr: 2.1, wins: 920, beds: 1120, ws: 4, kills: 5200, deaths: 2730, bow: 310 }),
         ok('Nova_Kai', 'party', 74, rank('MVP', '#55ffff'), 'NightOwls', { fkdr: 1.94, finals: 610, kdr: 1.2, wlr: 1.4, wins: 340, beds: 480, ws: 2, kills: 2100, deaths: 1750, bow: 120 }),

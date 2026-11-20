@@ -35,8 +35,30 @@ describe('normalizeConfig — defaults', () => {
     });
 
     it('columnOrder merges known ids and appends missing ones', () => {
-        const cfg = normalizeConfig({ columnOrder: ['player', 'fkdr'] });
-        assert.deepEqual(cfg.columnOrder, ['player', 'fkdr', ...defaultConfig().columnOrder.filter(id => !['player', 'fkdr'].includes(id))]);
+        const cfg = normalizeConfig({ columnOrder: ['fkdr', 'player'] });
+        assert.deepEqual(cfg.columnOrder, ['fkdr', 'player', 'tags', ...defaultConfig().columnOrder.filter(id => !['fkdr', 'player', 'tags'].includes(id))]);
+    });
+
+    it('an old columnOrder without tags gets it right after player', () => {
+        const old = ['rank', 'player', 'guild', 'fkdr', 'finals', 'kdr', 'wlr', 'wins', 'beds', 'winstreak', 'kills', 'deaths', 'bowkills', 'source'];
+        const cfg = normalizeConfig({ columnOrder: old });
+        assert.deepEqual(cfg.columnOrder.slice(0, 4), ['rank', 'player', 'tags', 'guild']);
+        assert.equal(cfg.columnOrder.length, old.length + 1);
+    });
+
+    it('tags joins a saved compact set only when the config predates the column', () => {
+        const oldOrder = ['rank', 'player', 'guild', 'fkdr', 'source'];
+        const compact = ['rank', 'player', 'fkdr'];
+        assert.ok(normalizeConfig({ columnOrder: oldOrder, compactColumns: compact }).compactColumns.includes('tags'));
+        const deliberate = normalizeConfig({ columnOrder: ['rank', 'player', 'tags', 'fkdr'], compactColumns: compact });
+        assert.ok(!deliberate.compactColumns.includes('tags'));
+    });
+
+    it('tags is enabled by default, also for configs saved before it existed', () => {
+        assert.equal(defaultConfig().columnEnabled.tags, true);
+        assert.equal(normalizeConfig({ columnEnabled: { rank: true, player: true } }).columnEnabled.tags, true);
+        assert.equal(normalizeConfig({ columnEnabled: { tags: false } }).columnEnabled.tags, false);
+        assert.ok(defaultConfig().compactColumns.includes('tags'));
     });
 
     it('columnEnabled keeps player locked on', () => {
@@ -58,6 +80,8 @@ describe('normalizeConfig — v5 keys', () => {
         assert.equal(cfg.uiScale, 1);
         assert.equal(cfg.rowDensity, 'comfortable');
         assert.equal(cfg.nickedOnTop, true);
+        assert.equal(cfg.watchlistOnTop, true);
+        assert.equal(cfg.watchlistSound, false);
         assert.equal(cfg.highlightSuspects, true);
     });
 
@@ -81,6 +105,10 @@ describe('normalizeConfig — v5 keys', () => {
         assert.equal(normalizeConfig({ theme: 'sepia' }).theme, 'dark');
         assert.equal(normalizeConfig({ nickedOnTop: false }).nickedOnTop, false);
         assert.equal(normalizeConfig({ nickedOnTop: 'no' }).nickedOnTop, true);
+        assert.equal(normalizeConfig({ watchlistOnTop: false }).watchlistOnTop, false);
+        assert.equal(normalizeConfig({ watchlistOnTop: 'no' }).watchlistOnTop, true);
+        assert.equal(normalizeConfig({ watchlistSound: true }).watchlistSound, true);
+        assert.equal(normalizeConfig({ watchlistSound: 1 }).watchlistSound, false);
         assert.equal(normalizeConfig({ highlightSuspects: false }).highlightSuspects, false);
     });
 
@@ -230,5 +258,28 @@ describe('normalizeConfig — settingsBounds', () => {
         assert.deepEqual(normalizeConfig({ settingsBounds: good }).settingsBounds, good);
         assert.equal(normalizeConfig({ settingsBounds: { x: 1, y: 2, width: 'wide', height: 4 } }).settingsBounds, null);
         assert.equal(normalizeConfig({ settingsBounds: 'nope' }).settingsBounds, null);
+    });
+});
+
+describe('normalizeConfig — login age', () => {
+    it('defaults to all with level 10 and 5 fresh minutes', () => {
+        const cfg = normalizeConfig({});
+        assert.deepEqual([cfg.loginAge, cfg.loginAgeMaxLevel, cfg.freshMinutes], ['all', 10, 5]);
+    });
+
+    it('accepts the three modes and rejects anything else', () => {
+        assert.equal(normalizeConfig({ loginAge: 'all' }).loginAge, 'all');
+        assert.equal(normalizeConfig({ loginAge: 'lowLevel' }).loginAge, 'lowLevel');
+        assert.equal(normalizeConfig({ loginAge: 'off' }).loginAge, 'off');
+        assert.equal(normalizeConfig({ loginAge: 'sometimes' }).loginAge, 'all');
+        assert.equal(normalizeConfig({ loginAge: true }).loginAge, 'all');
+    });
+
+    it('clamps and rounds the numeric keys, falling back when mistyped', () => {
+        const cfg = normalizeConfig({ loginAgeMaxLevel: 0, freshMinutes: 99999 });
+        assert.deepEqual([cfg.loginAgeMaxLevel, cfg.freshMinutes], [1, 1440]);
+        assert.equal(normalizeConfig({ loginAgeMaxLevel: 12.6 }).loginAgeMaxLevel, 13);
+        const bad = normalizeConfig({ loginAgeMaxLevel: '20', freshMinutes: NaN });
+        assert.deepEqual([bad.loginAgeMaxLevel, bad.freshMinutes], [10, 5]);
     });
 });

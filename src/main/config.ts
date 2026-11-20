@@ -11,6 +11,8 @@ import * as path from 'node:path';
 import type {
     RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey,
 } from '../shared/types';
+import { mergeColumnOrder } from '../shared/columns';
+import { EMPTY_SIZES, normalizeOverlaySizes, type OverlaySizes } from './layoutSizes';
 
 export type { RatioColors, RatioKey, RatioThresholds, StatsInterval, StatsMode, TierKey };
 
@@ -22,6 +24,8 @@ export interface AppConfig {
     isNicked: boolean;
     myNickName: string;
     overlayBounds: { x: number; y: number; width: number; height: number };
+    /** Window size each layout last had; null until that layout was resized */
+    overlaySizes: OverlaySizes;
     /** Last position of the settings window; null until it has been moved or resized */
     settingsBounds: { x: number; y: number; width: number; height: number } | null;
     alwaysOnTop: boolean;
@@ -43,13 +47,18 @@ export interface AppConfig {
     rowDensity: 'comfortable' | 'dense';
     theme: 'dark' | 'light'; // light = light panels + dark text, for bright game scenes
     nickedOnTop: boolean;
+    watchlistOnTop: boolean; // watched players right after the party
+    watchlistSound: boolean; // short beep when a watched player enters the table
     highlightSuspects: boolean;
+    loginAge: 'off' | 'lowLevel' | 'all'; // login-age chip: who gets it
+    loginAgeMaxLevel: number;
+    freshMinutes: number;
 }
 
 export type RawConfig = Record<string, unknown>;
 
 const KNOWN_COLUMNS = [
-    'rank', 'player', 'guild', 'fkdr', 'finals', 'kdr', 'wlr', 'wins',
+    'rank', 'player', 'tags', 'guild', 'fkdr', 'finals', 'kdr', 'wlr', 'wins',
     'beds', 'winstreak', 'kills', 'deaths', 'bowkills', 'source',
 ];
 const VALID_INTERVALS: StatsInterval[] = ['total', 'weekly', 'monthly', 'yearly'];
@@ -75,6 +84,7 @@ export function defaultConfig(): AppConfig {
         isNicked: false,
         myNickName: '',
         overlayBounds: { x: 20, y: 60, width: 960, height: 600 },
+        overlaySizes: { ...EMPTY_SIZES },
         settingsBounds: null,
         alwaysOnTop: true,
         toggleHotkey: 'F4',
@@ -91,11 +101,11 @@ export function defaultConfig(): AppConfig {
         ratioColors: { ...DEFAULT_COLORS },
         columnOrder: [...KNOWN_COLUMNS],
         columnEnabled: {
-            rank: true, player: true, fkdr: true, finals: true, kdr: true,
+            rank: true, player: true, tags: true, fkdr: true, finals: true, kdr: true,
             wlr: true, wins: true, beds: true, winstreak: true, kills: false,
             deaths: false, bowkills: false, guild: false, source: true,
         },
-        compactColumns: ['rank', 'player', 'fkdr', 'winstreak', 'source'],
+        compactColumns: ['rank', 'player', 'tags', 'fkdr', 'winstreak', 'source'],
         fkdrThresholds: { good: 3.0, medium: 1.0 },
         updateAutoCheck: true,
         apiKey: '',
@@ -103,7 +113,12 @@ export function defaultConfig(): AppConfig {
         rowDensity: 'comfortable',
         theme: 'dark',
         nickedOnTop: true,
+        watchlistOnTop: true,
+        watchlistSound: false,
         highlightSuspects: true,
+        loginAge: 'all',
+        loginAgeMaxLevel: 10,
+        freshMinutes: 5,
     };
 }
 
@@ -189,6 +204,7 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
             width: num(bounds.width, defaults.overlayBounds.width),
             height: num(bounds.height, defaults.overlayBounds.height),
         },
+        overlaySizes: normalizeOverlaySizes(merged.overlaySizes),
         settingsBounds: normalizeBounds(merged.settingsBounds),
         alwaysOnTop: bool(merged.alwaysOnTop, defaults.alwaysOnTop),
         toggleHotkey: str(merged.toggleHotkey, defaults.toggleHotkey),
@@ -205,9 +221,9 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
             medium: str((merged.ratioColors as RawConfig)?.medium, defaults.ratioColors.medium),
             bad: str((merged.ratioColors as RawConfig)?.bad, defaults.ratioColors.bad),
         },
-        columnOrder: mergeColumnOrder(merged.columnOrder),
+        columnOrder: normalizeColumnOrder(merged.columnOrder),
         columnEnabled: normalizeColumnEnabled(merged.columnEnabled),
-        compactColumns: mergeCompactColumns(merged.compactColumns),
+        compactColumns: mergeCompactColumns(merged.compactColumns, !hasColumn(merged.columnOrder, 'tags')),
         fkdrThresholds: {
             good: num((merged.fkdrThresholds as RawConfig)?.good, 3.0),
             medium: num((merged.fkdrThresholds as RawConfig)?.medium, 1.0),
@@ -218,7 +234,12 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
         rowDensity: enumOf(merged.rowDensity, ['comfortable', 'dense'], defaults.rowDensity),
         theme: enumOf(merged.theme, ['dark', 'light'], defaults.theme),
         nickedOnTop: bool(merged.nickedOnTop, defaults.nickedOnTop),
+        watchlistOnTop: bool(merged.watchlistOnTop, defaults.watchlistOnTop),
+        watchlistSound: bool(merged.watchlistSound, defaults.watchlistSound),
         highlightSuspects: bool(merged.highlightSuspects, defaults.highlightSuspects),
+        loginAge: enumOf(merged.loginAge, ['off', 'lowLevel', 'all'], defaults.loginAge),
+        loginAgeMaxLevel: Math.min(1000, Math.max(1, Math.round(num(merged.loginAgeMaxLevel, defaults.loginAgeMaxLevel)))),
+        freshMinutes: Math.min(1440, Math.max(1, Math.round(num(merged.freshMinutes, defaults.freshMinutes)))),
     };
 }
 
@@ -230,18 +251,14 @@ function normalizeBounds(v: unknown): AppConfig['settingsBounds'] {
     return { x: x as number, y: y as number, width: width as number, height: height as number };
 }
 
-function mergeColumnOrder(v: unknown): string[] {
+function normalizeColumnOrder(v: unknown): string[] {
     const saved = Array.isArray(v) ? v.filter((id): id is string => typeof id === 'string') : [];
-    const merged = saved.filter(id => KNOWN_COLUMNS.includes(id));
-    for (const id of KNOWN_COLUMNS) {
-        if (!merged.includes(id)) merged.push(id);
-    }
-    return merged;
+    return mergeColumnOrder(saved, KNOWN_COLUMNS);
 }
 
 function normalizeColumnEnabled(v: unknown): Record<string, boolean> {
     const out: Record<string, boolean> = {};
-    for (const id of KNOWN_COLUMNS) out[id] = id === 'player';
+    for (const id of KNOWN_COLUMNS) out[id] = id === 'player' || id === 'tags';
     if (v && typeof v === 'object') {
         for (const id of KNOWN_COLUMNS) {
             const val = (v as RawConfig)[id];
@@ -252,10 +269,16 @@ function normalizeColumnEnabled(v: unknown): Record<string, boolean> {
     return out;
 }
 
-function mergeCompactColumns(v: unknown): string[] {
+function hasColumn(order: unknown, id: string): boolean {
+    return Array.isArray(order) && order.includes(id);
+}
+
+/** `addTags`: the saved config predates the Tags column, so it joins the compact set once. */
+function mergeCompactColumns(v: unknown, addTags: boolean): string[] {
     const saved = Array.isArray(v) ? v.filter((id): id is string => typeof id === 'string') : [];
     const merged = saved.filter(id => KNOWN_COLUMNS.includes(id));
     if (!merged.includes('player')) merged.push('player');
+    if (addTags && Array.isArray(v) && !merged.includes('tags')) merged.push('tags');
     return merged;
 }
 

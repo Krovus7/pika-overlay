@@ -10,8 +10,19 @@ export function esc(str: string | null | undefined): string {
     return String(str ?? '').replace(/[&<>"']/g, c => ESC_MAP[c]!);
 }
 
-export function fmt(v: number | undefined): string {
-    return v == null ? '—' : Number(v).toFixed(2);
+/** Ratio text sized for a 58 px column: 2 decimals below 100, then fewer digits, then the k form. */
+export function fmtRatio(v: number | undefined): string {
+    if (v == null) return '—';
+    // The precision follows the rounded value, so 99.996 shows "100.0", not "100.00".
+    if (Number(v.toFixed(2)) < 100) return v.toFixed(2);
+    if (Number(v.toFixed(1)) < 1000) return v.toFixed(1);
+    const whole = Math.round(v);
+    return whole < 10_000 ? String(whole) : fmtInt(whole);
+}
+
+/** Exact value for the cell tooltip, whenever the shown text is shorter than 2 decimals. */
+export function ratioTitle(v: number | undefined): string | null {
+    return v != null && fmtRatio(v) !== v.toFixed(2) ? v.toFixed(2) : null;
 }
 
 /** Whole numbers; 10k and above are shortened (21.4k) to fit narrow columns. */

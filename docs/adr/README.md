@@ -32,5 +32,6 @@ Ogni decisione architetturale del progetto viene registrata come ADR:
 | 0011 | Dark and light themes, continuous legibility floor (v5) | Accepted |
 | 0012 | The table follows the lobby; Pika match start recognised (v5) | Accepted |
 | 0013 | Settings in their own window (v5) | Accepted |
+| 0014 | Local watchlist, imported lists as layers, nick links (v5.2) | Accepted |
 
 Le ADR numerate vivono nei file `0001-*.md`, `0002-*.md`, ecc.

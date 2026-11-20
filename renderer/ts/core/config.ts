@@ -3,7 +3,7 @@
  * main process and falls back to sensible defaults for anything missing.
  */
 
-import { COLUMN_DEFS } from '../../../src/shared/columns';
+import { COLUMN_DEFS, mergeColumnOrder } from '../../../src/shared/columns';
 import type { RatioThresholds } from '../../../src/shared/types';
 import { DEFAULT_COLORS, DEFAULT_THRESHOLDS, state } from './state';
 
@@ -48,9 +48,7 @@ function parseThresholds(cfg: Record<string, unknown>): RatioThresholds {
 function applyColumns(cfg: Record<string, unknown>): void {
     const knownIds = COLUMN_DEFS.map(c => c.id);
     const savedOrder = Array.isArray(cfg.columnOrder) ? (cfg.columnOrder as string[]) : state.columnOrder;
-    const merged = savedOrder.filter(id => knownIds.includes(id));
-    knownIds.forEach(id => { if (!merged.includes(id)) merged.push(id); });
-    state.columnOrder = merged;
+    state.columnOrder = mergeColumnOrder(savedOrder, knownIds);
     state.columnEnabled = { ...state.columnEnabled, ...asRecord(cfg.columnEnabled) as Record<string, boolean> };
     state.columnEnabled.player = true;
 
@@ -70,7 +68,14 @@ export function applyConfigToState(cfg: Record<string, unknown>): void {
     state.isNicked = !!cfg.isNicked;
     state.myNickName = String(cfg.myNickName || '').toLowerCase();
     state.nickedOnTop = cfg.nickedOnTop !== false;
+    state.watchlistOnTop = cfg.watchlistOnTop !== false;
+    state.watchlistSound = cfg.watchlistSound === true;
     state.highlightSuspects = cfg.highlightSuspects !== false;
+    state.loginAge = {
+        loginAge: cfg.loginAge === 'lowLevel' || cfg.loginAge === 'all' ? cfg.loginAge : 'off',
+        loginAgeMaxLevel: typeof cfg.loginAgeMaxLevel === 'number' ? cfg.loginAgeMaxLevel : 10,
+        freshMinutes: typeof cfg.freshMinutes === 'number' ? cfg.freshMinutes : 5,
+    };
 
     if (typeof cfg.statsInterval === 'string') state.interval = cfg.statsInterval;
     if (typeof cfg.statsMode === 'string') state.mode = cfg.statsMode;

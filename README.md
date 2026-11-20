@@ -33,6 +33,14 @@ their BedWars stats from the official Pika stats API.
   with the reason: nicked, private profile, never played, no games this week.
 - **Party aware.** Party members are pinned on top and their stats, like your
   own, are reloaded at every new lobby.
+- **A watchlist of your own.** Right-click a player to mark a sniper, a cheater
+  or anyone else; the mark shows as a chip next to the name and an alert tells
+  you when a marked player joins your lobby. Lists can be exported, pasted into
+  Discord and imported by friends. Everything stays on your PC.
+- **Nicked teammates.** Tell the overlay that a nick is your teammate and it
+  stops showing up as an unknown nicked player.
+- **Login age.** A chip with how long a player has been logged in, to spot fresh
+  accounts; a long session with no BedWars stats is marked BOT?.
 - **Readable on any background.** Dark and light themes, and a legibility
   floor that keeps text readable down to 5 % background opacity.
 - **Within the API limit.** A 10-minute cache and a rate limiter keep the
@@ -91,10 +99,13 @@ names into the search box (several at once, separated by spaces or commas).
 
 - **Period and mode:** All Time, Weekly, Monthly, Yearly; Overall, Solo, Duo,
   Triples, Quad.
-- **Sorting:** click a column header. Your own row, your party and nicked
+- **Sorting:** click a column header. Your own row, your party, marked players and nicked
   players can be kept on top.
+- **Tags column:** small chips next to the name: YOU, SNIPER / CHEATER / OTHER
+  from your watchlist, the login age if enabled, BOT? for suspected bots.
+  Right-click a row for the watchlist menu. Click a player name to copy it.
 - **Title bar:** theme, layout (detailed or compact), refresh (reload every
-  row, ignoring the cache), clear, settings. Click a player name to copy it.
+  row, ignoring the cache), clear, settings.
 - **Hotkeys:** `F4` show or hide, `F5` clear. Both can be changed in
   Settings → General.
 - **Playing nicked yourself:** tick "I am nicked" and enter your nick, so the
@@ -111,8 +122,9 @@ window too. A narrow overlay hides the rightmost columns instead of scrolling.
 | General | log file, username, nick, hotkeys |
 | API | connection status, API key, what each label means |
 | Appearance | theme, background opacity, interface scale, layout, row density, always on top |
-| Columns | show, hide and reorder columns; choose the columns of the compact layout |
+| Columns | show, hide and reorder columns (including Tags); choose the columns of the compact layout |
 | Colors | tier colors and thresholds for FKDR, KD and WLR |
+| Watchlist | your marked players, imported lists, import and export, teammate nicks, login age, alerts |
 | Updates | installed version, check and install updates |
 | Debug | connection state and the most recent log lines |
 
@@ -122,6 +134,8 @@ Every setting saves as you change it.
 
 - The overlay reads one local file, the Minecraft log you selected. It does
   not read game memory, inject into the game or send anything to the server.
+- Your watchlist is a local file, `%APPDATA%\pika-overlay\watchlist.json`. It
+  is never uploaded; it leaves your PC only when you export it yourself.
 - It sends player names to `stats.pika-network.net`, with your API key, to
   fetch their stats, and it contacts GitHub to check for updates. Nothing else
   leaves your PC.

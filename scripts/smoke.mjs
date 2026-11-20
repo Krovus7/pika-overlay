@@ -7,7 +7,14 @@
  * Steps: bridge present → settings open/close (its own window) → API key saved
  * through Settings → API in that window (only when PIKA_API_KEY is set) → period dropdown open/close →
  * real lookups (live API): a known player and a made-up name → period switch →
- * clear → compact toggle. Screenshots land in artifacts/screens/v5-live-*.png.
+ * watchlist (sniper chip via IPC, text export → clear → import → chip back,
+ * list removal) → clear → compact toggle. Screenshots land in
+ * artifacts/screens/v5-live-*.png.
+ *
+ * The watchlist steps use the app's real watchlist.json (userData is fixed, no
+ * override exists): the file is backed up before the launch and restored on
+ * every exit path. The native export/import file dialogs cannot be driven over
+ * CDP, so the export/import round trip goes through the text format.
  *
  * Env: PIKA_API_KEY   key to enter in Settings → API (it is saved in the app's
  *                     own config, exactly as a user would; never printed)
@@ -16,7 +23,7 @@
  */
 
 import { setTimeout as sleep } from 'node:timers/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 
 import { launchAndAttach } from './lib/cdp.mjs';
@@ -33,6 +40,33 @@ if (process.argv[2] === undefined) args.unshift('.');
 if (!existsSync(exe)) {
     console.error(`[smoke] exe not found: ${exe}`);
     process.exit(2);
+}
+
+const USER_DATA = path.join(process.env.APPDATA ?? '', 'pika-overlay');
+const isWatchlistFile = name => name === 'watchlist.json' || name.startsWith('watchlist.json.');
+const listWatchlistFiles = () => (existsSync(USER_DATA) ? readdirSync(USER_DATA).filter(isWatchlistFile) : []);
+const watchlistBackup = new Map(listWatchlistFiles().map(name => [name, readFileSync(path.join(USER_DATA, name))]));
+
+/** Puts the watchlist files back exactly as they were; files the run created are removed. */
+function restoreWatchlist() {
+    for (const name of listWatchlistFiles()) if (!watchlistBackup.has(name)) rmSync(path.join(USER_DATA, name), { force: true });
+    for (const [name, content] of watchlistBackup) writeFileSync(path.join(USER_DATA, name), content);
+}
+process.on('exit', restoreWatchlist);
+
+/** Stops the app and waits (at most 5 s) for the process to end, so no quit-time write can follow the restore. */
+async function stopApp() {
+    if (!app) return;
+    app.close();
+    await Promise.race([app.exited, sleep(5000)]);
+}
+for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => {
+        stopApp().finally(() => {
+            restoreWatchlist();
+            process.exit(130);
+        });
+    });
 }
 
 let app = null;
@@ -55,6 +89,45 @@ async function waitUntilGone(urlPart) {
         await sleep(250);
     }
     return false;
+}
+
+const watchChips = name => `[...document.querySelectorAll('#stats-body tr')].find(r => r.textContent.toLowerCase().includes('${name.toLowerCase()}'))?.querySelector('.tag-watch')?.className ?? ''`;
+const hasChip = (name, kind) => `(${watchChips(name)}).includes('tag-${kind}')`;
+const noChip = name => `(${watchChips(name)}) === ''`;
+
+async function watchlistSteps() {
+    const smokeNote = 'smoke test';
+    const setOwn = kind => evaluate(`window.pikaOverlay.setWatchEntry(${JSON.stringify(UNKNOWN_NAME)}, ${kind ? `{ kind: '${kind}', note: '${smokeNote}' }` : 'null'})`);
+
+    const saved = await setOwn('sniper');
+    const chip = await waitFor(hasChip(UNKNOWN_NAME, 'sniper'), 8000, 'sniper chip').catch(() => false);
+    step('marking a row as sniper through IPC shows the SNIPER chip', saved === true && !!chip);
+    await screenshot('v5-live-watchlist-chip.png');
+
+    // Same text the "Copy as text" button produces for this entry
+    const snapshot = await evaluate(`window.pikaOverlay.getWatchlist()`);
+    const mine = snapshot.entries.filter(e => e.source === 'me' && e.name.toLowerCase() === UNKNOWN_NAME.toLowerCase());
+    const text = mine.map(e => `${e.name}, ${e.kind}, ${e.note}`).join('\n');
+    const copied = await evaluate(`window.pikaOverlay.copyWatchlistText().then(() => true, () => false)`);
+    step('copy as text works and the entry is in the snapshot', copied === true && mine.length === 1);
+
+    await setOwn(null);
+    const cleared = await waitFor(noChip(UNKNOWN_NAME), 8000, 'chip gone after remove').catch(() => false);
+    step('removing the entry removes the chip', !!cleared);
+
+    const attempt = await evaluate(`window.pikaOverlay.importWatchlistText(${JSON.stringify(text)}, 'other')`);
+    const confirmed = attempt?.token ? await evaluate(`window.pikaOverlay.confirmWatchImport(${JSON.stringify(attempt.token)})`) : false;
+    const back = await waitFor(hasChip(UNKNOWN_NAME, 'sniper'), 8000, 'chip back after import').catch(() => false);
+    const imported = await waitFor(hasChip(UNKNOWN_NAME, 'imported'), 3000, 'imported style').catch(() => false);
+    step('import (preview, confirm) brings the chip back as an imported one', attempt?.count === 1 && confirmed === true && !!back && !!imported);
+
+    const after = await evaluate(`window.pikaOverlay.getWatchlist()`);
+    const list = after.lists.find(l => l.label === attempt?.label);
+    const removed = list ? await evaluate(`window.pikaOverlay.removeWatchList(${JSON.stringify(list.id)})`) : false;
+    const gone = await waitFor(noChip(UNKNOWN_NAME), 8000, 'chip gone after list removal').catch(() => false);
+    const final = await evaluate(`window.pikaOverlay.getWatchlist()`);
+    const leftover = final.entries.some(e => e.name.toLowerCase() === UNKNOWN_NAME.toLowerCase());
+    step('removing the list removes its chip and entries', removed === true && !!gone && !leftover);
 }
 
 async function main() {
@@ -142,6 +215,9 @@ async function main() {
     await sleep(500);
     await waitFor(NO_ROW_LOADING, 30000, 'lifetime rows resolved').catch(() => false);
 
+    // 5c. watchlist: chip through IPC, text export → clear → import → chip back, list removal
+    await watchlistSteps();
+
     // 6. clear
     await evaluate(`document.getElementById('btn-clear').click()`);
     const cleared = await waitFor(`document.querySelectorAll('#stats-body tr').length === 0`, 10000, 'table cleared');
@@ -163,7 +239,8 @@ async function finish() {
     let fail = results.length - pass;
     if (results.length === 0) fail = 1; // no steps executed = failure, never a silent pass
     console.log(`\n[smoke] ${pass} passed, ${fail} failed`);
-    app?.close();
+    await stopApp();
+    restoreWatchlist();
     process.exit(fail > 0 ? 1 : 0);
 }
 

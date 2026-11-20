@@ -3,11 +3,11 @@
 const TOAST_MS = 1200;
 let timer: number | undefined;
 
-export function showToast(text: string): void {
+export function showToast(text: string, durationMs = TOAST_MS): void {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = text;
     el.classList.add('is-visible');
     window.clearTimeout(timer);
-    timer = window.setTimeout(() => el.classList.remove('is-visible'), TOAST_MS);
+    timer = window.setTimeout(() => el.classList.remove('is-visible'), durationMs);
 }

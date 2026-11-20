@@ -15,6 +15,8 @@ import { IPC_EVENTS } from '../shared/ipc-contract';
 import { clearPlayers } from './ipc/clearPlayers';
 import { registerIpcHandlers, type HandlerDeps } from './ipc/handlers';
 import { LookupService, type LookupDeps } from './ipc/lookup';
+import { registerWatchlistHandlers } from './ipc/watchlistHandlers';
+import { registerWatchlistMenu } from './ipc/watchlistMenu';
 import { LogWatcher } from './log/logWatcher';
 import { driveReplay, replayFilePath } from './replay';
 import { gameState, partyState, playerRegistry } from './state';
@@ -22,7 +24,13 @@ import { LookupQueue } from './state/lookupQueue';
 import { createTray } from './tray';
 import { checkForUpdates, onUpdateStateChange, runStartupHooks } from './update/velopackUpdate';
 import { bindWatcherEvents } from './watcherBindings';
-import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale } from './windowManager';
+import { clearAlertFlash, deliverAlert } from './watchlist/alertDelivery';
+import { WatchAlerts } from './watchlist/alerts';
+import { getWatchlist, initWatchlist } from './watchlist/instance';
+import { linkNickAndHide, mayLink } from './watchlist/nickLink';
+import { notifyWatchlist } from './watchlist/notify';
+import { WatchlistStore } from './watchlist/store';
+import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale, switchLayoutSize } from './windowManager';
 import { broadcast } from './broadcast';
 import { applySettingsWindowConfig, initSettingsWindow, openSettings } from './settingsWindow';
 import { watcherSettings } from './ipc/configHandlers';
@@ -47,7 +55,20 @@ app.whenReady().then(() => {
     const store = new ConfigStore(ConfigStore.userDataPath(app.getPath('userData')));
     setApiKey(store.get('apiKey'));
 
-    const lookupDeps: LookupDeps = { store, registry: playerRegistry, getOverlayWin };
+    initWatchlist(new WatchlistStore(WatchlistStore.userDataPath(app.getPath('userData'))));
+    const watchlist = getWatchlist();
+    const alerts = new WatchAlerts(
+        name => watchlist.lookup(name),
+        name => name.toLowerCase() === watcherSettings(store).name.toLowerCase() || partyState.has(name),
+    );
+    const lookupDeps: LookupDeps = {
+        store, registry: playerRegistry, getOverlayWin,
+        isLinkedNick: name => watchlist.isLinkedNick(name),
+        onPlayerEnter: (name, source) => {
+            const entry = alerts.check(name, source);
+            if (entry) deliverAlert(getOverlayWin(), name, entry);
+        },
+    };
     const service = new LookupService(lookupDeps);
     const queue = new LookupQueue(async job => {
         if (job.refresh) await service.refresh(job.username, job.interval, job.mode, job.fresh);
@@ -55,6 +76,10 @@ app.whenReady().then(() => {
     });
 
     createOverlay(store, rootDir);
+    const stopFlash = (): void => clearAlertFlash(getOverlayWin());
+    getOverlayWin()?.on('show', stopFlash);
+    getOverlayWin()?.on('restore', stopFlash);
+    getOverlayWin()?.on('focus', stopFlash);
     initSettingsWindow({ store, rootDir, getOverlayWin });
     createTray(rootDir, getOverlayWin, openSettings);
 
@@ -70,17 +95,30 @@ app.whenReady().then(() => {
         queue,
         applyWindowConfig: s => { applyWindowConfig(s); applySettingsWindowConfig(s); },
         resizeForScale: (oldScale, newScale) => resizeForScale(store, oldScale, newScale),
+        switchLayoutSize: oldMode => switchLayoutSize(store, oldMode),
         registerHotkeys: registerHotkeysFn,
         logWatcher,
         party: partyState,
     };
     registerIpcHandlers(handlerDeps);
+    const linkNick = (nick: string, friend: string | null): boolean =>
+        mayLink(friend, partyState) &&
+        linkNickAndHide(watchlist, playerRegistry, key => send(IPC_EVENTS.PLAYER_REMOVE, key), nick, friend);
+    registerWatchlistHandlers(watchlist, linkNick);
+    registerWatchlistMenu({ store: watchlist, party: partyState, linkNick });
 
     onUpdateStateChange(s => broadcast(IPC_EVENTS.UPDATE_STATE, s));
 
     bindWatcherEvents({
         logWatcher, queue, registry: playerRegistry, party: partyState, game: gameState, send,
         isSelf: name => name.toLowerCase() === watcherSettings(store).name.toLowerCase(),
+        onLobbyClear: () => {
+            alerts.reset();
+            if (watchlist.dropFriendlessLinks()) notifyWatchlist(watchlist);
+        },
+        onPartyChange: wasNonEmpty => {
+            if (watchlist.pruneNickLinks(partyState.snapshot(), wasNonEmpty)) notifyWatchlist(watchlist);
+        },
     });
 
     // Dev-only screenshot drive: no log watcher, no update check (offline)

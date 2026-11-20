@@ -28,6 +28,10 @@ Outside `state/`:
 | `src/main/api/cache.ts` | profile and stats caches (TTLs in `docs/API-CLIENT.md`) |
 | `src/main/api/rateLimiter.ts` | request budget of the current window |
 | `src/main/ipc/autoRetry.ts` | per-player automatic retry counters and timers |
+| `src/main/watchlist/store.ts` `WatchlistStore` | own entries and imported lists (`watchlist.json`, ADR-0014) plus session-only nick links (memory only, pruned by `pruneNickLinks` on every party change; "someone else" links dropped by `dropFriendlessLinks` at every lobby clear); every file change is saved first and only then kept in memory, then broadcast as `watchlist:updated`; reached through `getWatchlist()` (`instance.ts`, set once in `main.ts`) |
+| `src/main/watchlist/importPreview.ts` | pending import previews (in memory, single use, 5 minute TTL, at most 5) |
+| `src/main/watchlist/alerts.ts` `WatchAlerts` | players already alerted in this lobby; reset on `players_clear` |
+| `renderer/ts/core/state.ts` `watch` | the overlay's copy of `WatchlistView.resolved` (a `Map`), plus `watchlistOnTop`, `watchlistSound` and the login-age settings from the config |
 | `renderer/ts/core/state.ts` | overlay-side mirror: shown rows, sort, party, layout, health |
 
 ## IPC contract (`src/shared/ipc-contract.ts`)
@@ -61,6 +65,12 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `update:getState` / `update:check` / `update:downloadApply` | `getUpdateState()` / `checkForUpdates()` / `downloadAndApply()` | `handlers.ts` → `velopackUpdate.ts` |
 | `api:getHealth` | `getApiHealth()` | `apiHandlers.ts` |
 | `api:testKey` | `testApiKey(key)` | `apiHandlers.ts` → `keyTest.ts` (no save, no health change) |
+| `watchlist:get` / `set` / `removeList` | `getWatchlist()` / `setWatchEntry(name, change \| null)` / `removeWatchList(id)` | `watchlistHandlers.ts` → `watchlist/store.ts` (`watchlist.json`; set/remove broadcast `watchlist:updated`) |
+| `watchlist:export` / `copyText` | `exportWatchlist({ includeImported })` / `copyWatchlistText()` | `watchlistHandlers.ts` (save dialog, clipboard; own entries unless imported ones are ticked) |
+| `watchlist:importFile` / `importText` / `confirmImport` | `importWatchlistFile()` / `importWatchlistText(text, kind)` / `confirmWatchImport(token)` | `watchlistHandlers.ts` → `importPreview.ts` (preview in memory for 5 minutes, saved on confirm) |
+| `watchlist:menu` | `showWatchMenu(name, nicked)` | `watchlistMenu.ts` + `menuSpec.ts`: returns the row menu as data `{ token, title, items }` (marks with tone and checked kind, remove, imported source line, nick link submenu with the party); the overlay draws it. A new menu invalidates older tokens |
+| `watchlist:menuPick` | `pickWatchMenu(token, id)` | `menuSession.ts`: runs the picked item of the latest menu if the token is current, then clears; resolves false for a stale token or unknown id |
+| `watchlist:linkNick` / `unlinkNick` | `linkNick(nick, friend \| null)` / `unlinkNick(nick)` | `watchlistHandlers.ts` (nick links: session-only, personal, never saved, exported or imported) |
 
 ### Push events (`IPC_EVENTS`, main → renderer)
 
@@ -77,6 +87,8 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `config:updated` | `onConfigUpdate` | full config object (overlay + settings window) |
 | `update:state` | `onUpdateState` | `UpdateState` (overlay + settings window) |
 | `api:health` | `onApiHealth` | `ApiHealth` (overlay + settings window) |
+| `watchlist:updated` | `onWatchlistUpdate` | `WatchlistView` = `{ entries, lists, nickLinks, resolved }`; `resolved` maps lowercase name to `{ kind, note, sourceLabel, imported }` with own-beats-imported already applied (overlay + settings window) |
+| `watchlist:alert` | `onWatchlistAlert` | `WatchAlert` `{ name, kind, note }`, overlay only: a watched player entered the table, once per player per lobby (`WatchAlerts`, reset on `players_clear`); main also calls `flashFrame` when the overlay is hidden |
 
 `player:error` no longer exists (removed in v5, ADR-0010). The preload keeps
 one listener per event (`removeAllListeners` before `on`). `config:updated`,
@@ -125,12 +137,28 @@ overlay reacts to `game:start` with the status pill only.
 runs directly. `stats:refetchAll` and an API-key change queue a refresh of
 every registered player (`refresh: true`, sources preserved).
 
+## Watchlist flow
+
+1. Lookup: `LookupService.lookup` ignores a linked nick from a non-typed
+   source (`isLinkedNick`), so the renderer never gets that row.
+2. After `registry.add`, `onPlayerEnter(name, source)` asks `WatchAlerts.check`;
+   typed sources (`manual`, `bulk`), `party`, the own name and party members are
+   excluded. A hit sends `watchlist:alert` and flashes the taskbar button when
+   the overlay is hidden or minimized (`alertDelivery.ts`).
+3. Every successful change (set, remove list, confirmed import, link, unlink)
+   goes through `notifyWatchlist`, which broadcasts `WatchlistView` to both
+   windows. Own entries beat imported ones in `resolve.ts`.
+4. Linking a nick (menu or `watchlist:linkNick`) saves the link and removes the
+   shown row with `player:remove` (`nickLink.ts`).
+
 ## Config flow (`ipc/configHandlers.ts`)
 
 `config:save` and `config:set` share one path: apply the change; when `apiKey`
 changed, `setApiKey` (resets health, cache, budget) and refresh every row;
 re-apply always-on-top and zoom (of both windows); when `uiScale` changed, resize the
-overlay by new/old first (`windowManager.resizeForScale`, saves `overlayBounds`);
+overlay by new/old first (`windowManager.resizeForScale`, saves `overlayBounds` and
+scales `overlaySizes`); when `overlayMode` changed, `windowManager.switchLayoutSize`
+stores the old layout's size and restores the new layout's (`layoutSizes.ts`);
 broadcast `config:updated`. `config:save`
 additionally restarts the log watcher only when the log path or the watched
 name changed (the nick when "I am nicked" is on, else the username) and

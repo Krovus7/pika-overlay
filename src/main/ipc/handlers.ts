@@ -30,6 +30,8 @@ export interface HandlerDeps extends LookupDeps {
     applyWindowConfig: (store: ConfigStore) => void;
     /** Resizes the overlay window when the interface scale changes */
     resizeForScale: (oldScale: number, newScale: number) => void;
+    /** Restores the window size of the layout just switched to */
+    switchLayoutSize: (oldMode: 'detailed' | 'compact') => void;
     registerHotkeys: () => void;
     logWatcher: LogWatcher;
     party: PartyState;

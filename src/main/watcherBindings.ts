@@ -25,13 +25,17 @@ export interface WatcherBindingDeps {
     send: (channel: string, ...args: unknown[]) => void;
     /** True for the name the user plays under (username, or nick when nicked) */
     isSelf: (username: string) => boolean;
+    /** The lobby changed (players_clear) */
+    onLobbyClear?: () => void;
+    /** After every party mutation; `wasNonEmpty` is the party state before it */
+    onPartyChange?: (wasNonEmpty: boolean) => void;
 }
 
 /** One lobby join is one refresh, however many times the join line repeats */
 const LOBBY_REFRESH_MIN_GAP_MS = 20_000;
 
 export function bindWatcherEvents(deps: WatcherBindingDeps): void {
-    const { logWatcher, queue, registry, party, game, send, isSelf } = deps;
+    const { logWatcher, queue, registry, party, game, send, isSelf, onLobbyClear, onPartyChange } = deps;
     let lastLobbyRefresh = 0;
 
     const removeShownExcept = (keep: ReadonlySet<string>): void => {
@@ -66,6 +70,13 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
             !job.refresh && !USER_TYPED_SOURCES.includes(job.source) && !party.has(job.username.toLowerCase()));
     };
 
+    // Runs a party mutation and tells main about it, with the party state from before it
+    const changeParty = (mutate: () => void): void => {
+        const wasNonEmpty = party.size > 0;
+        mutate();
+        onPartyChange?.(wasNonEmpty);
+    };
+
     logWatcher.on('log_line', (line: string) => pushLogLine(line));
 
     logWatcher.on('players_sync', (detectedNames: string[]) => {
@@ -87,6 +98,7 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
 
     logWatcher.on('players_clear', () => {
         game.reset();
+        onLobbyClear?.();
         dropStaleLookups();
         removeShownExcept(new Set(party.snapshot()));
         send(IPC_EVENTS.PLAYERS_CLEAR);
@@ -117,33 +129,41 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
             if (!newSet.has(key)) removeShown(key);
         }
 
-        party.clear();
-        names.forEach(n => party.add(n));
-        send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        changeParty(() => {
+            party.clear();
+            names.forEach(n => party.add(n));
+            send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        });
         console.log(`[Party] Sync: ${party.snapshot().join(', ')}`);
 
         for (const name of names) enqueueFresh(name, 'party');
     });
 
     logWatcher.on('party_joined', (username: string) => {
-        party.add(username.toLowerCase());
-        send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        changeParty(() => {
+            party.add(username.toLowerCase());
+            send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        });
         console.log(`[Party] Joined: ${username}`);
         enqueueFresh(username, 'party');
     });
 
     logWatcher.on('party_left', (username: string) => {
         const key = username.toLowerCase();
-        party.delete(key);
-        removeShown(key);
-        send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        changeParty(() => {
+            party.delete(key);
+            removeShown(key);
+            send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        });
         console.log(`[Party] Left: ${username} — removed from overlay`);
     });
 
     logWatcher.on('party_clear', () => {
-        for (const key of party.snapshot()) removeShown(key);
-        party.clear();
-        send(IPC_EVENTS.PARTY_UPDATE, []);
+        changeParty(() => {
+            for (const key of party.snapshot()) removeShown(key);
+            party.clear();
+            send(IPC_EVENTS.PARTY_UPDATE, []);
+        });
         console.log('[Party] Cleared — all pins and party players removed from overlay');
     });
 }

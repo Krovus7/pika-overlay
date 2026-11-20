@@ -46,6 +46,7 @@ export interface ProfileShape {
     ranks?: Array<string | ApiRank>;
     username?: string;
     clan?: { name?: string } | null;
+    lastSeen?: unknown;
 }
 
 export function getRankDisplay(profile: ProfileShape | null | undefined): RankDisplay {

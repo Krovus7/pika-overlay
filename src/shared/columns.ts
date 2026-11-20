@@ -13,9 +13,24 @@ export interface ColumnDef {
     locked?: boolean;
 }
 
+/**
+ * Merges a saved column order with the known ids: unknown ids are dropped,
+ * missing ones are appended, except `tags` which belongs right after `player`.
+ */
+export function mergeColumnOrder(saved: readonly string[], known: readonly string[]): string[] {
+    const merged = saved.filter(id => known.includes(id));
+    const missing = known.filter(id => !merged.includes(id));
+    if (missing.includes('tags') && merged.includes('player')) {
+        merged.splice(merged.indexOf('player') + 1, 0, 'tags');
+        missing.splice(missing.indexOf('tags'), 1);
+    }
+    return [...merged, ...missing];
+}
+
 export const COLUMN_DEFS: ColumnDef[] = [
     { id: 'rank',      label: 'LV',        sortKey: 'rankSortValue',  cls: 'col-rank',    settingsLabel: 'LV'        },
     { id: 'player',    label: 'Player',    sortKey: null,             cls: 'col-player',  settingsLabel: 'Player',    locked: true },
+    { id: 'tags',      label: 'Tags',      sortKey: null,             cls: 'col-tags',    settingsLabel: 'Tags'      },
     { id: 'guild',     label: 'Guild',     sortKey: null,             cls: 'col-guild',   settingsLabel: 'Guild'     },
     { id: 'fkdr',      label: 'FKDR',      sortKey: 'fkdr',           cls: 'col-fkdr',    settingsLabel: 'FKDR'      },
     { id: 'finals',    label: 'Finals',    sortKey: 'finalKills',     cls: 'col-fk',      settingsLabel: 'Finals'    },

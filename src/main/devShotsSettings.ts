@@ -18,7 +18,7 @@ export interface SettingsShotTools {
 const MIN_WIDTH = 560;
 const TABS = [
     ['general', 'general'], ['api', 'api'], ['appearance', 'appearance'],
-    ['columns', 'columns'], ['stats', 'colors'], ['updates', 'updates'], ['debug', 'debug'],
+    ['columns', 'columns'], ['stats', 'colors'], ['watchlist', 'watchlist'], ['updates', 'updates'], ['debug', 'debug'],
 ] as const;
 
 async function waitForWindow(): Promise<BrowserWindow> {
@@ -65,7 +65,7 @@ export async function captureSettingsShots({ shotsDir }: SettingsShotTools): Pro
     await sleep(300);
 
     await setTheme('light');
-    for (const tab of ['general', 'api', 'appearance', 'stats'] as const) {
+    for (const tab of ['general', 'api', 'appearance', 'stats', 'watchlist'] as const) {
         await openTab(tab);
         await shot(`v5-20-settings-${tab === 'stats' ? 'colors' : tab}-light.png`);
     }

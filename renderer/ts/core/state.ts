@@ -5,6 +5,8 @@
 
 import { COLUMN_DEFS } from '../../../src/shared/columns';
 import type { ApiHealth, RatioColors, RatioThresholds } from '../../../src/shared/types';
+import type { WatchResolved } from '../../../src/shared/watchlist';
+import type { LoginAgeSettings } from '../table/loginAge';
 import type { RowData } from '../table/types';
 
 export type Layout = 'detailed' | 'compact';
@@ -35,7 +37,11 @@ export interface OverlayState {
     myUsername: string;
     myNickName: string;
     nickedOnTop: boolean;
+    watchlistOnTop: boolean;
+    watchlistSound: boolean;
+    watch: ReadonlyMap<string, WatchResolved>;
     highlightSuspects: boolean;
+    loginAge: LoginAgeSettings;
     thresholds: RatioThresholds;
     colors: RatioColors;
     health: ApiHealth;
@@ -49,7 +55,7 @@ export const state: OverlayState = {
     mode: 'ALL_MODES',
     party: new Set(),
     layout: 'detailed',
-    compactColumns: new Set(['rank', 'player', 'fkdr', 'winstreak', 'source']),
+    compactColumns: new Set(['rank', 'player', 'tags', 'fkdr', 'winstreak', 'source']),
     columnOrder: COLUMN_DEFS.map(c => c.id),
     columnEnabled: Object.fromEntries(COLUMN_DEFS.map(c => [c.id, true])),
     pinSelf: false,
@@ -57,7 +63,11 @@ export const state: OverlayState = {
     myUsername: '',
     myNickName: '',
     nickedOnTop: true,
+    watchlistOnTop: true,
+    watchlistSound: false,
+    watch: new Map(),
     highlightSuspects: true,
+    loginAge: { loginAge: 'off', loginAgeMaxLevel: 10, freshMinutes: 5 },
     thresholds: DEFAULT_THRESHOLDS,
     colors: DEFAULT_COLORS,
     health: { kind: 'ok' },

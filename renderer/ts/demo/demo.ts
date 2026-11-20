@@ -14,7 +14,7 @@ import { setHealth } from '../ui/banner';
 import { applyOpacity } from '../ui/lowOpacity';
 import { setThemeDom } from '../ui/theme';
 import { setBackdrop } from './backdrops';
-import { DEMO_PARTY, DEMO_SELF, demoRows } from './demoRows';
+import { DEMO_PARTY, DEMO_SELF, demoRows, demoWatch } from './demoRows';
 
 function healthOf(kind: string): ApiHealth {
     switch (kind) {
@@ -34,6 +34,9 @@ export function registerDemo(): void {
         state.isNicked = false;
         state.pinSelf = true;
         state.party = new Set(DEMO_PARTY.map(n => n.toLowerCase()));
+        // Demo only: login age shown for every row, and a sample watchlist; config keeps its real values
+        state.loginAge = { loginAge: 'all', loginAgeMaxLevel: 10, freshMinutes: 5 };
+        state.watch = demoWatch();
         renderNow();
     };
     window.__pikaDemoClear = () => clearTable();

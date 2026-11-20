@@ -1,0 +1,20 @@
+/* Watchlist tab: entry rows, imported lists, import preview. */
+.s-watch-items > * + * { border-top: 1px solid var(--s-line); }
+.s-watch-row { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 12px; }
+.s-watch-row > .s-input { height: 30px; }
+.s-watch-row > .s-select { flex: 0 0 auto; width: 96px; }
+.s-watch-row > .s-input:not(.s-select) { flex: 1 1 140px; min-width: 0; }
+.s-watch-name { flex: 0 1 150px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 12.5px; }
+.s-watch-list .s-watch-name { flex: 1 1 auto; }
+.s-watch-date { flex: 0 0 auto; font-size: 11.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.s-empty { margin: 0; padding: 12px; font-size: 12px; color: var(--text-dim); }
+.s-select { width: auto; }
+.s-number { width: 96px; }
+.s-inline > .s-select { flex: 0 0 auto; width: 96px; }
+.s-watch-option { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
+.s-watch-paste { display: flex; flex-direction: column; gap: 8px; }
+.s-watch-paste textarea { width: 100%; box-sizing: border-box; resize: vertical; height: auto; padding: 8px 10px; }
+.s-watch-preview { padding: 10px 12px; border: 1px solid var(--accent-line); border-radius: 6px; background: var(--s-tint); }
+.s-watch-preview-line { margin: 0 0 4px; font-size: 12.5px; line-height: 1.5; }
+.s-watch-preview .s-inline { margin-top: 8px; }
+.s-watch-preview[hidden], .s-watch-paste[hidden] { display: none; }
