@@ -57,7 +57,9 @@ vpk upload github -o release -c win --repoUrl https://github.com/Krovus7/pika-ov
 
 5.0.0 was published on 2026-11-13 by running these three steps by hand;
 5.0.1 was published the same day with `npm run release` itself; 5.1.0 and
-5.2.0 (2026-11-21, delta 5.1.0 → 5.2.0) the same way. Release notes are set
+5.2.1 (2026-11-21, delta 5.1.0 → 5.2.1) the same way. 5.2.0 was published
+the same night and withdrawn (release and tag deleted) because nothing in the
+overlay announced it; 5.2.1 carries all of 5.2.0 plus the update popup. Release notes are set
 afterwards with `gh release edit v<version> --notes-file <file>`.
 
 The tag is derived from `package.json` version (e.g. `v5.0.0`). Use `--pre`

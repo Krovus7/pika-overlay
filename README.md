@@ -37,10 +37,14 @@ their BedWars stats from the official Pika stats API.
   or anyone else; the mark shows as a chip next to the name and an alert tells
   you when a marked player joins your lobby. Lists can be exported, pasted into
   Discord and imported by friends. Everything stays on your PC.
-- **Nicked teammates.** Tell the overlay that a nick is your teammate and it
-  stops showing up as an unknown nicked player.
-- **Login age.** A chip with how long a player has been logged in, to spot fresh
-  accounts; a long session with no BedWars stats is marked BOT?.
+- **Nicked teammates.** Right-click a nicked party member → *This is my
+  teammate* and the nick stops showing up. Links are never saved and can never
+  hide an enemy: they end as soon as that teammate leaves your party.
+- **Login age.** A chip with how long each player has been connected to Pika
+  (their last login). A fresh login is orange, a typical sniper sign; a player
+  connected for 12 hours or more with no BedWars stats is marked `BOT?`.
+- **Update popup.** When a new version is out, a small card in the overlay
+  tells you; click it to open the Updates tab, or dismiss it.
 - **Readable on any background.** Dark and light themes, and a legibility
   floor that keeps text readable down to 5 % background opacity.
 - **Within the API limit.** A 10-minute cache and a rate limiter keep the
@@ -49,6 +53,8 @@ their BedWars stats from the official Pika stats API.
 | Light theme | Compact layout |
 |---|---|
 | <img src="docs/images/overlay-light.png" alt="Light theme"> | <img src="docs/images/overlay-compact.png" alt="Compact layout"> |
+| **Right-click menu** | **Update popup** |
+| <img src="docs/images/row-menu.png" alt="Right-click menu on a player"> | <img src="docs/images/update-popup.png" alt="Update available popup"> |
 
 ## Install
 
@@ -102,10 +108,13 @@ names into the search box (several at once, separated by spaces or commas).
 - **Sorting:** click a column header. Your own row, your party, marked players and nicked
   players can be kept on top.
 - **Tags column:** small chips next to the name: YOU, SNIPER / CHEATER / OTHER
-  from your watchlist, the login age if enabled, BOT? for suspected bots.
-  Right-click a row for the watchlist menu. Click a player name to copy it.
+  from your watchlist, the login age (`3m`, `2h`; orange when fresh), BOT? for
+  suspected bots. Right-click a row for the watchlist menu. Click a player name
+  to copy it. Large ratios are shortened (`113.5`, `12.3k`); hover for the
+  exact value.
 - **Title bar:** theme, layout (detailed or compact), refresh (reload every
-  row, ignoring the cache), clear, settings.
+  row, ignoring the cache), clear, settings. Each layout remembers its own
+  window size.
 - **Hotkeys:** `F4` show or hide, `F5` clear. Both can be changed in
   Settings → General.
 - **Playing nicked yourself:** tick "I am nicked" and enter your nick, so the
@@ -125,7 +134,7 @@ window too. A narrow overlay hides the rightmost columns instead of scrolling.
 | Columns | show, hide and reorder columns (including Tags); choose the columns of the compact layout |
 | Colors | tier colors and thresholds for FKDR, KD and WLR |
 | Watchlist | your marked players, imported lists, import and export, teammate nicks, login age, alerts |
-| Updates | installed version, check and install updates |
+| Updates | installed version, check and install updates, automatic check (at startup and every 6 hours) |
 | Debug | connection state and the most recent log lines |
 
 Every setting saves as you change it.
@@ -203,8 +212,9 @@ Project rules for contributors and coding agents are in `AGENTS.md`,
 
 v5 is verified by unit tests, a simulation over 55 real game logs, replays of
 real logs into the running app, smoke runs against the live API and an in-app
-update from 4.1.0. A full live BedWars session with v5 is not yet
-field-verified. The record is
+update from 4.1.0. On 2026-11-20 a live BedWars session with the 5.2 beta
+confirmed the login age (`lastSeen` is the last login time, unchanged at
+logout), the Tags chips and the watchlist menu. The record is
 [`docs/VERIFICATION-2026-11.md`](docs/VERIFICATION-2026-11.md).
 
 ## Credits
