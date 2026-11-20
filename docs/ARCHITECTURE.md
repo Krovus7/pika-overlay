@@ -44,6 +44,7 @@ src/
     │   ├── resolve.ts        own entry beats imported; resolved view for the table
     │   ├── alerts.ts, alertDelivery.ts   once per player per lobby; toast event, taskbar flash
     │   ├── menuSpec.ts       row context menu as data (testable)
+    │   ├── menuSession.ts    menu view for the overlay + latest-token click map
     │   ├── nickLink.ts, notify.ts, instance.ts
     ├── log/              log parsing (ported from v3; see LOG-PARSING.md)
     │   ├── patterns.ts, nameCleaner.ts, partyParser.ts, lineParser.ts
@@ -65,7 +66,7 @@ src/
     │   ├── clearPlayers.ts   manual clear shared by the button and the hotkey
     │   ├── configHandlers.ts config:* and the side effects of a config change
     │   ├── apiHandlers.ts    api:getHealth, api:testKey, api:health push
-    │   ├── watchlistHandlers.ts, watchlistMenu.ts   watchlist:* IPC and the native row menu
+    │   ├── watchlistHandlers.ts, watchlistMenu.ts   watchlist:* IPC and the row menu data/pick
     │   ├── lookup.ts         LookupService: lookup/refresh/retry/refreshAll, race guards
     │   └── autoRetry.ts      automatic retry of error / rate_limited rows
     └── update/velopackUpdate.ts  Velopack check/download/apply state machine

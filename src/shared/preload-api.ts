@@ -5,6 +5,7 @@
 
 import type { ApiHealth, ApiKeyTestResult, PlayerLoading, UpdateState } from './types';
 import type { StatsPayload } from './ipc-contract';
+import type { MenuView } from './menu';
 import type { ImportAttempt, WatchAlert, WatchKind, WatchlistView } from './watchlist';
 
 export interface PikaOverlayApi {
@@ -90,6 +91,8 @@ export interface PikaOverlayApi {
     onWatchlistUpdate: (cb: (data: WatchlistView) => void) => void;
     /** Overlay only: a watched player entered the table (once per player per lobby) */
     onWatchlistAlert: (cb: (alert: WatchAlert) => void) => void;
-    /** Pops up the native row menu at the cursor; `nicked` adds the nick-link items */
-    showWatchMenu: (name: string, nicked: boolean) => Promise<void>;
+    /** What the row menu offers for this name (nicked adds the nick-link items); null for an invalid name. The overlay draws it. */
+    showWatchMenu: (name: string, nicked: boolean) => Promise<MenuView | null>;
+    /** Runs the picked item of the latest menu; false when the token is stale or the id unknown */
+    pickWatchMenu: (token: string, id: string) => Promise<boolean>;
 }

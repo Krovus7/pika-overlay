@@ -31,7 +31,8 @@ Last run (2026-11-20, branch `feat/watchlist-login-age`): `npm test` → 340 tes
 | `watchlist-format.test.ts` | 14 | names, kinds, note cleaning, HTML in notes stays text after `esc()`, size and count caps, duplicates, text format with comments and bare names, JSON with wrong `format` / `version` rejected, BOM |
 | `watchlist-store.test.ts` | 14 | own entry beats imported, removing a list removes only its entries, re-import with the same label replaces, corrupt file → backup + empty, atomic write, failed writes leave memory unchanged, nick links |
 | `watchlist-table.test.ts` | 11 | resolved view, watch chip and row class, sorting with `watchlistOnTop`, alerts (once per lobby, excluded sources), linked nicks ignored by lookup |
-| `watchlist-actions.test.ts` | 7 | row menu content (`buildMenuSpec`): marks keep the note, imported source line, nick link submenu, `&` escaped |
+| `watchlist-actions.test.ts` | 8 | row menu content (`buildMenuSpec`): marks keep the note, imported source line, nick link submenu, tone and checked kind |
+| `row-menu.test.ts` | 9 | menu placement/clamp math, highlight stepping, `MenuSession` tokens (stale token ignored, one pick) |
 | `watchlist-settings-text.test.ts` | 6 | pure Watchlist-tab helpers: search, dates, preview lines, nick link labels, `noteNeedsSave` |
 | `review-fixes.test.ts` | 8 | regressions from the v5 review: late 401 of a replaced key, re-arming a key after a passing test, timeout covering the response body, manual clear (party kept, backlog dropped), API-key redaction in debug log lines, config written through a temp file |
 

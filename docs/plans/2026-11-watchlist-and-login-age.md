@@ -165,7 +165,7 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
   - `watchlist:linkNick(nick, friend | null)` → add or replace a nick link
     (friend name validated like any name, or empty); `watchlist:unlinkNick(nick)`;
     `watchlist:get` also returns `nickLinks`;
-  - `watchlist:menu(name)` → native context menu (see Task 4);
+  - `watchlist:menu(name, nicked)` → row menu as data and `watchlist:menuPick(token, id)` (see Task 4; originally a native menu, replaced by the themed overlay menu);
   - event `watchlist:updated` broadcast to overlay and settings window.
 
 ## Task 4 — Watchlist in the UI

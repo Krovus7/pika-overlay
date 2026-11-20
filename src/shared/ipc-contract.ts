@@ -45,6 +45,7 @@ export const IPC_CHANNELS = {
     WATCHLIST_LINK_NICK: 'watchlist:linkNick',
     WATCHLIST_UNLINK_NICK: 'watchlist:unlinkNick',
     WATCHLIST_MENU: 'watchlist:menu',
+    WATCHLIST_MENU_PICK: 'watchlist:menuPick',
 } as const;
 
 export const IPC_EVENTS = {

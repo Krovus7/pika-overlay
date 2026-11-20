@@ -101,13 +101,16 @@ it is dropped like any other column (rightmost first).
 A local list of names with a kind (sniper, cheater, other) and a note
 (ADR-0014); stored in `watchlist.json`, keyed by name.
 
-- **Mark a player:** right-click a row. The native menu has Mark as sniper /
-  cheater / other (changing the kind keeps an own note), Edit note in Settings
-  (opens Settings → Watchlist), Remove from watchlist (own entry) or a disabled
-  "From list: <label>" (imported entry). Left click still copies the name.
-- **Nicked teammate:** on a NICKED row the menu starts with a disabled line
+- **Mark a player:** right-click a row. The menu is drawn in the overlay
+  look, headed by the player name, and has Mark as sniper /
+  cheater / other (colored dot, a check on the current own kind; changing the
+  kind keeps an own note), Edit note in Settings
+  (opens Settings → Watchlist), Remove from watchlist (own entry) or a dim
+  "From list: <label>" line (imported entry). Esc, a click outside, scrolling or
+  resizing closes it; arrow keys, Enter and Esc work. Left click still copies the name.
+- **Nicked teammate:** on a NICKED row the menu starts with a dim line
   saying the tag follows the nick, not the player, and ends with "This is my
-  teammate" (party members, or "Someone else"). The nick is then hidden from the
+  teammate" (opens the party members, or "Someone else", in place with a Back row). The nick is then hidden from the
   table and ignored when detected again. Nick links are personal and never
   exported. They are listed in Settings → Watchlist and can be removed there.
 - **Alert:** when a watched player enters the table from the log (not typed

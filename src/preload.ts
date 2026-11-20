@@ -84,6 +84,7 @@ const api: PikaOverlayApi = {
     onWatchlistUpdate: (cb) => on<WatchlistView>(IPC_EVENTS.WATCHLIST_UPDATED, cb),
     onWatchlistAlert: (cb) => on<WatchAlert>(IPC_EVENTS.WATCHLIST_ALERT, cb),
     showWatchMenu: (name, nicked) => ipcRenderer.invoke(IPC_CHANNELS.WATCHLIST_MENU, name, nicked),
+    pickWatchMenu: (token, id) => ipcRenderer.invoke(IPC_CHANNELS.WATCHLIST_MENU_PICK, token, id),
 };
 
 contextBridge.exposeInMainWorld('pikaOverlay', api);

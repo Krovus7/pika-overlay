@@ -65,9 +65,15 @@ the lowercase player name.
 ## Implementation notes
 - Main: `src/main/watchlist/` (`store.ts`, `fileLoad.ts`, `validate.ts`,
   `format.ts`, `importPreview.ts`, `resolve.ts`, `alerts.ts`, `alertDelivery.ts`,
-  `menuSpec.ts`, `nickLink.ts`, `notify.ts`, `instance.ts`); IPC in
+  `menuSpec.ts`, `menuSession.ts`, `nickLink.ts`, `notify.ts`, `instance.ts`); IPC in
   `src/main/ipc/watchlistHandlers.ts` and `watchlistMenu.ts`. Types:
-  `src/shared/watchlist.ts`.
+  `src/shared/watchlist.ts`, `src/shared/menu.ts`.
+- Row menu: main builds the content (`menuSpec.ts`) and returns it as data
+  (`watchlist:menu`); the overlay draws it in its own look
+  (`renderer/ts/table/rowMenu.ts`, `row-menu.css`), not a native menu. Click
+  closures stay in main, keyed by a token that only the latest menu holds;
+  `watchlist:menuPick(token, id)` runs one and clears them (ADR-0003: main owns
+  state and decisions).
 - Renderer: Tags column chips (`table/tagsCell.ts`, `watchView.ts`), row classes
   `row-watch-<kind>` (`css/watchlist.css`), alert toast (`core/watchlist.ts`),
   Settings → Watchlist (`settings/tabWatchlist.ts` and `watch*.ts`).
@@ -82,5 +88,5 @@ the lowercase player name.
   `watchlist-settings-text.test.ts`.
 - `node scripts/smoke.mjs`: sniper chip through IPC, text export/import round
   trip, list removal (the real `watchlist.json` is restored afterwards).
-- Not field-verified: native menu, `flashFrame`, beep and the layout in a real
+- Not field-verified: the themed row menu, `flashFrame`, beep and the layout in a real
   game session.

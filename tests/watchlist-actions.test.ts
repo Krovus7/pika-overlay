@@ -24,7 +24,7 @@ describe('row menu content', () => {
         mark: (k, n) => calls.push(`mark:${k}:${n}`), unmark: () => calls.push('unmark'), editNote: () => calls.push('editNote'), link: f => calls.push(`link:${f}`),
         ...over,
     });
-    const labels = (items: ReturnType<typeof buildMenuSpec>) => items.map(i => i.label ?? '---');
+    const labels = (items: ReturnType<typeof buildMenuSpec>) => items.map(i => i.kind === 'separator' ? '---' : i.label);
 
     beforeEach(() => { calls.length = 0; });
 
@@ -42,16 +42,27 @@ describe('row menu content', () => {
         assert.deepEqual(calls, ['mark:cheater:camps beds', 'unmark']);
     });
 
-    it('escapes & in imported labels and party names so the menu shows them literally', () => {
+    it('marks carry their kind tone and the current own kind is checked; remove is a danger item', () => {
+        const items = buildMenuSpec(input({ resolved: own }));
+        assert.deepEqual(items.slice(0, 3).map(i => [i.tone, i.checked]), [['sniper', true], ['cheater', false], ['other', false]]);
+        assert.equal(items[5]!.tone, 'danger');
+    });
+
+    it('an imported kind is not checked: only own entries are', () => {
+        const items = buildMenuSpec(input({ resolved: imported }));
+        assert.deepEqual(items.slice(0, 3).map(i => i.checked), [false, false, false]);
+    });
+
+    it('keeps & in imported labels and party names as plain text (the renderer escapes HTML)', () => {
         const items = buildMenuSpec(input({ resolved: { ...imported, sourceLabel: 'A&B' }, nicked: true, partyMembers: ['x&y'] }));
-        assert.ok(labels(items).includes('From list: A&&B'));
-        assert.deepEqual(labels(items[items.length - 1]!.submenu!), ['x&&y', 'Someone else']);
+        assert.ok(labels(items).includes('From list: A&B'));
+        assert.deepEqual(labels(items[items.length - 1]!.items!), ['x&y', 'Someone else']);
     });
 
     it('imported entry: informative disabled line, no remove, note not copied', () => {
         const items = buildMenuSpec(input({ resolved: { ...imported, sourceLabel: 'Friends' } }));
         assert.deepEqual(labels(items).slice(3), ['---', 'Edit note in Settings', 'From list: Friends']);
-        assert.equal(items[5]!.enabled, false);
+        assert.equal(items[5]!.kind, 'info');
         items[0]!.click!();
         assert.deepEqual(calls, ['mark:sniper:']);
     });
@@ -59,12 +70,13 @@ describe('row menu content', () => {
     it('nicked row: disabled first line and a teammate submenu with the party plus "Someone else"', () => {
         const items = buildMenuSpec(input({ nicked: true, partyMembers: ['pal', 'bud'] }));
         assert.match(items[0]!.label!, /^This is a nick/);
-        assert.equal(items[0]!.enabled, false);
+        assert.equal(items[0]!.kind, 'info');
         const sub = items[items.length - 1]!;
         assert.equal(sub.label, 'This is my teammate');
-        assert.deepEqual(labels(sub.submenu!), ['pal', 'bud', 'Someone else']);
-        sub.submenu![0]!.click!();
-        sub.submenu![2]!.click!();
+        assert.equal(sub.kind, 'submenu');
+        assert.deepEqual(labels(sub.items!), ['pal', 'bud', 'Someone else']);
+        sub.items![0]!.click!();
+        sub.items![2]!.click!();
         assert.deepEqual(calls, ['link:pal', 'link:null']);
     });
 });

@@ -1,13 +1,15 @@
 /** Row context menu as plain data (no Electron types), so the content is testable. */
 
+import type { MenuTone } from '../../shared/menu';
 import { WATCH_KINDS, type WatchKind, type WatchResolved } from '../../shared/watchlist';
 
 export interface MenuSpec {
-    label?: string;
-    type?: 'separator';
-    enabled?: boolean;
+    label: string;
+    kind: 'action' | 'info' | 'separator' | 'submenu';
+    tone?: MenuTone;
+    checked?: boolean;
     click?: () => void;
-    submenu?: MenuSpec[];
+    items?: MenuSpec[];
 }
 
 export interface MenuInput {
@@ -25,32 +27,33 @@ const KIND_ITEM: Record<WatchKind, string> = {
     sniper: 'Mark as sniper', cheater: 'Mark as cheater', other: 'Mark as other',
 };
 
-/** A native menu reads `&` as a mnemonic marker; user and imported text must show it literally. */
-export const menuText = (text: string): string => text.replace(/&/g, '&&');
-
-const SEPARATOR: MenuSpec = { type: 'separator' };
+const SEPARATOR: MenuSpec = { label: '', kind: 'separator' };
 
 export function buildMenuSpec(input: MenuInput): MenuSpec[] {
     const { nicked, resolved } = input;
     const items: MenuSpec[] = [];
     if (nicked) {
-        items.push({ label: 'This is a nick: the tag follows the nick, not the player', enabled: false }, SEPARATOR);
+        items.push({ label: 'This is a nick: the tag follows the nick, not the player', kind: 'info' }, SEPARATOR);
     }
     // Changing the kind keeps the note of an own entry; an imported note stays with its list.
     const keptNote = resolved && !resolved.imported ? resolved.note : '';
+    const ownKind = resolved && !resolved.imported ? resolved.kind : undefined;
     for (const kind of WATCH_KINDS) {
-        items.push({ label: KIND_ITEM[kind], click: () => input.mark(kind, keptNote) });
+        items.push({
+            label: KIND_ITEM[kind], kind: 'action', tone: kind, checked: ownKind === kind, click: () => input.mark(kind, keptNote),
+        });
     }
-    items.push(SEPARATOR, { label: 'Edit note in Settings', click: input.editNote });
+    items.push(SEPARATOR, { label: 'Edit note in Settings', kind: 'action', click: input.editNote });
     if (resolved) {
-        if (!resolved.imported) items.push({ label: 'Remove from watchlist', click: input.unmark });
-        else items.push({ label: menuText(`From list: ${resolved.sourceLabel}`), enabled: false });
+        if (!resolved.imported) items.push({ label: 'Remove from watchlist', kind: 'action', tone: 'danger', click: input.unmark });
+        else items.push({ label: `From list: ${resolved.sourceLabel}`, kind: 'info' });
     }
     if (nicked) {
-        const members: MenuSpec[] = input.partyMembers.map(m => ({ label: menuText(m), click: () => input.link(m) }));
+        const members: MenuSpec[] = input.partyMembers.map(m => ({ label: m, kind: 'action', click: () => input.link(m) }));
         items.push(SEPARATOR, {
             label: 'This is my teammate',
-            submenu: [...members, { label: 'Someone else', click: () => input.link(null) }],
+            kind: 'submenu',
+            items: [...members, { label: 'Someone else', kind: 'action', click: () => input.link(null) }],
         });
     }
     return items;

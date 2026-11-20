@@ -68,7 +68,8 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `watchlist:get` / `set` / `removeList` | `getWatchlist()` / `setWatchEntry(name, change \| null)` / `removeWatchList(id)` | `watchlistHandlers.ts` → `watchlist/store.ts` (`watchlist.json`; set/remove broadcast `watchlist:updated`) |
 | `watchlist:export` / `copyText` | `exportWatchlist({ includeImported })` / `copyWatchlistText()` | `watchlistHandlers.ts` (save dialog, clipboard; own entries unless imported ones are ticked) |
 | `watchlist:importFile` / `importText` / `confirmImport` | `importWatchlistFile()` / `importWatchlistText(text, kind)` / `confirmWatchImport(token)` | `watchlistHandlers.ts` → `importPreview.ts` (preview in memory for 5 minutes, saved on confirm) |
-| `watchlist:menu` | `showWatchMenu(name, nicked)` | `watchlistMenu.ts` + `menuSpec.ts`: native row menu (marks, remove, imported source line, nick link submenu with the party) |
+| `watchlist:menu` | `showWatchMenu(name, nicked)` | `watchlistMenu.ts` + `menuSpec.ts`: returns the row menu as data `{ token, title, items }` (marks with tone and checked kind, remove, imported source line, nick link submenu with the party); the overlay draws it. A new menu invalidates older tokens |
+| `watchlist:menuPick` | `pickWatchMenu(token, id)` | `menuSession.ts`: runs the picked item of the latest menu if the token is current, then clears; resolves false for a stale token or unknown id |
 | `watchlist:linkNick` / `unlinkNick` | `linkNick(nick, friend \| null)` / `unlinkNick(nick)` | `watchlistHandlers.ts` (nick links: personal, never exported or imported) |
 
 ### Push events (`IPC_EVENTS`, main → renderer)

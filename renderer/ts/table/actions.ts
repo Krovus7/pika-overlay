@@ -2,6 +2,7 @@
 
 import { state } from '../core/state';
 import { showToast } from '../ui/toast';
+import { openRowMenu } from './rowMenu';
 
 const api = window.pikaOverlay;
 
@@ -28,8 +29,7 @@ function openWatchMenu(e: MouseEvent): void {
     const row = key ? state.players.get(key) : undefined;
     if (!row) return;
     e.preventDefault();
-    api.showWatchMenu(row.username, row.status === 'nicked')
-        .catch(err => console.error('[Overlay] Row menu failed:', String(err)));
+    openRowMenu(row.username, row.status === 'nicked', e.clientX, e.clientY);
 }
 
 export function initRowActions(): void {

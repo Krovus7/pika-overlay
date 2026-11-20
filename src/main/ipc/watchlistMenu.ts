@@ -1,10 +1,12 @@
-/** watchlist:menu — the native row context menu, built in main and popped up over the calling window. */
+/** watchlist:menu and watchlist:menuPick — main decides what the row menu offers and runs the pick; the overlay draws it. */
 
-import { BrowserWindow, Menu, ipcMain, type MenuItemConstructorOptions } from 'electron';
+import { ipcMain } from 'electron';
 
 import { IPC_CHANNELS } from '../../shared/ipc-contract';
+import type { MenuView } from '../../shared/menu';
 import type { PartyState } from '../state';
 import { buildMenuSpec } from '../watchlist/menuSpec';
+import { MenuSession } from '../watchlist/menuSession';
 import { openSettings } from '../settingsWindow';
 import { toResolved } from '../watchlist/resolve';
 import { notifyWatchlist } from '../watchlist/notify';
@@ -17,8 +19,10 @@ export interface WatchlistMenuDeps {
 }
 
 export function registerWatchlistMenu({ store, party, linkNick }: WatchlistMenuDeps): void {
-    ipcMain.handle(IPC_CHANNELS.WATCHLIST_MENU, (e, name: unknown, nicked: unknown) => {
-        if (typeof name !== 'string' || !name) return;
+    const session = new MenuSession();
+
+    ipcMain.handle(IPC_CHANNELS.WATCHLIST_MENU, (_e, name: unknown, nicked: unknown): MenuView | null => {
+        if (typeof name !== 'string' || !name) return null;
         const change = (change: Parameters<WatchlistStore['setOwn']>[1]): void => {
             if (store.setOwn(name, change)) notifyWatchlist(store);
         };
@@ -33,7 +37,8 @@ export function registerWatchlistMenu({ store, party, linkNick }: WatchlistMenuD
             editNote: () => openSettings('watchlist'),
             link: friend => { if (linkNick(name, friend)) notifyWatchlist(store); },
         });
-        const window = BrowserWindow.fromWebContents(e.sender) ?? undefined;
-        Menu.buildFromTemplate(spec as MenuItemConstructorOptions[]).popup({ window });
+        return session.open(name, spec);
     });
+
+    ipcMain.handle(IPC_CHANNELS.WATCHLIST_MENU_PICK, (_e, token: unknown, id: unknown): boolean => session.pick(token, id));
 }
