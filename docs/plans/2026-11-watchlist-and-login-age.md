@@ -66,7 +66,8 @@ identity (Pika accepts cracked accounts, so a Mojang UUID is not reliable).
 
 - New column `{ id: 'tags', label: 'Tags', sortKey: null, cls: 'col-tags' }`
   placed right after `player` in `COLUMN_DEFS`; fixed width in `COL_WIDTH`
-  (start at 92 px, adjust from screenshots); enabled by default and part of
+  (148 px: CHEATER + FRESH 99m chips side by side, see tags-width report;
+  was 92 px, which clipped the second chip); enabled by default and part of
   the default compact set.
 - Config migration: existing `columnOrder` without `tags` gets it inserted
   right after `player` (extend the existing column merge, with a test).
