@@ -4,7 +4,7 @@ import type { PikaOverlayApi } from '../../../src/shared/preload-api';
 import { WATCH_KINDS, type WatchEntry, type WatchKind } from '../../../src/shared/watchlist';
 import { block, button, group, h, setStatus, textInput } from './controls';
 import { runAction } from './watchAction';
-import { filterEntries, formatAddedDate } from './watchText';
+import { filterEntries, formatAddedDate, noteNeedsSave } from './watchText';
 
 export interface Section {
     root: HTMLElement;
@@ -66,13 +66,27 @@ function buildEntryRow(api: PikaOverlayApi, e: WatchEntry, status: HTMLElement):
     const who = h('span', 's-watch-name', e.name);
     who.title = e.name;
     // Both controls save the current values of both, so one edit never overwrites the other
-    const save = (): void => void runAction(status, () => api.setWatchEntry(e.name, { kind: select.value as WatchKind, note: note.value.trim() }), `Could not save ${e.name}.`);
+    let lastSent = e.note;
+    const save = (): void => {
+        const previous = lastSent;
+        lastSent = note.value.trim();
+        void runAction(status, async () => {
+            try {
+                const ok = await api.setWatchEntry(e.name, { kind: select.value as WatchKind, note: lastSent });
+                if (!ok) lastSent = previous;
+                return ok;
+            } catch (err) {
+                lastSent = previous;
+                throw err;
+            }
+        }, `Could not save ${e.name}.`);
+    };
     const select = kindSelect(e.kind, `Kind of ${e.name}`, save);
     const note = textInput('Note');
     note.maxLength = 120;
     note.value = e.note;
     note.setAttribute('aria-label', `Note for ${e.name}`);
-    const saveNote = (): void => { if (note.value.trim() !== e.note) save(); };
+    const saveNote = (): void => { if (noteNeedsSave(note.value, lastSent)) save(); };
     note.addEventListener('blur', saveNote);
     note.addEventListener('keydown', ev => { if (ev.key === 'Enter') saveNote(); });
     const date = h('span', 's-watch-date', formatAddedDate(e.addedAt));

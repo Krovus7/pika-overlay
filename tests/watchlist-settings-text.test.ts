@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { filterEntries, formatAddedDate, friendLabel, nickLinksSorted, previewLines } from '../renderer/ts/settings/watchText';
+import { filterEntries, formatAddedDate, friendLabel, nickLinksSorted, noteNeedsSave, previewLines } from '../renderer/ts/settings/watchText';
 import { SETTINGS_TAB_IDS } from '../src/shared/ipc-contract';
 import type { WatchEntry } from '../src/shared/watchlist';
 
@@ -48,5 +48,14 @@ describe('settings tab order', () => {
         const html = fs.readFileSync(path.join(__dirname, '..', '..', 'renderer', 'settings.html'), 'utf8');
         const ids = [...html.matchAll(/class="settings-tab-btn[^"]*" data-tab="([^"]+)"/g)].map(m => m[1]);
         assert.deepEqual(ids, [...SETTINGS_TAB_IDS]);
+    });
+});
+
+
+describe('noteNeedsSave', () => {
+    it('compares with the last sent note, so restoring the original text after a save is saved again', () => {
+        assert.equal(noteNeedsSave(' X ', 'A'), true);
+        assert.equal(noteNeedsSave('A', 'X'), true);
+        assert.equal(noteNeedsSave(' A ', 'A'), false);
     });
 });

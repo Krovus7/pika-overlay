@@ -35,3 +35,8 @@ export function friendLabel(link: NickLink): string {
 export function nickLinksSorted(links: readonly NickLink[]): NickLink[] {
     return [...links].sort((a, b) => a.nick.toLowerCase().localeCompare(b.nick.toLowerCase()));
 }
+
+/** True when the input text differs from the note last sent to main (not from the note the row was built with). */
+export function noteNeedsSave(inputValue: string, lastSent: string): boolean {
+    return inputValue.trim() !== lastSent;
+}
