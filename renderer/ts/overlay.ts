@@ -17,6 +17,7 @@ import { setHealth } from './ui/banner';
 import { setGameStatus, showFatal } from './ui/gameStatus';
 import { initSearch } from './ui/search';
 import { initThemeToggle } from './ui/theme';
+import { initUpdatePopup } from './ui/updatePopup';
 
 const api = window.pikaOverlay;
 
@@ -93,6 +94,7 @@ function start(): void {
     initThemeToggle(api);
     bindIpc();
     initWatchlist(api);
+    initUpdatePopup(api);
     const version = document.querySelector('.logo-version');
     if (version) version.textContent = `v${__APP_VERSION__}`;
     registerDemo();

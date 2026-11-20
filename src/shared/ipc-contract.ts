@@ -69,6 +69,10 @@ export const IPC_EVENTS = {
 /** Tab ids of the settings window, in display order. */
 export const SETTINGS_TAB_IDS = ['general', 'api', 'appearance', 'columns', 'stats', 'watchlist', 'updates', 'debug'] as const;
 
+export function isSettingsTab(tab: unknown): tab is (typeof SETTINGS_TAB_IDS)[number] {
+    return typeof tab === 'string' && (SETTINGS_TAB_IDS as readonly string[]).includes(tab);
+}
+
 export type StatsPayload = PlayerResult & { source: string };
 
 export type { PlayerLoading, PlayerResult };

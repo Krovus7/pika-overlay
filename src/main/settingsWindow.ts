@@ -6,7 +6,7 @@
 import { BrowserWindow, screen } from 'electron';
 import * as path from 'node:path';
 
-import { IPC_EVENTS, SETTINGS_TAB_IDS } from '../shared/ipc-contract';
+import { IPC_EVENTS } from '../shared/ipc-contract';
 import type { ConfigStore } from './config';
 import { isInsideAny, placeBeside } from './windowBounds';
 
@@ -31,10 +31,6 @@ export function initSettingsWindow(d: SettingsWindowDeps): void {
 
 export function getSettingsWin(): BrowserWindow | null {
     return settingsWin && !settingsWin.isDestroyed() ? settingsWin : null;
-}
-
-export function isSettingsTab(tab: unknown): tab is string {
-    return typeof tab === 'string' && (SETTINGS_TAB_IDS as readonly string[]).includes(tab);
 }
 
 function initialBounds({ store, getOverlayWin }: SettingsWindowDeps): Electron.Rectangle {

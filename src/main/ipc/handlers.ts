@@ -9,13 +9,13 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { IPC_CHANNELS, IPC_EVENTS } from '../../shared/ipc-contract';
+import { IPC_CHANNELS, IPC_EVENTS, isSettingsTab } from '../../shared/ipc-contract';
 import { cache } from '../api/cache';
 import type { ConfigStore } from '../config';
 import type { LogWatcher } from '../log/logWatcher';
 import { getRecentLogLines } from '../log/debugLines';
 import type { LookupQueue, PartyState } from '../state';
-import { getSettingsWin, isSettingsTab, openSettings } from '../settingsWindow';
+import { getSettingsWin, openSettings } from '../settingsWindow';
 import { checkForUpdates, downloadAndApply, getUpdateState } from '../update/velopackUpdate';
 import { registerApiHandlers } from './apiHandlers';
 import { clearPlayers } from './clearPlayers';

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="css/row-menu.css" />
   <link rel="stylesheet" href="css/footer.css" />
   <link rel="stylesheet" href="css/toast.css" />
+  <link rel="stylesheet" href="css/update-popup.css" />
   <link rel="stylesheet" href="css/compact.css" />
 </head>
 <body>
@@ -153,6 +154,14 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div id="update-popup" class="update-popup" role="status" aria-live="polite">
+    <button class="up-main" type="button">
+      <svg class="ic up-icon"><use href="#i-download"/></svg>
+      <span class="up-text"><span class="up-title">Update available</span><span class="up-sub"></span></span>
+    </button>
+    <button class="up-close" type="button" aria-label="Dismiss"><svg class="ic"><use href="#i-x"/></svg></button>
+  </div>
 
   <script src="bundle/overlay.js"></script>
 </body>

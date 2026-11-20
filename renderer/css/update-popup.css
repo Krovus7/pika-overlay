@@ -1,0 +1,63 @@
+/* "Update available" card, bottom-right above the footer. Backing stays solid at any
+   opacity setting (like the toast) so it reads over a bright or dark scene. */
+.update-popup {
+  position: fixed;
+  right: 12px;
+  bottom: 34px;
+  z-index: 55;
+  display: flex;
+  align-items: stretch;
+  width: 280px;
+  max-width: calc(100% - 24px);
+  color: var(--text);
+  text-shadow: none;
+  background: rgba(var(--surface-rgb), max(0.95, var(--bg-alpha)));
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), calc(0.3 + var(--lo) * 0.3));
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity var(--t-med) var(--ease), transform var(--t-med) var(--ease), visibility 0s linear var(--t-med);
+}
+.update-popup.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+body.layout-compact .update-popup { bottom: 10px; }
+
+.up-main, .up-close { font: inherit; color: inherit; background: transparent; border: 0; cursor: pointer; }
+.up-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 4px 9px 11px;
+  text-align: left;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.up-main:hover, .up-close:hover { background: var(--accent-tint); }
+.up-icon { flex-shrink: 0; width: 18px; height: 18px; color: var(--accent-ink); }
+.up-text { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 1px; }
+.up-title, .up-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.up-title { font-size: 12px; font-weight: 700; }
+.up-sub { font-size: 11px; color: var(--text-soft); }
+
+.up-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  color: var(--text-dim);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.up-close:hover { color: var(--text); }
+.up-main:focus-visible, .up-close:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .update-popup { transition: none; transform: none; }
+}
