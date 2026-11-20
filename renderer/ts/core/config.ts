@@ -69,6 +69,11 @@ export function applyConfigToState(cfg: Record<string, unknown>): void {
     state.myNickName = String(cfg.myNickName || '').toLowerCase();
     state.nickedOnTop = cfg.nickedOnTop !== false;
     state.highlightSuspects = cfg.highlightSuspects !== false;
+    state.loginAge = {
+        loginAge: cfg.loginAge === 'lowLevel' || cfg.loginAge === 'all' ? cfg.loginAge : 'off',
+        loginAgeMaxLevel: typeof cfg.loginAgeMaxLevel === 'number' ? cfg.loginAgeMaxLevel : 10,
+        freshMinutes: typeof cfg.freshMinutes === 'number' ? cfg.freshMinutes : 5,
+    };
 
     if (typeof cfg.statsInterval === 'string') state.interval = cfg.statsInterval;
     if (typeof cfg.statsMode === 'string') state.mode = cfg.statsMode;

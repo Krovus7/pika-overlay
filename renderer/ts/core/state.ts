@@ -5,6 +5,7 @@
 
 import { COLUMN_DEFS } from '../../../src/shared/columns';
 import type { ApiHealth, RatioColors, RatioThresholds } from '../../../src/shared/types';
+import type { LoginAgeSettings } from '../table/loginAge';
 import type { RowData } from '../table/types';
 
 export type Layout = 'detailed' | 'compact';
@@ -36,6 +37,7 @@ export interface OverlayState {
     myNickName: string;
     nickedOnTop: boolean;
     highlightSuspects: boolean;
+    loginAge: LoginAgeSettings;
     thresholds: RatioThresholds;
     colors: RatioColors;
     health: ApiHealth;
@@ -58,6 +60,7 @@ export const state: OverlayState = {
     myNickName: '',
     nickedOnTop: true,
     highlightSuspects: true,
+    loginAge: { loginAge: 'off', loginAgeMaxLevel: 10, freshMinutes: 5 },
     thresholds: DEFAULT_THRESHOLDS,
     colors: DEFAULT_COLORS,
     health: { kind: 'ok' },

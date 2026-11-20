@@ -45,6 +45,9 @@ export interface AppConfig {
     theme: 'dark' | 'light'; // light = light panels + dark text, for bright game scenes
     nickedOnTop: boolean;
     highlightSuspects: boolean;
+    loginAge: 'off' | 'lowLevel' | 'all'; // login-age chip: off until lastSeen is verified
+    loginAgeMaxLevel: number;
+    freshMinutes: number;
 }
 
 export type RawConfig = Record<string, unknown>;
@@ -105,6 +108,9 @@ export function defaultConfig(): AppConfig {
         theme: 'dark',
         nickedOnTop: true,
         highlightSuspects: true,
+        loginAge: 'off',
+        loginAgeMaxLevel: 10,
+        freshMinutes: 5,
     };
 }
 
@@ -220,6 +226,9 @@ export function normalizeConfig(raw: RawConfig | null | undefined, defaults: App
         theme: enumOf(merged.theme, ['dark', 'light'], defaults.theme),
         nickedOnTop: bool(merged.nickedOnTop, defaults.nickedOnTop),
         highlightSuspects: bool(merged.highlightSuspects, defaults.highlightSuspects),
+        loginAge: enumOf(merged.loginAge, ['off', 'lowLevel', 'all'], defaults.loginAge),
+        loginAgeMaxLevel: Math.min(1000, Math.max(1, Math.round(num(merged.loginAgeMaxLevel, defaults.loginAgeMaxLevel)))),
+        freshMinutes: Math.min(1440, Math.max(1, Math.round(num(merged.freshMinutes, defaults.freshMinutes)))),
     };
 }
 

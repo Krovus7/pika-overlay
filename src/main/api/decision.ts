@@ -47,6 +47,6 @@ export function decidePlayerResult(
 /** Second step for an empty selection, given the lifetime/all-modes result */
 export function decideFromTotal(total: PlayerResult): PlayerResult {
     if (total.status !== 'ok') return total;
-    const { username, rank, level, guild } = total;
-    return { username, status: 'no_data', rank, level, guild };
+    const { username, rank, level, guild, lastSeen } = total;
+    return { username, status: 'no_data', rank, level, guild, lastSeen };
 }

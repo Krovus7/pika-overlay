@@ -12,7 +12,7 @@ interface Nums { fkdr: number; finals: number; kdr: number; wlr: number; wins: n
 
 function ok(username: string, source: string, level: number, r: Rank, guild: string | null, n: Nums): StatsPayload {
     return {
-        username, source, status: 'ok', rank: r, level, guild,
+        username, source, status: 'ok', rank: r, level, guild, lastSeen: null,
         finalKills: n.finals, finalDeaths: Math.round(n.finals / Math.max(n.fkdr, 0.01)), fkdr: n.fkdr,
         wins: n.wins, losses: Math.round(n.wins / Math.max(n.wlr, 0.01)), wlr: n.wlr,
         kills: n.kills, deaths: n.deaths, kdr: n.kdr,
@@ -23,7 +23,7 @@ function ok(username: string, source: string, level: number, r: Rank, guild: str
 
 function profile(username: string, source: string, status: 'api_off' | 'never_played' | 'no_data',
     level: number, r: Rank, guild: string | null): StatsPayload {
-    return { username, source, status, rank: r, level, guild };
+    return { username, source, status, rank: r, level, guild, lastSeen: null };
 }
 
 function bare(username: string, source: string, status: 'nicked' | 'not_found' | 'error' | 'rate_limited' | 'auth'): StatsPayload {

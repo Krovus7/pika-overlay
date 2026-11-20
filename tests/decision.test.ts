@@ -83,7 +83,7 @@ describe('decidePlayerResult', () => {
 });
 
 describe('decideFromTotal', () => {
-    const info = { rank: { text: 'X', color: '#fff' }, level: 5, guild: 'G' };
+    const info = { rank: { text: 'X', color: '#fff' }, level: 5, guild: 'G', lastSeen: null };
 
     it('lifetime data exists → no_data with profile info', () => {
         const total = result(okProfile, dataBoard);

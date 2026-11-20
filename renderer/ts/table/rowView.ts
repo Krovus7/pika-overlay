@@ -1,6 +1,7 @@
 /** Per-row facts (name, party/self/suspect flags) and the signature that tells when a row must re-render. Pure. */
 
 import { chipsSignature, viewChips } from './tagsCell';
+import { loginAgeView } from './loginAge';
 import type { RenderContext, RowData, RowView } from './types';
 
 /** Level 0/1 with zero stats: likely a bot or a fresh alt. */
@@ -22,6 +23,11 @@ function displayName(d: RowData, ctx: RenderContext): string {
     return d.username;
 }
 
+function ageOf(d: RowData, ctx: RenderContext): RowView['age'] {
+    if (d.status !== 'ok' && d.status !== 'api_off' && d.status !== 'never_played' && d.status !== 'no_data') return null;
+    return loginAgeView(d.lastSeen, d.level, ctx.now, ctx.loginAge);
+}
+
 export function viewOf(d: RowData, ctx: RenderContext): RowView {
     const key = d.username.toLowerCase();
     const self = selfKey(ctx);
@@ -31,10 +37,11 @@ export function viewOf(d: RowData, ctx: RenderContext): RowView {
         isParty: ctx.partyMembers.has(key),
         isSelf: !!self && key === self,
         isSuspect: ctx.highlightSuspects && isSuspect(d),
+        age: ageOf(d, ctx),
     };
 }
 
 /** Fingerprint of everything besides the data object that changes a row's markup. */
 export function viewSignature(v: RowView): string {
-    return `${v.name}|${+v.isParty}${+v.isSelf}${+v.isSuspect}|${chipsSignature(viewChips(v))}`;
+    return `${v.name}|${+v.isParty}${+v.isSelf}${+v.isSuspect}|${v.age?.text ?? ''}|${chipsSignature(viewChips(v))}`;
 }

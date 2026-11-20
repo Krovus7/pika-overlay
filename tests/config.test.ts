@@ -254,3 +254,25 @@ describe('normalizeConfig — settingsBounds', () => {
         assert.equal(normalizeConfig({ settingsBounds: 'nope' }).settingsBounds, null);
     });
 });
+
+describe('normalizeConfig — login age', () => {
+    it('defaults to off with level 10 and 5 fresh minutes', () => {
+        const cfg = normalizeConfig({});
+        assert.deepEqual([cfg.loginAge, cfg.loginAgeMaxLevel, cfg.freshMinutes], ['off', 10, 5]);
+    });
+
+    it('accepts the three modes and rejects anything else', () => {
+        assert.equal(normalizeConfig({ loginAge: 'all' }).loginAge, 'all');
+        assert.equal(normalizeConfig({ loginAge: 'lowLevel' }).loginAge, 'lowLevel');
+        assert.equal(normalizeConfig({ loginAge: 'sometimes' }).loginAge, 'off');
+        assert.equal(normalizeConfig({ loginAge: true }).loginAge, 'off');
+    });
+
+    it('clamps and rounds the numeric keys, falling back when mistyped', () => {
+        const cfg = normalizeConfig({ loginAgeMaxLevel: 0, freshMinutes: 99999 });
+        assert.deepEqual([cfg.loginAgeMaxLevel, cfg.freshMinutes], [1, 1440]);
+        assert.equal(normalizeConfig({ loginAgeMaxLevel: 12.6 }).loginAgeMaxLevel, 13);
+        const bad = normalizeConfig({ loginAgeMaxLevel: '20', freshMinutes: NaN });
+        assert.deepEqual([bad.loginAgeMaxLevel, bad.freshMinutes], [10, 5]);
+    });
+});

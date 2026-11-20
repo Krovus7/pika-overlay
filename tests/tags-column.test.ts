@@ -46,7 +46,7 @@ describe('tags cell', () => {
 describe('status row with the tags column', () => {
     const nicked: RowView = {
         data: { username: 'x', source: 'log', status: 'nicked' } as RowView['data'],
-        name: 'x', isParty: false, isSelf: false, isSuspect: false,
+        name: 'x', isParty: false, isSelf: false, isSuspect: false, age: null,
     };
     const cellsBeforePill = (ids: string[]): string[] => {
         const html = buildStatusCells(nicked, ids.map(col), ctx);
@@ -70,7 +70,7 @@ describe('status row with the tags column', () => {
 describe('row signature', () => {
     const base: RowView = {
         data: { username: 'x', source: 'log', status: 'loading' },
-        name: 'x', isParty: false, isSelf: false, isSuspect: false,
+        name: 'x', isParty: false, isSelf: false, isSuspect: false, age: null,
     };
 
     it('differs when the chips differ', () => {

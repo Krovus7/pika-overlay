@@ -3,10 +3,11 @@
 import { state } from '../core/state';
 import { refreshEmptyState } from '../ui/emptyState';
 import { updateFooter } from '../ui/footer';
+import { syncAgeTimer } from './ageTimer';
 import { noGamesNote } from './format';
 import { getVisibleCols } from './header';
 import { clearRows, reconcile } from './reconcile';
-import { selfKey } from './rowBuilder';
+import { selfKey, viewOf } from './rowBuilder';
 import { comparePlayers } from './sorting';
 import type { RenderContext } from './types';
 
@@ -22,6 +23,8 @@ function buildContext(): RenderContext {
         thresholds: state.thresholds,
         colors: state.colors,
         highlightSuspects: state.highlightSuspects,
+        loginAge: state.loginAge,
+        now: Date.now(),
         periodNote: noGamesNote(state.interval, state.mode),
     };
 }
@@ -38,10 +41,11 @@ export function renderNow(): void {
         partyMembers: state.party,
     };
     const sorted = [...state.players.values()].sort((a, b) => comparePlayers(a, b, sortState));
-    const ctxSig = JSON.stringify([cols.map(c => c.id), ctx.thresholds, ctx.colors, ctx.highlightSuspects, ctx.periodNote]);
+    const ctxSig = JSON.stringify([cols.map(c => c.id), ctx.thresholds, ctx.colors, ctx.highlightSuspects, ctx.loginAge, ctx.periodNote]);
 
     if (sorted.length) reconcile(tbody, sorted, cols, ctx, ctxSig);
     else clearRows(tbody);
+    syncAgeTimer(cols.some(c => c.id === 'tags') && sorted.some(d => viewOf(d, ctx).age), scheduleRender);
     refreshEmptyState();
     updateFooter();
 }

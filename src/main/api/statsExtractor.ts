@@ -8,11 +8,19 @@ import { getRankDisplay, type ProfileShape } from './rankDisplay';
 
 export type LeaderboardShape = Record<string, { entries?: Array<{ value: string }> | null }>;
 
-export function profileInfo(profile: ProfileShape): PlayerProfileInfo {
+const MIN_LAST_SEEN = Date.UTC(2015, 0, 1);
+const LAST_SEEN_SKEW_MS = 5 * 60_000;
+
+function validLastSeen(v: unknown, now: number): number | null {
+    return typeof v === 'number' && Number.isFinite(v) && v >= MIN_LAST_SEEN && v <= now + LAST_SEEN_SKEW_MS ? v : null;
+}
+
+export function profileInfo(profile: ProfileShape, now: number = Date.now()): PlayerProfileInfo {
     return {
         rank: getRankDisplay(profile),
         level: profile?.rank?.level ?? null,
         guild: profile?.clan?.name ?? null,
+        lastSeen: validLastSeen(profile?.lastSeen, now),
     };
 }
 

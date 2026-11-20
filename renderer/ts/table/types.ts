@@ -4,6 +4,7 @@
  */
 
 import type { StatsPayload } from '../../../src/shared/ipc-contract';
+import type { LoginAgeSettings, LoginAgeView } from './loginAge';
 import type { RatioColors, RatioThresholds } from '../../../src/shared/types';
 
 export interface LoadingRow {
@@ -23,6 +24,9 @@ export interface RenderContext {
     thresholds: RatioThresholds;
     colors: RatioColors;
     highlightSuspects: boolean;
+    loginAge: LoginAgeSettings;
+    /** One clock reading per render so every row agrees on ages. */
+    now: number;
     /** Wording for "no games" rows, e.g. "this week in Solo" */
     periodNote: string;
 }
@@ -34,4 +38,5 @@ export interface RowView {
     isParty: boolean;
     isSelf: boolean;
     isSuspect: boolean;
+    age: LoginAgeView | null;
 }

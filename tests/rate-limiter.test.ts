@@ -147,7 +147,7 @@ describe('HealthTracker', () => {
 
 describe('ApiCache TTLs', () => {
     const okResult = { username: 'a', status: 'ok' } as unknown as PlayerResult;
-    const info = { rank: { text: '', color: '#aaa' }, level: null, guild: null };
+    const info = { rank: { text: '', color: '#aaa' }, level: null, guild: null, lastSeen: null };
 
     it('ok stats live 10 min; api_off / never_played / no_data 3 min; others never stored', () => {
         let now = 0;

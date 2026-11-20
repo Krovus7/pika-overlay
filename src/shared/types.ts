@@ -53,6 +53,8 @@ export interface PlayerProfileInfo {
     rank: RankDisplay;
     level: number | null;
     guild: string | null;
+    /** Epoch ms of the profile's `lastSeen`, or null when missing or implausible. */
+    lastSeen: number | null;
 }
 
 export interface BedwarsNumbers {
