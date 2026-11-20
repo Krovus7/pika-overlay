@@ -13,6 +13,7 @@ declare global {
         __pikaDemoOpacity: (alpha: number) => void;
         __pikaDemoTheme: (theme: 'dark' | 'light') => void;
         __pikaDemoBackdrop: (scene: 'bright' | 'dark' | 'none') => void;
+        __pikaDemoUpdate: (version: string | null) => void;
         __pikaDemoDensity: (dense: boolean) => void;
     }
 }

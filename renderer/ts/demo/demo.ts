@@ -13,6 +13,7 @@ import { renderNow } from '../table/render';
 import { setHealth } from '../ui/banner';
 import { applyOpacity } from '../ui/lowOpacity';
 import { setThemeDom } from '../ui/theme';
+import { demoUpdatePopup } from '../ui/updatePopup';
 import { setBackdrop } from './backdrops';
 import { DEMO_PARTY, DEMO_SELF, demoRows, demoWatch } from './demoRows';
 
@@ -50,5 +51,6 @@ export function registerDemo(): void {
     window.__pikaDemoOpacity = alpha => applyOpacity(alpha);
     window.__pikaDemoTheme = theme => setThemeDom(theme);
     window.__pikaDemoBackdrop = scene => setBackdrop(scene);
+    window.__pikaDemoUpdate = version => demoUpdatePopup(version);
     window.__pikaDemoDensity = dense => document.body.classList.toggle('density-dense', dense);
 }

@@ -13,6 +13,7 @@ import type { BrowserWindow } from 'electron';
 
 import { captureMenuShots } from './devShotsMenu';
 import { captureSettingsShots } from './devShotsSettings';
+import { captureUpdateShots } from './devShotsUpdate';
 
 export interface ShotsDeps {
     getOverlayWin: () => BrowserWindow | null;
@@ -98,6 +99,7 @@ export async function driveShots(deps: ShotsDeps): Promise<void> {
         await shot('v5-11-narrow.png');
         win.setBounds(original);
         await captureMenuShots(js, shot);
+        await captureUpdateShots(js, shot, narrow => win.setBounds(narrow ? { ...original, width: NARROW_WIDTH } : original));
 
         // Opacity ladder, plain (transparent window) in both themes
         let n = 12;

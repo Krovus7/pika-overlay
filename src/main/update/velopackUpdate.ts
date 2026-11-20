@@ -1,7 +1,7 @@
 /**
  * Velopack auto-update — check/download/apply against the GitHub Releases
- * feed of Krovus7/pika-overlay (ADR-0004). Check only at startup and on user
- * request; download only on explicit user action; no polling. A busy guard
+ * feed of Krovus7/pika-overlay (ADR-0004). Check at startup, every 6 h while open
+ * and on user request; download only on explicit user action. A busy guard
  * serializes concurrent check/download requests.
  */
 
@@ -73,11 +73,23 @@ export async function checkForUpdates(): Promise<UpdateState> {
         }
     } catch (err) {
         console.error('[Update] Check failed:', String(err));
-        setState({ kind: 'error', message: String(err) });
+        // A failed re-check keeps an update already found (and its card) instead of hiding it
+        setState(pendingUpdate
+            ? { kind: 'available', version: pendingUpdate.TargetFullRelease.Version }
+            : { kind: 'error', message: String(err) });
     } finally {
         busy = false;
     }
     return state;
+}
+
+/** Re-checks every 6 h while the app stays open (ADR-0004); `enabled` is read at each tick. */
+export const RECHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+export function startPeriodicChecks(enabled: () => boolean): void {
+    setInterval(() => {
+        if (enabled()) void checkForUpdates();
+    }, RECHECK_INTERVAL_MS).unref();
 }
 
 /** Downloads the update with progress and applies it (app restarts) */
