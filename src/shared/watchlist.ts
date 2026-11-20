@@ -35,11 +35,11 @@ export interface WatchlistFile {
     version: 1;
     entries: WatchEntry[];
     lists: ImportedList[];
-    nickLinks: NickLink[];
 }
 
 /** What watchlist:get returns and watchlist:updated broadcasts. */
-export type WatchlistSnapshot = Omit<WatchlistFile, 'version'>;
+/** Nick links are session-only (memory), never part of the file. */
+export type WatchlistSnapshot = Omit<WatchlistFile, 'version'> & { nickLinks: NickLink[] };
 
 export interface ImportPreview {
     /** Single-use, expires after 5 minutes */

@@ -111,8 +111,10 @@ A local list of names with a kind (sniper, cheater, other) and a note
 - **Nicked teammate:** on a NICKED row the menu starts with a dim line
   saying the tag follows the nick, not the player, and ends with "This is my
   teammate" (opens the party members, or "Someone else", in place with a Back row). The nick is then hidden from the
-  table and ignored when detected again. Nick links are personal and never
-  exported. They are listed in Settings → Watchlist and can be removed there.
+  table and ignored when detected again. Nick links last for the session only
+  (not saved, never exported): one nick per teammate, deleted when that teammate
+  leaves your party; a "Someone else" link is deleted when the party empties. They
+  are listed in Settings → Watchlist and can be removed there.
 - **Alert:** when a watched player enters the table from the log (not typed
   names, party members or the own row) a toast "SNIPER Name is in your lobby"
   shows for about 6 s, once per player per lobby. Optional beep
@@ -257,7 +259,7 @@ position and size are remembered (`settingsBounds`).
 | Appearance | Theme; Background opacity (`opacity`); Interface scale (`uiScale`, reset button); Always on top (`alwaysOnTop`); Layout (`overlayMode`); Row density (`rowDensity`); Show nicked players first (`nickedOnTop`); Highlight suspected bots and alts (`highlightSuspects`); "Preview with sample players" demo rows |
 | Columns | Detailed layout: show/hide, drag or arrows to reorder (`columnOrder`, `columnEnabled`); Compact layout: column chips (`compactColumns`) |
 | Colors | Tier colors (`ratioColors`, Reset colors); thresholds per ratio FKDR/KD/WLR (`ratioThresholds`, validated: each tier higher than the next, otherwise "Not saved yet"; Reset thresholds) |
-| Watchlist | own entries (add by name with kind and note, search, change kind, edit note, remove); imported lists ("someone else's notes", remove); Import file / Paste list / Export file (with "include imported lists") / Copy as text, each import with a preview step; nick links (nick, teammate, date, remove); Sniper detection (login age: `loginAge`, `loginAgeMaxLevel`, `freshMinutes`, marked experimental); Alerts (`watchlistSound` "Play a beep", `watchlistOnTop` "Show marked players first") |
+| Watchlist | own entries (add by name with kind and note, search, change kind, edit note, remove); imported lists ("someone else's notes", remove); Import file / Paste list / Export file (with "include imported lists") / Copy as text, each import with a preview step; nick links (session-only: nick, teammate, date, remove); Sniper detection (login age: `loginAge`, `loginAgeMaxLevel`, `freshMinutes`, marked experimental); Alerts (`watchlistSound` "Play a beep", `watchlistOnTop` "Show marked players first") |
 | Updates | installed version; Check for updates; Update and restart; Check on startup (`updateAutoCheck`) |
 | Debug | app version, API connection state, log file found; last 60 of the 100 most recent log lines (a Pika API key in a line — `/apikey` answers in chat — is replaced by `pika_<hidden>`, `src/main/log/redact.ts`), Refresh, Copy |
 

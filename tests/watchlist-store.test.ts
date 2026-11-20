@@ -77,7 +77,6 @@ describe('watchlist store', () => {
         const s = open();
         s.setOwn('Steve', { kind: 'sniper', note: 'n' });
         s.applyImport('a', [parsed('Alex')]);
-        s.linkNick('Nicky', 'Friend');
         assert.deepEqual(fs.readdirSync(dir), ['watchlist.json']);
         const back = open();
         assert.deepEqual(back.snapshot(), s.snapshot());
@@ -127,7 +126,6 @@ describe('failed writes', () => {
         quiet(() => {
             assert.equal(s.setOwn('Steve', { kind: 'other', note: '' }), false);
             assert.equal(s.applyImport('a', [parsed('Alex')]), null);
-            assert.equal(s.linkNick('Nicky', null), false);
         });
         assert.deepEqual(s.snapshot(), { entries: [], lists: [], nickLinks: [] });
     });
@@ -163,6 +161,55 @@ describe('nick links', () => {
         assert.equal(s.unlinkNick('Nicky'), true);
         assert.equal(s.isLinkedNick('nicky'), false);
         assert.equal(s.unlinkNick('nicky'), false);
+    });
+
+    it('keeps one nick per friend, case-insensitively', () => {
+        const s = open();
+        s.linkNick('Old', 'Friend');
+        s.linkNick('New', 'friend');
+        s.linkNick('Other', 'Pal');
+        assert.deepEqual(s.snapshot().nickLinks.map(l => l.nick).sort(), ['New', 'Other']);
+        s.linkNick('Anna', null);
+        s.linkNick('Bobo', null);
+        assert.equal(s.snapshot().nickLinks.length, 4);
+    });
+
+    it('prunes a link when its friend left the party', () => {
+        const s = open();
+        s.linkNick('One', 'Alpha');
+        s.linkNick('Two', 'Bravo');
+        assert.equal(s.pruneNickLinks(['alpha', 'bravo'], true), false);
+        assert.equal(s.pruneNickLinks(['ALPHA'], true), true);
+        assert.deepEqual(s.snapshot().nickLinks.map(l => l.nick), ['One']);
+    });
+
+    it('prunes every friend link when the party is cleared', () => {
+        const s = open();
+        s.linkNick('One', 'Alpha');
+        assert.equal(s.pruneNickLinks([], true), true);
+        assert.equal(s.snapshot().nickLinks.length, 0);
+    });
+
+    it('drops "someone else" only when the party goes from non-empty to empty', () => {
+        const s = open();
+        s.linkNick('Anon', null);
+        assert.equal(s.pruneNickLinks([], false), false);
+        assert.equal(s.pruneNickLinks(['alpha'], true), false);
+        assert.equal(s.pruneNickLinks([], true), true);
+        assert.equal(s.isLinkedNick('anon'), false);
+    });
+
+    it('never writes links to the file and ignores them in an old file', () => {
+        const s = open();
+        s.setOwn('Steve', { kind: 'other', note: '' });
+        s.linkNick('Nicky', 'Friend');
+        assert.equal('nickLinks' in JSON.parse(fs.readFileSync(file, 'utf8')), false);
+        const old = { version: 1, entries: [], lists: [], nickLinks: [{ nick: 'Ghost', friend: 'Pal', addedAt: 1 }] };
+        fs.writeFileSync(file, JSON.stringify(old));
+        const loaded = open();
+        assert.equal(loaded.isLinkedNick('ghost'), false);
+        loaded.setOwn('Steve', { kind: 'other', note: '' });
+        assert.equal('nickLinks' in JSON.parse(fs.readFileSync(file, 'utf8')), false);
     });
 
     it('validates both names', () => {

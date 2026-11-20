@@ -29,9 +29,16 @@ the lowercase player name.
   otherwise the most recent import. An import never changes or deletes an own
   entry, and a whole list is removed in one action. Importing the same label
   again replaces that list.
-- **Nick links** (`nickLinks`) say that a nick seen in the log is a teammate.
-  A linked nick is hidden from the table (later detections are ignored). They
-  are personal: never exported, never imported.
+- **Nick links** say that a nick seen in the log is a teammate. A linked nick
+  is hidden from the table (later detections are ignored). They are session-only:
+  kept in memory, never written to `watchlist.json` (a `nickLinks` array in an old
+  file is ignored on load and dropped at the next write), never exported or
+  imported. One nick per teammate (linking F replaces F's other link). A link to a
+  friend ends as soon as a party change leaves F out of the party; a "Someone
+  else" link ends when the party goes from non-empty to empty. Reason: a link
+  that outlived the party hid an enemy once the friend changed nick or a
+  stranger took the old one. Pruning runs in main (`onPartyChange` in
+  `watcherBindings.ts` -> `WatchlistStore.pruneNickLinks`).
 - **No server.** Sharing is by file (JSON) or pasted text; the receiver
   previews the import and confirms it.
 - The file is written through a temp file and renamed; a corrupt file is

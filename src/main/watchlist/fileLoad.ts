@@ -3,11 +3,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { ImportedList, NickLink, WatchlistFile } from '../../shared/watchlist';
-import { dedupeByName, isValidName, normalizeEntry } from './validate';
+import type { ImportedList, WatchlistFile } from '../../shared/watchlist';
+import { normalizeEntry } from './validate';
 
 export function emptyFile(): WatchlistFile {
-    return { version: 1, entries: [], lists: [], nickLinks: [] };
+    return { version: 1, entries: [], lists: [] };
 }
 
 function repairLists(raw: unknown): ImportedList[] {
@@ -20,19 +20,7 @@ function repairLists(raw: unknown): ImportedList[] {
     });
 }
 
-function repairNickLinks(raw: unknown, now: number): NickLink[] {
-    if (!Array.isArray(raw)) return [];
-    const links = raw.flatMap((l): { name: string; friend: string; addedAt: number }[] => {
-        const r = l as Record<string, unknown> | null;
-        if (!r || !isValidName(r.nick)) return [];
-        const friend = typeof r.friend === 'string' && isValidName(r.friend) ? r.friend : '';
-        const addedAt = typeof r.addedAt === 'number' ? r.addedAt : now;
-        return [{ name: r.nick, friend, addedAt }];
-    });
-    return dedupeByName(links).map(l => ({ nick: l.name, friend: l.friend, addedAt: l.addedAt }));
-}
-
-/** Throws on anything that is not a version-1 watchlist document. */
+/** Nick links found in an old file are ignored: links live in memory only. Throws on anything that is not a version-1 watchlist document. */
 export function repairFile(doc: unknown, now: number): WatchlistFile {
     const d = doc as Record<string, unknown> | null;
     if (!d || typeof d !== 'object' || d.version !== 1 || !Array.isArray(d.entries)) {
@@ -47,7 +35,7 @@ export function repairFile(doc: unknown, now: number): WatchlistFile {
         return [{ ...entry, source }];
     });
     for (const list of lists) list.count = entries.filter(e => e.source === list.id).length;
-    return { version: 1, entries, lists, nickLinks: repairNickLinks(d.nickLinks, now) };
+    return { version: 1, entries, lists };
 }
 
 export interface FileIo {

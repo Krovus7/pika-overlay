@@ -28,7 +28,7 @@ Outside `state/`:
 | `src/main/api/cache.ts` | profile and stats caches (TTLs in `docs/API-CLIENT.md`) |
 | `src/main/api/rateLimiter.ts` | request budget of the current window |
 | `src/main/ipc/autoRetry.ts` | per-player automatic retry counters and timers |
-| `src/main/watchlist/store.ts` `WatchlistStore` | own entries, imported lists and nick links (`watchlist.json`, ADR-0014); every change is saved first and only then kept in memory, then broadcast as `watchlist:updated`; reached through `getWatchlist()` (`instance.ts`, set once in `main.ts`) |
+| `src/main/watchlist/store.ts` `WatchlistStore` | own entries and imported lists (`watchlist.json`, ADR-0014) plus session-only nick links (memory only, pruned by `pruneNickLinks` on every party change); every file change is saved first and only then kept in memory, then broadcast as `watchlist:updated`; reached through `getWatchlist()` (`instance.ts`, set once in `main.ts`) |
 | `src/main/watchlist/importPreview.ts` | pending import previews (in memory, single use, 5 minute TTL, at most 5) |
 | `src/main/watchlist/alerts.ts` `WatchAlerts` | players already alerted in this lobby; reset on `players_clear` |
 | `renderer/ts/core/state.ts` `watch` | the overlay's copy of `WatchlistView.resolved` (a `Map`), plus `watchlistOnTop`, `watchlistSound` and the login-age settings from the config |
@@ -70,7 +70,7 @@ Channel names are constants shared by main (`src/main/ipc/`), preload
 | `watchlist:importFile` / `importText` / `confirmImport` | `importWatchlistFile()` / `importWatchlistText(text, kind)` / `confirmWatchImport(token)` | `watchlistHandlers.ts` → `importPreview.ts` (preview in memory for 5 minutes, saved on confirm) |
 | `watchlist:menu` | `showWatchMenu(name, nicked)` | `watchlistMenu.ts` + `menuSpec.ts`: returns the row menu as data `{ token, title, items }` (marks with tone and checked kind, remove, imported source line, nick link submenu with the party); the overlay draws it. A new menu invalidates older tokens |
 | `watchlist:menuPick` | `pickWatchMenu(token, id)` | `menuSession.ts`: runs the picked item of the latest menu if the token is current, then clears; resolves false for a stale token or unknown id |
-| `watchlist:linkNick` / `unlinkNick` | `linkNick(nick, friend \| null)` / `unlinkNick(nick)` | `watchlistHandlers.ts` (nick links: personal, never exported or imported) |
+| `watchlist:linkNick` / `unlinkNick` | `linkNick(nick, friend \| null)` / `unlinkNick(nick)` | `watchlistHandlers.ts` (nick links: session-only, personal, never saved, exported or imported) |
 
 ### Push events (`IPC_EVENTS`, main → renderer)
 

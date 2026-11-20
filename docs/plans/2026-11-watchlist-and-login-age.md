@@ -124,7 +124,9 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
       friend: string;        // the real name of the teammate, '' when not given
       addedAt: number;
   }
-  interface WatchlistFile { version: 1; entries: WatchEntry[]; lists: ImportedList[]; nickLinks: NickLink[] }
+  interface WatchlistFile { version: 1; entries: WatchEntry[]; lists: ImportedList[] }
+  // NickLink is NOT in the file: since 2026-11-20 links are session-only (memory), one per friend,
+  // dropped when the friend leaves the party; the snapshot still carries nickLinks for the Settings tab
   ```
 - **Store** (`store.ts`): `%APPDATA%\pika-overlay\watchlist.json`; load once at
   startup; atomic write (temp file + rename, as `config.ts`); a corrupt file is
@@ -183,7 +185,8 @@ Files under `src/main/watchlist/`, each ≤ ~150 lines, pure parts unit tested.
   empty friend). A linked nick is removed from the table and never shown again
   (later detections of that nick are ignored), so it no longer looks like an
   unknown nicked player. Linked nicks are not exported or imported (they are
-  personal). Managed in the Watchlist tab (Task 4b): list nick → friend, date,
+  personal). Revised 2026-11-20: links are session-only and end when the friend
+  leaves the party (see ADR-0014). Managed in the Watchlist tab (Task 4b): list nick → friend, date,
   remove.
 - **Chips** in the Tags column: SNIPER (amber), CHEATER (red), OTHER (neutral),
   built from existing tokens, readable at low opacity like the other chips

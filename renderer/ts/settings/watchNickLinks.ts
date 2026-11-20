@@ -12,7 +12,7 @@ export interface NickLinksSection {
 }
 
 export function buildNickLinks(api: PikaOverlayApi): NickLinksSection {
-    const g = group('Nick links', 'Nicks you marked as a teammate are hidden from the table. Remove a link to see that nick again.');
+    const g = group('Nick links', 'Nicks you marked as a teammate are hidden from the table. Links last for this session only and end when that teammate leaves your party.');
     const items = h('div', 's-watch-items');
     const status = h('div', 's-status');
     status.setAttribute('role', 'status');

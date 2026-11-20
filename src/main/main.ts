@@ -28,6 +28,7 @@ import { clearAlertFlash, deliverAlert } from './watchlist/alertDelivery';
 import { WatchAlerts } from './watchlist/alerts';
 import { getWatchlist, initWatchlist } from './watchlist/instance';
 import { linkNickAndHide } from './watchlist/nickLink';
+import { notifyWatchlist } from './watchlist/notify';
 import { WatchlistStore } from './watchlist/store';
 import { applyWindowConfig, createOverlay, getOverlayWin, resizeForScale } from './windowManager';
 import { broadcast } from './broadcast';
@@ -110,6 +111,9 @@ app.whenReady().then(() => {
         logWatcher, queue, registry: playerRegistry, party: partyState, game: gameState, send,
         isSelf: name => name.toLowerCase() === watcherSettings(store).name.toLowerCase(),
         onLobbyClear: () => alerts.reset(),
+        onPartyChange: wasNonEmpty => {
+            if (watchlist.pruneNickLinks(partyState.snapshot(), wasNonEmpty)) notifyWatchlist(watchlist);
+        },
     });
 
     // Dev-only screenshot drive: no log watcher, no update check (offline)

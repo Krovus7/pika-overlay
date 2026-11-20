@@ -27,13 +27,15 @@ export interface WatcherBindingDeps {
     isSelf: (username: string) => boolean;
     /** The lobby changed (players_clear) */
     onLobbyClear?: () => void;
+    /** After every party mutation; `wasNonEmpty` is the party state before it */
+    onPartyChange?: (wasNonEmpty: boolean) => void;
 }
 
 /** One lobby join is one refresh, however many times the join line repeats */
 const LOBBY_REFRESH_MIN_GAP_MS = 20_000;
 
 export function bindWatcherEvents(deps: WatcherBindingDeps): void {
-    const { logWatcher, queue, registry, party, game, send, isSelf, onLobbyClear } = deps;
+    const { logWatcher, queue, registry, party, game, send, isSelf, onLobbyClear, onPartyChange } = deps;
     let lastLobbyRefresh = 0;
 
     const removeShownExcept = (keep: ReadonlySet<string>): void => {
@@ -113,6 +115,7 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
     });
 
     logWatcher.on('party_members', (names: string[]) => {
+        const wasNonEmpty = party.size > 0;
         const newSet = new Set(names.map(n => n.toLowerCase()));
 
         // Remove players no longer in the party from overlay
@@ -123,30 +126,37 @@ export function bindWatcherEvents(deps: WatcherBindingDeps): void {
         party.clear();
         names.forEach(n => party.add(n));
         send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        onPartyChange?.(wasNonEmpty);
         console.log(`[Party] Sync: ${party.snapshot().join(', ')}`);
 
         for (const name of names) enqueueFresh(name, 'party');
     });
 
     logWatcher.on('party_joined', (username: string) => {
+        const wasNonEmpty = party.size > 0;
         party.add(username.toLowerCase());
         send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        onPartyChange?.(wasNonEmpty);
         console.log(`[Party] Joined: ${username}`);
         enqueueFresh(username, 'party');
     });
 
     logWatcher.on('party_left', (username: string) => {
         const key = username.toLowerCase();
+        const wasNonEmpty = party.size > 0;
         party.delete(key);
         removeShown(key);
         send(IPC_EVENTS.PARTY_UPDATE, party.snapshot());
+        onPartyChange?.(wasNonEmpty);
         console.log(`[Party] Left: ${username} — removed from overlay`);
     });
 
     logWatcher.on('party_clear', () => {
+        const wasNonEmpty = party.size > 0;
         for (const key of party.snapshot()) removeShown(key);
         party.clear();
         send(IPC_EVENTS.PARTY_UPDATE, []);
+        onPartyChange?.(wasNonEmpty);
         console.log('[Party] Cleared — all pins and party players removed from overlay');
     });
 }
